@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idle Bricks - An Idle Breakout Game</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>🧱 Idle Bricks</h1>
+            <div id="stats">
+                <div class="stat">
+                    <span id="coins">0</span>
+                    <label>Coins</label>
+                </div>
+                <div class="stat">
+                    <span id="bricks-broken">0</span>
+                    <label>Bricks Broken</label>
+                </div>
+                <div class="stat">
+                    <span id="total-bricks">0</span>
+                    <label>Total Bricks</label>
+                </div>
+                <div class="stat">
+                    <span id="balls-count">0</span>
+                    <label>Balls</label>
+                </div>
+            </div>
+        </header>
+        
+        <main>
+            <div id="game-area">
+                <canvas id="game-canvas"></canvas>
+            </div>
+            
+            <aside id="shop-panel">
+                <h2>🛒 Shop</h2>
+                
+                <div class="shop-section">
+                    <h3>Buy Balls</h3>
+                    <div id="ball-shop">
+                        <button class="shop-item" data-ball="basic">
+                            <span class="item-name">Basic Ball</span>
+                            <span class="item-cost" id="cost-basic">10</span> coins
+                            <div class="item-desc">Standard ball</div>
+                        </button>
+                        <button class="shop-item" data-ball="fast">
+                            <span class="item-name">Fast Ball</span>
+                            <span class="item-cost" id="cost-fast">50</span> coins
+                            <div class="item-desc">2x speed</div>
+                        </button>
+                        <button class="shop-item" data-ball="heavy">
+                            <span class="item-name">Heavy Ball</span>
+                            <span class="item-cost" id="cost-heavy">100</span> coins
+                            <div class="item-desc">3x damage</div>
+                        </button>
+                        <button class="shop-item" data-ball="plasma">
+                            <span class="item-name">Plasma Ball</span>
+                            <span class="item-cost" id="cost-plasma">500</span> coins
+                            <div class="item-desc">Pierces through bricks</div>
+                        </button>
+                        <button class="shop-item" data-ball="explosive">
+                            <span class="item-name">Explosive Ball</span>
+                            <span class="item-cost" id="cost-explosive">1000</span> coins
+                            <div class="item-desc">Damages nearby bricks</div>
+                        </button>
+                        <button class="shop-item" data-ball="sniper">
+                            <span class="item-name">Sniper Ball</span>
+                            <span class="item-cost" id="cost-sniper">2500</span> coins
+                            <div class="item-desc">Targets weakest bricks</div>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="shop-section">
+                    <h3>Upgrades</h3>
+                    <div id="upgrades-shop">
+                        <button class="shop-item" id="upgrade-all-speed">
+                            <span class="item-name">Speed Boost</span>
+                            <span class="item-cost" id="cost-speed">100</span> coins
+                            <div class="item-desc">All balls +10% speed</div>
+                        </button>
+                        <button class="shop-item" id="upgrade-all-damage">
+                            <span class="item-name">Power Boost</span>
+                            <span class="item-cost" id="cost-damage">150</span> coins
+                            <div class="item-desc">All balls +10% damage</div>
+                        </button>
+                        <button class="shop-item" id="upgrade-coin-mult">
+                            <span class="item-name">Coin Multiplier</span>
+                            <span class="item-cost" id="cost-coin">200</span> coins
+                            <div class="item-desc">+10% coins earned</div>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="shop-section">
+                    <h3>Prestige</h3>
+                    <button class="shop-item prestige-btn" id="prestige-btn" disabled>
+                        <span class="item-name">🌟 Prestige</span>
+                        <span class="item-desc">Reset for permanent bonuses</span>
+                        <span class="item-desc" id="prestige-info">Break 10,000 bricks to unlock</span>
+                    </button>
+                </div>
+            </aside>
+        </main>
+        
+        <footer>
+            <button id="save-btn">💾 Save</button>
+            <button id="reset-btn">🔄 Reset</button>
+            <span id="auto-save-status">Auto-saves every 30s</span>
+        </footer>
+    </div>
+    
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
