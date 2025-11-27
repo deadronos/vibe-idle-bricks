@@ -1,0 +1,210 @@
+/* App Layout */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #0f0f1a;
+  color: #ffffff;
+}
+
+/* Header */
+.game-header {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-bottom: 2px solid #0f3460;
+}
+
+.game-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  color: #e94560;
+  text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+}
+
+/* Main Layout */
+.game-main {
+  display: flex;
+  flex: 1;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* Sidebars */
+.sidebar {
+  width: 250px;
+  padding: 1rem;
+  background: rgba(26, 26, 46, 0.8);
+  border-radius: 8px;
+  border: 1px solid #0f3460;
+}
+
+.left-sidebar,
+.right-sidebar {
+  flex-shrink: 0;
+}
+
+/* Game Canvas */
+.game-canvas {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: #1a1a2e;
+  border-radius: 8px;
+  border: 2px solid #0f3460;
+  overflow: hidden;
+}
+
+/* Stats Display */
+.stats-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.stat-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.stat-label {
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.stat-value {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.stat-value.money {
+  color: #4ade80;
+}
+
+.progress-bar {
+  width: 200px;
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #e94560, #ff6b6b);
+  transition: width 0.3s ease;
+}
+
+/* Upgrade Panel */
+.upgrade-panel h3,
+.ball-stats h3 {
+  margin: 0 0 1rem 0;
+  color: #e94560;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #0f3460;
+  padding-bottom: 0.5rem;
+}
+
+.upgrade-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: rgba(15, 52, 96, 0.3);
+  border-radius: 6px;
+  border: 1px solid #0f3460;
+}
+
+.upgrade-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.upgrade-name {
+  font-weight: bold;
+  color: #fff;
+}
+
+.upgrade-level {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.upgrade-current {
+  font-size: 0.75rem;
+  color: #4ade80;
+}
+
+.upgrade-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upgrade-button.can-afford {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  color: #000;
+}
+
+.upgrade-button.can-afford:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+}
+
+.upgrade-button.cannot-afford {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+}
+
+/* Ball Stats */
+.ball-stats {
+  font-size: 0.9rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(15, 52, 96, 0.5);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-row span:first-child {
+  color: #888;
+}
+
+.stat-row span:last-child {
+  color: #4ade80;
+  font-weight: bold;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .game-main {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .left-sidebar,
+  .right-sidebar {
+    order: 2;
+  }
+
+  .game-canvas {
+    order: 1;
+  }
+}
