@@ -1,6 +1,11 @@
 import { Ball } from './ball.js';
 import { Brick, BrickManager } from './brick.js';
 
+// Game constants
+const UPGRADE_MULTIPLIER = 0.1;      // 10% boost per upgrade level
+const PRESTIGE_BONUS = 0.25;         // 25% bonus per prestige level
+const OFFLINE_EARNINGS_RATE = 0.5;   // 50% of theoretical earnings while offline
+
 /**
  * Main Game class - handles game loop, state, and rendering
  */
@@ -111,9 +116,10 @@ export class Game {
         
         // Check if we need more bricks
         if (this.bricks.length < 20) {
-            // Increase tier over time
-            if (this.bricksBroken > 0 && this.bricksBroken % 100 === 0) {
-                this.currentTier = Math.min(10, 1 + Math.floor(this.bricksBroken / 100));
+            // Increase tier over time (only when crossing a threshold)
+            const newTier = Math.min(10, 1 + Math.floor(this.bricksBroken / 100));
+            if (newTier > this.currentTier) {
+                this.currentTier = newTier;
             }
             
             const newBricks = this.brickManager.addBricksToFillScreen(this.bricks, this.currentTier);
@@ -200,7 +206,7 @@ export class Game {
     
     addCoins(amount) {
         // Apply prestige bonus
-        const prestigeBonus = 1 + (this.prestigeLevel * 0.25);
+        const prestigeBonus = 1 + (this.prestigeLevel * PRESTIGE_BONUS);
         this.coins += Math.floor(amount * prestigeBonus);
     }
     
@@ -295,9 +301,10 @@ export class Game {
         // Update prestige button
         const prestigeBtn = document.getElementById('prestige-btn');
         const prestigeInfo = document.getElementById('prestige-info');
+        const prestigePercent = Math.round(PRESTIGE_BONUS * 100);
         if (this.canPrestige()) {
             prestigeBtn.disabled = false;
-            prestigeInfo.textContent = `+25% coin bonus (Current: +${this.prestigeLevel * 25}%)`;
+            prestigeInfo.textContent = `+${prestigePercent}% coin bonus (Current: +${this.prestigeLevel * prestigePercent}%)`;
         } else {
             prestigeBtn.disabled = true;
             prestigeInfo.textContent = `Break ${this.formatNumber(10000 - this.bricksBroken)} more bricks`;
@@ -414,10 +421,10 @@ export class Game {
         
         if (minutes > 1) {
             // Calculate approximate earnings per second
-            const coinsPerSecond = this.balls.length * (1 + this.upgrades.coinMult * 0.1) * (1 + this.prestigeLevel * 0.25);
+            const coinsPerSecond = this.balls.length * (1 + this.upgrades.coinMult * UPGRADE_MULTIPLIER) * (1 + this.prestigeLevel * PRESTIGE_BONUS);
             
-            // Award 50% of theoretical earnings (to encourage active play)
-            const offlineCoins = Math.floor(coinsPerSecond * seconds * 0.5);
+            // Award portion of theoretical earnings (to encourage active play)
+            const offlineCoins = Math.floor(coinsPerSecond * seconds * OFFLINE_EARNINGS_RATE);
             
             if (offlineCoins > 0) {
                 this.coins += offlineCoins;

@@ -21,6 +21,7 @@ export class Ball {
     }
     
     setTypeProperties() {
+        // Note: Ball costs are managed in game.js ballCosts property
         const types = {
             basic: {
                 speed: 3,
@@ -28,8 +29,7 @@ export class Ball {
                 color: '#9ca3af',
                 pierce: false,
                 explosive: false,
-                targeting: false,
-                cost: 10
+                targeting: false
             },
             fast: {
                 speed: 6,
@@ -37,8 +37,7 @@ export class Ball {
                 color: '#60a5fa',
                 pierce: false,
                 explosive: false,
-                targeting: false,
-                cost: 50
+                targeting: false
             },
             heavy: {
                 speed: 2.5,
@@ -46,8 +45,7 @@ export class Ball {
                 color: '#f97316',
                 pierce: false,
                 explosive: false,
-                targeting: false,
-                cost: 100
+                targeting: false
             },
             plasma: {
                 speed: 4,
@@ -55,8 +53,7 @@ export class Ball {
                 color: '#a855f7',
                 pierce: true,
                 explosive: false,
-                targeting: false,
-                cost: 500
+                targeting: false
             },
             explosive: {
                 speed: 3,
@@ -65,8 +62,7 @@ export class Ball {
                 pierce: false,
                 explosive: true,
                 explosionRadius: 50,
-                targeting: false,
-                cost: 1000
+                targeting: false
             },
             sniper: {
                 speed: 5,
@@ -74,8 +70,7 @@ export class Ball {
                 color: '#10b981',
                 pierce: false,
                 explosive: false,
-                targeting: true,
-                cost: 2500
+                targeting: true
             }
         };
         
@@ -274,17 +269,5 @@ export class Ball {
         ctx.beginPath();
         ctx.arc(this.x - 2, this.y - 2, this.radius * 0.4, 0, Math.PI * 2);
         ctx.fill();
-    }
-    
-    static getCost(type) {
-        const costs = {
-            basic: 10,
-            fast: 50,
-            heavy: 100,
-            plasma: 500,
-            explosive: 1000,
-            sniper: 2500
-        };
-        return costs[type] || 10;
     }
 }
