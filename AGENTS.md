@@ -136,7 +136,8 @@ This project uses a structured Memory Bank in `/memory/` for context persistence
 
 ## Testing
 
-- No formal test suite currently configured
+- **Vitest** for unit testing (`npm run test`)
+- Tests located in `tests/` directory
 - Manual testing via `npm run dev`
 - Validate TypeScript with `npm run build`
 - Lint with `npm run lint`

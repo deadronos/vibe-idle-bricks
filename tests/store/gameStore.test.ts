@@ -4,17 +4,23 @@ import { useGameStore } from '../../src/store/gameStore'
 import { BALL_TYPES, PRESTIGE_THRESHOLD } from '../../src/types/game'
 
 // Mock localStorage
-const localStorageMock = (() => {
+const createLocalStorageMock = () => {
   let store: Record<string, string> = {}
   return {
-    getItem: vi.fn((key: string) => store[key] || null),
+    getItem: vi.fn((key: string) => store[key] ?? null),
     setItem: vi.fn((key: string, value: string) => { store[key] = value }),
     removeItem: vi.fn((key: string) => { delete store[key] }),
     clear: () => { store = {} },
+    _setStore: (newStore: Record<string, string>) => { store = newStore },
   }
-})()
+}
 
-Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+const localStorageMock = createLocalStorageMock()
+
+Object.defineProperty(window, 'localStorage', { 
+  value: localStorageMock,
+  writable: true 
+})
 
 // Helper to reset store state
 const resetStore = () => {
@@ -49,12 +55,8 @@ const resetStore = () => {
 describe('gameStore', () => {
   beforeEach(() => {
     resetStore()
-    // Mock localStorage
-    vi.stubGlobal('localStorage', {
-      getItem: vi.fn(),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-    })
+    localStorageMock.clear()
+    vi.clearAllMocks()
   })
 
   describe('initial state', () => {
@@ -405,6 +407,206 @@ describe('gameStore', () => {
     it('should remove localStorage save', () => {
       useGameStore.getState().reset()
       expect(localStorage.removeItem).toHaveBeenCalledWith('idleBricksSave')
+    })
+  })
+
+  describe('save', () => {
+    beforeEach(() => {
+      localStorageMock.clear()
+      vi.clearAllMocks()
+    })
+
+    it('should save state to localStorage', () => {
+      useGameStore.setState({
+        coins: new Decimal(1000),
+        bricksBroken: new Decimal(50),
+        prestigeLevel: 2,
+        currentTier: 3,
+        balls: [
+          { id: 'ball-1', type: 'basic', x: 100, y: 100, dx: 1, dy: -1 },
+          { id: 'ball-2', type: 'plasma', x: 200, y: 200, dx: -1, dy: -1 },
+        ],
+      })
+
+      useGameStore.getState().save()
+
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'idleBricksSave',
+        expect.any(String)
+      )
+    })
+
+    it('should serialize Decimal values as strings', () => {
+      useGameStore.setState({
+        coins: new Decimal(1000),
+        bricksBroken: new Decimal(50),
+      })
+
+      useGameStore.getState().save()
+
+      const savedData = JSON.parse(localStorageMock.setItem.mock.calls[0][1])
+      expect(savedData.coins).toBe('1000')
+      expect(savedData.bricksBroken).toBe('50')
+    })
+
+    it('should save ball types', () => {
+      useGameStore.setState({
+        balls: [
+          { id: 'ball-1', type: 'basic', x: 100, y: 100, dx: 1, dy: -1 },
+          { id: 'ball-2', type: 'sniper', x: 200, y: 200, dx: -1, dy: -1 },
+        ],
+      })
+
+      useGameStore.getState().save()
+
+      const savedData = JSON.parse(localStorageMock.setItem.mock.calls[0][1])
+      expect(savedData.balls).toEqual(['basic', 'sniper'])
+    })
+
+    it('should include timestamp', () => {
+      const beforeSave = Date.now()
+      useGameStore.getState().save()
+      const afterSave = Date.now()
+
+      const savedData = JSON.parse(localStorageMock.setItem.mock.calls[0][1])
+      expect(savedData.timestamp).toBeGreaterThanOrEqual(beforeSave)
+      expect(savedData.timestamp).toBeLessThanOrEqual(afterSave)
+    })
+  })
+
+  describe('load', () => {
+    beforeEach(() => {
+      localStorageMock.clear()
+      vi.clearAllMocks()
+      resetStore()
+    })
+
+    it('should do nothing if no save exists', () => {
+      // No save in localStorage (it's cleared)
+      const stateBefore = { ...useGameStore.getState() }
+      
+      useGameStore.getState().load()
+      
+      // Coins should still be 0
+      expect(useGameStore.getState().coins.eq(stateBefore.coins)).toBe(true)
+    })
+
+    it('should restore saved state', () => {
+      const saveData = {
+        coins: '5000',
+        bricksBroken: '250',
+        totalBricksBroken: '1000',
+        prestigeLevel: 3,
+        upgrades: { speed: 2, damage: 3, coinMult: 1 },
+        ballCosts: {
+          basic: '15',
+          fast: '75',
+          heavy: '150',
+          plasma: '750',
+          explosive: '1500',
+          sniper: '3750',
+        },
+        upgradeCosts: {
+          speed: '150',
+          damage: '225',
+          coinMult: '300',
+        },
+        currentTier: 4,
+        balls: ['basic', 'plasma'],
+        timestamp: Date.now() - 1000, // 1 second ago (no offline bonus)
+      }
+      localStorageMock._setStore({ idleBricksSave: JSON.stringify(saveData) })
+
+      useGameStore.getState().load()
+
+      const state = useGameStore.getState()
+      expect(state.coins.gte(5000)).toBe(true) // May have small offline bonus
+      expect(state.bricksBroken.eq(250)).toBe(true)
+      expect(state.totalBricksBroken.eq(1000)).toBe(true)
+      expect(state.prestigeLevel).toBe(3)
+      expect(state.upgrades.speed).toBe(2)
+      expect(state.upgrades.damage).toBe(3)
+      expect(state.upgrades.coinMult).toBe(1)
+      expect(state.currentTier).toBe(4)
+      expect(state.balls.length).toBe(2)
+    })
+
+    it('should recreate balls with correct types', () => {
+      const saveData = {
+        coins: '100',
+        bricksBroken: '0',
+        totalBricksBroken: '0',
+        prestigeLevel: 0,
+        upgrades: { speed: 0, damage: 0, coinMult: 0 },
+        ballCosts: {},
+        upgradeCosts: {},
+        currentTier: 1,
+        balls: ['basic', 'heavy', 'sniper'],
+        timestamp: Date.now(),
+      }
+      localStorageMock._setStore({ idleBricksSave: JSON.stringify(saveData) })
+
+      useGameStore.getState().load()
+
+      const balls = useGameStore.getState().balls
+      expect(balls.map(b => b.type)).toEqual(['basic', 'heavy', 'sniper'])
+    })
+
+    it('should calculate offline earnings for time > 1 minute', () => {
+      const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
+      const saveData = {
+        coins: '1000',
+        bricksBroken: '100',
+        totalBricksBroken: '0',
+        prestigeLevel: 1,
+        upgrades: { speed: 0, damage: 0, coinMult: 2 },
+        ballCosts: {},
+        upgradeCosts: {},
+        currentTier: 1,
+        balls: ['basic', 'basic', 'basic'],
+        timestamp: fiveMinutesAgo,
+      }
+      localStorageMock._setStore({ idleBricksSave: JSON.stringify(saveData) })
+
+      useGameStore.getState().load()
+
+      // Should have more than starting coins due to offline earnings
+      expect(useGameStore.getState().coins.gt(1000)).toBe(true)
+    })
+
+    it('should handle corrupted save data gracefully', () => {
+      localStorageMock._setStore({ idleBricksSave: 'not valid json {{{' })
+      
+      // Should not throw
+      expect(() => useGameStore.getState().load()).not.toThrow()
+    })
+
+    it('should use defaults for missing ball costs', () => {
+      const saveData = {
+        coins: '100',
+        balls: ['basic'],
+        timestamp: Date.now(),
+      }
+      localStorageMock._setStore({ idleBricksSave: JSON.stringify(saveData) })
+
+      useGameStore.getState().load()
+
+      // Should have default ball costs
+      expect(useGameStore.getState().ballCosts.basic.eq(BALL_TYPES.basic.baseCost)).toBe(true)
+    })
+
+    it('should create default ball if no balls in save', () => {
+      const saveData = {
+        coins: '100',
+        balls: [],
+        timestamp: Date.now(),
+      }
+      localStorageMock._setStore({ idleBricksSave: JSON.stringify(saveData) })
+
+      useGameStore.getState().load()
+
+      expect(useGameStore.getState().balls.length).toBe(1)
+      expect(useGameStore.getState().balls[0].type).toBe('basic')
     })
   })
 })
