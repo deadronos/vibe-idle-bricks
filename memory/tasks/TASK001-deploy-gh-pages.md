@@ -38,4 +38,6 @@ The project is a Vite + React application. To deploy to GitHub Pages, we need to
 - Task created.
 - Updated `vite.config.ts` with `base: '/vibe-idle-bricks/'`.
 - Created `.github/workflows/deploy.yml` using `actions/deploy-pages@v4`.
+- Updated workflow to trigger only on tags `v*`.
+- Fixed build error in `tests/setup.ts` by replacing `global` with `vi.stubGlobal`.
 - Task completed.
