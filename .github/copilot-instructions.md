@@ -55,6 +55,7 @@ Never use raw `number` for coins, health, damage, or values that can grow unboun
 npm run dev      # Start dev server (Vite HMR)
 npm run build    # TypeScript check + production build
 npm run lint     # ESLint
+npm run typecheck # TypeScript type checking without emit
 npm run test     # Run Vitest unit tests
 npm run preview  # Preview production build
 ```

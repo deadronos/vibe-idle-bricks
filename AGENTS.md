@@ -69,6 +69,7 @@ Always use `generateId()` from `src/utils/helpers.ts` for entity IDs. Never use 
 npm run dev      # Start dev server
 npm run build    # TypeScript check + production build
 npm run lint     # ESLint
+npm run typecheck # Run TypeScript type checking without emit
 npm run preview  # Preview production build
 ```
 
@@ -140,6 +141,7 @@ This project uses a structured Memory Bank in `/memory/` for context persistence
 - Tests located in `tests/` directory
 - Manual testing via `npm run dev`
 - Validate TypeScript with `npm run build`
+- Type-check only via `npm run typecheck`
 - Lint with `npm run lint`
 
 ## Auto-Save
