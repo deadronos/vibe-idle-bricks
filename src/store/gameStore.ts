@@ -49,6 +49,8 @@ interface GameStore {
   save: () => void;
   load: () => void;
   reset: () => void;
+  exportSave: () => string;
+  importSave: (data: string) => boolean;
   setPaused: (paused: boolean) => void;
   getDamageMult: () => number;
   getCoinMult: () => number;
@@ -281,6 +283,87 @@ export const useGameStore = create<GameStore>()(
         timestamp: Date.now(),
       };
       localStorage.setItem('idleBricksSave', JSON.stringify(saveData));
+    },
+
+    exportSave: () => {
+      const state = get();
+      const saveData = {
+        coins: state.coins.toString(),
+        bricksBroken: state.bricksBroken.toString(),
+        totalBricksBroken: state.totalBricksBroken.toString(),
+        prestigeLevel: state.prestigeLevel,
+        upgrades: state.upgrades,
+        ballCosts: Object.fromEntries(
+          Object.entries(state.ballCosts).map(([k, v]) => [k, v.toString()])
+        ),
+        upgradeCosts: Object.fromEntries(
+          Object.entries(state.upgradeCosts).map(([k, v]) => [k, v.toString()])
+        ),
+        currentTier: state.currentTier,
+        balls: state.balls.map((b) => b.type),
+        timestamp: Date.now(),
+        version: 1,
+      };
+      return JSON.stringify(saveData);
+    },
+
+    importSave: (data: string) => {
+      try {
+        const saveData = JSON.parse(data);
+        const state = get();
+        const { width, height } = state.canvasSize;
+
+        // Basic validation
+        if (typeof saveData.coins === 'undefined' || typeof saveData.prestigeLevel === 'undefined') {
+          console.error('Invalid save data: missing required fields');
+          return false;
+        }
+
+        // Recreate balls
+        const balls: BallData[] = (saveData.balls || ['basic']).map((type: BallType) => {
+          const config = BALL_TYPES[type] || BALL_TYPES.basic;
+          const x = width / 2 + (Math.random() - 0.5) * 200;
+          const y = height - 50;
+          const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI / 3;
+          return {
+            id: generateId(),
+            type,
+            x,
+            y,
+            dx: Math.cos(angle) * config.speed,
+            dy: Math.sin(angle) * config.speed,
+          };
+        });
+
+        const ballCosts: Record<BallType, Decimal> = {} as Record<BallType, Decimal>;
+        for (const [key, value] of Object.entries(saveData.ballCosts || {})) {
+          ballCosts[key as BallType] = new Decimal(value as string);
+        }
+
+        const upgradeCosts: Record<keyof Upgrades, Decimal> = {} as Record<keyof Upgrades, Decimal>;
+        for (const [key, value] of Object.entries(saveData.upgradeCosts || {})) {
+          upgradeCosts[key as keyof Upgrades] = new Decimal(value as string);
+        }
+
+        set({
+          coins: new Decimal(saveData.coins || 0),
+          bricksBroken: new Decimal(saveData.bricksBroken || 0),
+          totalBricksBroken: new Decimal(saveData.totalBricksBroken || 0),
+          prestigeLevel: saveData.prestigeLevel || 0,
+          upgrades: saveData.upgrades || { speed: 0, damage: 0, coinMult: 0 },
+          ballCosts: Object.keys(ballCosts).length > 0 ? ballCosts : getDefaultBallCosts(),
+          upgradeCosts: Object.keys(upgradeCosts).length > 0 ? upgradeCosts : getDefaultUpgradeCosts(),
+          currentTier: saveData.currentTier || 1,
+          balls: balls.length > 0 ? balls : [createInitialBall(width, height)],
+          bricks: [],
+          explosions: [],
+        });
+
+        return true;
+      } catch (e) {
+        console.error('Failed to import save:', e);
+        return false;
+      }
     },
 
     load: () => {
