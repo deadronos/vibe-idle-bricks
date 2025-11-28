@@ -6,7 +6,7 @@ _No tasks currently in progress._
 
 ## Pending
 
-_No pending tasks._
+- [TASK003] Game Balance Improvements - Implement balance changes from DESIGN003
 
 ## Completed
 
