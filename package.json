@@ -1,0 +1,19 @@
+{
+  "name": "vibe-idle-bricks",
+  "version": "1.0.0",
+  "description": "An idle/incremental breakout style game with multiple balls, upgrades, and prestige mechanics",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "idle",
+    "incremental",
+    "breakout",
+    "game",
+    "canvas"
+  ],
+  "author": "",
+  "license": "MIT"
+}
