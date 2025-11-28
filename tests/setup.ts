@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import { afterEach, vi } from 'vitest'
 
 // Cleanup after each test case (e.g., clearing jsdom)
 afterEach(() => {
@@ -23,8 +23,8 @@ Object.defineProperty(window, 'matchMedia', {
 })
 
 // Mock ResizeObserver for components that use it
-global.ResizeObserver = class ResizeObserver {
+vi.stubGlobal('ResizeObserver', class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
-}
+})
