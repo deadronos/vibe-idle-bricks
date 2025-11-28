@@ -9,6 +9,7 @@ export function Shop() {
   const coins = useGameStore((state) => state.coins);
   const ballCosts = useGameStore((state) => state.ballCosts);
   const upgradeCosts = useGameStore((state) => state.upgradeCosts);
+  const upgrades = useGameStore((state) => state.upgrades);
   const bricksBroken = useGameStore((state) => state.bricksBroken);
   const prestigeLevel = useGameStore((state) => state.prestigeLevel);
   const canPrestige = useGameStore((state) => state.canPrestige);
@@ -65,6 +66,7 @@ export function Shop() {
             description="All balls +10% speed"
             cost={upgradeCosts.speed}
             coins={coins}
+            level={upgrades.speed}
             onBuy={() => buyUpgrade('speed')}
           />
           <UpgradeButton
@@ -73,6 +75,7 @@ export function Shop() {
             description="All balls +10% damage"
             cost={upgradeCosts.damage}
             coins={coins}
+            level={upgrades.damage}
             onBuy={() => buyUpgrade('damage')}
           />
           <UpgradeButton
@@ -81,6 +84,7 @@ export function Shop() {
             description="+10% coins earned"
             cost={upgradeCosts.coinMult}
             coins={coins}
+            level={upgrades.coinMult}
             onBuy={() => buyUpgrade('coinMult')}
           />
         </div>
@@ -112,15 +116,16 @@ interface UpgradeButtonProps {
   description: string;
   cost: import('break_infinity.js').default;
   coins: import('break_infinity.js').default;
+  level: number;
   onBuy: () => void;
 }
 
-function UpgradeButton({ name, description, cost, coins, onBuy }: UpgradeButtonProps) {
+function UpgradeButton({ name, description, cost, coins, level, onBuy }: UpgradeButtonProps) {
   const canAfford = coins.gte(cost);
 
   return (
     <button className="shop-item" disabled={!canAfford} onClick={onBuy}>
-      <span className="item-name">{name}</span>
+      <span className="item-name">{name} <span className="item-level">Lv.{level}</span></span>
       <span className="item-cost">{formatNumber(cost)}</span> coins
       <div className="item-desc">{description}</div>
     </button>
