@@ -1,73 +1,75 @@
-# React + TypeScript + Vite
+# 🧱 Idle Bricks
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An idle/incremental breakout-style game where balls autonomously smash through bricks while you upgrade and expand your arsenal.
 
-Currently, two official plugins are available:
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
+![Phaser](https://img.shields.io/badge/Phaser-3-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🎮 How to Play
 
-## React Compiler
+1. **Watch balls bounce** — They automatically break bricks and earn coins
+2. **Buy upgrades** — Increase speed, damage, and coin multipliers
+3. **Unlock new balls** — Each type has unique abilities
+4. **Tier up** — Breaking 100 bricks increases brick tier (harder but more valuable)
+5. **Prestige** — Reset at 10,000 bricks for permanent +25% coin bonus
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🎱 Ball Types
 
-## Expanding the ESLint configuration
+| Ball | Cost | Special Ability |
+|------|------|-----------------|
+| ⚪ Basic | 10 | Standard starter ball |
+| 🔵 Fast | 50 | 2× speed for more hits |
+| 🟠 Heavy | 100 | 3× damage, slower movement |
+| 🟣 Plasma | 500 | Pierces through bricks |
+| 🔴 Explosive | 1,000 | Area-of-effect damage |
+| 🟢 Sniper | 2,500 | Targets weakest bricks |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## ⚡ Features
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Autonomous gameplay** — Runs itself while you strategize upgrades
+- **6 unique ball types** — Each with distinct physics and abilities
+- **10 brick tiers** — Progressive difficulty with scaling rewards
+- **Prestige system** — Permanent bonuses for long-term progression
+- **Auto-save** — Progress saved every 30 seconds + offline earnings
+- **Large number support** — Handles arbitrarily large values with break_infinity.js
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🛠️ Tech Stack
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **React 19** — UI components and state display
+- **Phaser 3** — Game engine for physics and rendering
+- **Zustand** — Centralized state management
+- **TypeScript** — Type-safe codebase
+- **Vite** — Fast development and builds
+
+## 🚀 Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📁 Project Structure
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+src/
+├── components/     # React UI (Shop, Stats, Footer)
+├── game/           # Phaser GameScene and physics
+├── store/          # Zustand game state
+├── types/          # TypeScript definitions
+└── utils/          # Helper functions
 ```
+
+## 📄 License
+
+MIT
