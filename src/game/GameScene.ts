@@ -112,7 +112,9 @@ export class GameScene extends Phaser.Scene {
     const damageMult = store.getDamageMult();
     const coinMult = store.getCoinMult();
 
-    const updatedBalls = store.balls.map((ball) => {
+    const updatedBalls: BallData[] = [];
+
+    for (const ball of store.balls) {
       const config = BALL_TYPES[ball.type];
       const actualSpeed = config.speed * speedMult;
 
@@ -155,12 +157,16 @@ export class GameScene extends Phaser.Scene {
         dy = -Math.abs(dy);
       }
 
-      return { ...ball, x, y, dx, dy };
-    });
+      // Create updated ball with new position
+      let updatedBall: BallData = { ...ball, x, y, dx, dy };
 
-    // Check brick collisions
-    for (const ball of updatedBalls) {
-      this.checkBrickCollisions(ball, damageMult, coinMult);
+      // Check brick collisions with the updated position
+      const bounceResult = this.checkBrickCollisions(updatedBall, damageMult, coinMult, config);
+      if (bounceResult) {
+        updatedBall = { ...updatedBall, dx: bounceResult.dx, dy: bounceResult.dy };
+      }
+
+      updatedBalls.push(updatedBall);
     }
 
     // Update store with new ball positions
@@ -202,9 +208,13 @@ export class GameScene extends Phaser.Scene {
     return [dx, dy];
   }
 
-  checkBrickCollisions(ball: BallData, damageMult: number, coinMult: number) {
+  checkBrickCollisions(
+    ball: BallData,
+    damageMult: number,
+    coinMult: number,
+    config: typeof BALL_TYPES[keyof typeof BALL_TYPES]
+  ): { dx: number; dy: number } | null {
     const store = useGameStore.getState();
-    const config = BALL_TYPES[ball.type];
     const actualDamage = new Decimal(config.damage).mul(damageMult);
 
     for (const brick of store.bricks) {
@@ -223,11 +233,11 @@ export class GameScene extends Phaser.Scene {
 
         // Bounce unless piercing
         if (!config.pierce) {
-          this.bounceOffBrick(ball, brick);
-          break;
+          return this.calculateBounce(ball, brick);
         }
       }
     }
+    return null;
   }
 
   ballCollidesWithBrick(ball: BallData, brick: BrickData): boolean {
@@ -238,27 +248,20 @@ export class GameScene extends Phaser.Scene {
     return distX * distX + distY * distY < 64; // 8 * 8 radius squared
   }
 
-  bounceOffBrick(ball: BallData, brick: BrickData) {
+  calculateBounce(ball: BallData, brick: BrickData): { dx: number; dy: number } {
     const brickCenterX = brick.x + brick.width / 2;
     const brickCenterY = brick.y + brick.height / 2;
-    const dx = ball.x - brickCenterX;
-    const dy = ball.y - brickCenterY;
+    const deltaX = ball.x - brickCenterX;
+    const deltaY = ball.y - brickCenterY;
 
-    const normalizedX = dx / (brick.width / 2);
-    const normalizedY = dy / (brick.height / 2);
+    const normalizedX = deltaX / (brick.width / 2);
+    const normalizedY = deltaY / (brick.height / 2);
 
-    const updatedBalls = useGameStore.getState().balls.map((b) => {
-      if (b.id === ball.id) {
-        if (Math.abs(normalizedX) > Math.abs(normalizedY)) {
-          return { ...b, dx: Math.abs(b.dx) * Math.sign(dx) };
-        } else {
-          return { ...b, dy: Math.abs(b.dy) * Math.sign(dy) };
-        }
-      }
-      return b;
-    });
-
-    useGameStore.setState({ balls: updatedBalls });
+    if (Math.abs(normalizedX) > Math.abs(normalizedY)) {
+      return { dx: Math.abs(ball.dx) * Math.sign(deltaX), dy: ball.dy };
+    } else {
+      return { dx: ball.dx, dy: Math.abs(ball.dy) * Math.sign(deltaY) };
+    }
   }
 
   explode(x: number, y: number, radius: number, damage: Decimal, coinMult: number) {
@@ -445,7 +448,8 @@ class BrickManager {
 
         const tierVariation = Math.floor(Math.random() * 3) - 1;
         const tier = Math.max(1, baseTier + tierVariation);
-        const maxHealth = new Decimal(Math.ceil(tier * 1.5));
+        // Health scales linearly with tier: tier 1 = 3, tier 5 = 15, tier 10 = 30
+        const maxHealth = new Decimal(tier * 3);
 
         bricks.push({
           id: generateId(),
@@ -499,7 +503,8 @@ class BrickManager {
 
           const tierVariation = Math.floor(Math.random() * 3) - 1;
           const tier = Math.max(1, baseTier + tierVariation);
-          const maxHealth = new Decimal(Math.ceil(tier * 1.5));
+          // Health scales linearly with tier: tier 1 = 3, tier 5 = 15, tier 10 = 30
+          const maxHealth = new Decimal(tier * 3);
 
           newBricks.push({
             id: generateId(),
