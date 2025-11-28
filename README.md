@@ -1,92 +1,75 @@
 # 🧱 Idle Bricks
 
-An idle/incremental breakout style game where you use multiple balls of different strengths, speeds, and special abilities to smash a million bricks (eventually)!
+An idle/incremental breakout-style game where balls autonomously smash through bricks while you upgrade and expand your arsenal.
+
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
+![Phaser](https://img.shields.io/badge/Phaser-3-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 ## 🎮 How to Play
 
-1. **Open the game** - Simply open `index.html` in a modern web browser, or run `npm start`
-2. **Watch the balls bounce** - Balls automatically break bricks and earn you coins
-3. **Buy more balls** - Use coins to purchase different types of balls with unique abilities
-4. **Upgrade your balls** - Increase speed, damage, and coin earnings
-5. **Prestige** - After breaking 10,000 bricks, prestige for permanent bonuses
+1. **Watch balls bounce** — They automatically break bricks and earn coins
+2. **Buy upgrades** — Increase speed, damage, and coin multipliers
+3. **Unlock new balls** — Each type has unique abilities
+4. **Tier up** — Breaking 100 bricks increases brick tier (harder but more valuable)
+5. **Prestige** — Reset at 10,000 bricks for permanent +25% coin bonus
 
-## 🎾 Ball Types
+## 🎱 Ball Types
 
-| Ball | Cost | Description |
-|------|------|-------------|
-| **Basic Ball** | 10 | Standard ball, nothing special |
-| **Fast Ball** | 50 | 2x speed for faster brick breaking |
-| **Heavy Ball** | 100 | 3x damage to break tougher bricks quickly |
-| **Plasma Ball** | 500 | Pierces through bricks without bouncing |
-| **Explosive Ball** | 1,000 | Damages nearby bricks on impact |
-| **Sniper Ball** | 2,500 | Automatically targets the weakest bricks |
+| Ball | Cost | Special Ability |
+|------|------|-----------------|
+| ⚪ Basic | 10 | Standard starter ball |
+| 🔵 Fast | 50 | 2× speed for more hits |
+| 🟠 Heavy | 100 | 3× damage, slower movement |
+| 🟣 Plasma | 500 | Pierces through bricks |
+| 🔴 Explosive | 1,000 | Area-of-effect damage |
+| 🟢 Sniper | 2,500 | Targets weakest bricks |
 
-## ⬆️ Upgrades
+## ⚡ Features
 
-- **Speed Boost** - All balls move 10% faster
-- **Power Boost** - All balls deal 10% more damage
-- **Coin Multiplier** - Earn 10% more coins
+- **Autonomous gameplay** — Runs itself while you strategize upgrades
+- **6 unique ball types** — Each with distinct physics and abilities
+- **10 brick tiers** — Progressive difficulty with scaling rewards
+- **Prestige system** — Permanent bonuses for long-term progression
+- **Auto-save** — Progress saved every 30 seconds + offline earnings
+- **Large number support** — Handles arbitrarily large values with break_infinity.js
 
-## 🌟 Prestige System
+## 🛠️ Tech Stack
 
-After breaking 10,000 bricks, you can **prestige** to:
-- Reset your progress (coins, balls, upgrades)
-- Gain a permanent +25% coin bonus
-- Each prestige stacks for greater bonuses!
+- **React 19** — UI components and state display
+- **Phaser 3** — Game engine for physics and rendering
+- **Zustand** — Centralized state management
+- **TypeScript** — Type-safe codebase
+- **Vite** — Fast development and builds
 
-## 💾 Save System
+## 🚀 Getting Started
 
-- Game auto-saves every 30 seconds
-- Manual save with the "Save" button
-- Progress is stored in your browser's localStorage
-- Offline progress is calculated when you return
-
-## 🛠️ Running the Game
-
-### Option 1: Direct Browser
-Simply open `index.html` in any modern web browser (Chrome, Firefox, Safari, Edge).
-
-### Option 2: Local Server
 ```bash
-npm start
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
-Then open http://localhost:3000 in your browser.
-
-## 🎯 Goal
-
-Break a million bricks! The game features:
-- Progressively tougher bricks with higher tiers
-- Scaling costs for balls and upgrades
-- Strategic decisions on which balls and upgrades to buy
-- Prestige mechanics for long-term progression
 
 ## 📁 Project Structure
 
-```
-vibe-idle-bricks/
-├── index.html      # Main HTML file
-├── css/
-│   └── style.css   # Game styling
-├── js/
-│   ├── main.js     # Entry point and event handlers
-│   ├── game.js     # Main game loop and state
-│   ├── ball.js     # Ball class with different types
-│   └── brick.js    # Brick class and brick manager
-├── package.json    # NPM configuration
-└── README.md       # This file
+```text
+src/
+├── components/     # React UI (Shop, Stats, Footer)
+├── game/           # Phaser GameScene and physics
+├── store/          # Zustand game state
+├── types/          # TypeScript definitions
+└── utils/          # Helper functions
 ```
 
-## 🎨 Features
+## 📄 License
 
-- ✅ Multiple ball types with unique abilities
-- ✅ Upgrade system for speed, damage, and coins
-- ✅ Prestige system for long-term progression
-- ✅ Auto-save and manual save
-- ✅ Offline progress calculation
-- ✅ Responsive design
-- ✅ Visual effects (explosions, glowing balls)
-- ✅ Progressive brick tiers
-
-## 📜 License
-
-MIT License
+MIT
