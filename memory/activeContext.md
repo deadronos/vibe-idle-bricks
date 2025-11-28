@@ -9,6 +9,8 @@ Memory Bank initialization completed. The project is in a functional MVP state w
 - Created Memory Bank structure with all core files
 - Documented project architecture and patterns
 - Established task tracking system
+- Added GitHub Pages deployment workflow (`.github/workflows/deploy.yml`)
+- Configured Vite base path for GitHub Pages deployment
 
 ## Current State
 
