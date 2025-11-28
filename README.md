@@ -1,92 +1,73 @@
-# 🧱 Idle Bricks
+# React + TypeScript + Vite
 
-An idle/incremental breakout style game where you use multiple balls of different strengths, speeds, and special abilities to smash a million bricks (eventually)!
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## 🎮 How to Play
+Currently, two official plugins are available:
 
-1. **Open the game** - Simply open `index.html` in a modern web browser, or run `npm start`
-2. **Watch the balls bounce** - Balls automatically break bricks and earn you coins
-3. **Buy more balls** - Use coins to purchase different types of balls with unique abilities
-4. **Upgrade your balls** - Increase speed, damage, and coin earnings
-5. **Prestige** - After breaking 10,000 bricks, prestige for permanent bonuses
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## 🎾 Ball Types
+## React Compiler
 
-| Ball | Cost | Description |
-|------|------|-------------|
-| **Basic Ball** | 10 | Standard ball, nothing special |
-| **Fast Ball** | 50 | 2x speed for faster brick breaking |
-| **Heavy Ball** | 100 | 3x damage to break tougher bricks quickly |
-| **Plasma Ball** | 500 | Pierces through bricks without bouncing |
-| **Explosive Ball** | 1,000 | Damages nearby bricks on impact |
-| **Sniper Ball** | 2,500 | Automatically targets the weakest bricks |
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## ⬆️ Upgrades
+## Expanding the ESLint configuration
 
-- **Speed Boost** - All balls move 10% faster
-- **Power Boost** - All balls deal 10% more damage
-- **Coin Multiplier** - Earn 10% more coins
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-## 🌟 Prestige System
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-After breaking 10,000 bricks, you can **prestige** to:
-- Reset your progress (coins, balls, upgrades)
-- Gain a permanent +25% coin bonus
-- Each prestige stacks for greater bonuses!
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-## 💾 Save System
-
-- Game auto-saves every 30 seconds
-- Manual save with the "Save" button
-- Progress is stored in your browser's localStorage
-- Offline progress is calculated when you return
-
-## 🛠️ Running the Game
-
-### Option 1: Direct Browser
-Simply open `index.html` in any modern web browser (Chrome, Firefox, Safari, Edge).
-
-### Option 2: Local Server
-```bash
-npm start
-```
-Then open http://localhost:3000 in your browser.
-
-## 🎯 Goal
-
-Break a million bricks! The game features:
-- Progressively tougher bricks with higher tiers
-- Scaling costs for balls and upgrades
-- Strategic decisions on which balls and upgrades to buy
-- Prestige mechanics for long-term progression
-
-## 📁 Project Structure
-
-```
-vibe-idle-bricks/
-├── index.html      # Main HTML file
-├── css/
-│   └── style.css   # Game styling
-├── js/
-│   ├── main.js     # Entry point and event handlers
-│   ├── game.js     # Main game loop and state
-│   ├── ball.js     # Ball class with different types
-│   └── brick.js    # Brick class and brick manager
-├── package.json    # NPM configuration
-└── README.md       # This file
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-## 🎨 Features
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-- ✅ Multiple ball types with unique abilities
-- ✅ Upgrade system for speed, damage, and coins
-- ✅ Prestige system for long-term progression
-- ✅ Auto-save and manual save
-- ✅ Offline progress calculation
-- ✅ Responsive design
-- ✅ Visual effects (explosions, glowing balls)
-- ✅ Progressive brick tiers
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-## 📜 License
-
-MIT License
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```

@@ -1,0 +1,270 @@
+/* Game Container */
+.game-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+/* Header */
+header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  color: #ffd700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  margin-bottom: 15px;
+}
+
+/* Stats */
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px 25px;
+  border-radius: 10px;
+  text-align: center;
+  min-width: 120px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #4ade80;
+}
+
+.stat label {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+/* Main Layout */
+main {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.game-area {
+  flex: 1;
+  min-width: 400px;
+  max-width: calc(100vw - 380px);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  padding: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  height: calc(100vh - 220px);
+  max-height: 600px;
+}
+
+.game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.game-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Shop Panel */
+.shop-panel {
+  width: 320px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  padding: 20px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.shop-panel h2 {
+  text-align: center;
+  color: #ffd700;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.shop-section {
+  margin-bottom: 25px;
+}
+
+.shop-section h3 {
+  color: #64b5f6;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 5px;
+}
+
+.shop-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shop-item {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  border: 2px solid #4a5568;
+  border-radius: 10px;
+  padding: 12px 15px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #eee;
+}
+
+.shop-item:hover:not(:disabled) {
+  border-color: #ffd700;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
+}
+
+.shop-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shop-item .item-name {
+  display: block;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 3px;
+}
+
+.shop-item .item-cost {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.shop-item .item-desc {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-top: 3px;
+}
+
+/* Ball type colors */
+.ball-basic .item-name { color: #9ca3af; }
+.ball-fast .item-name { color: #60a5fa; }
+.ball-heavy .item-name { color: #f97316; }
+.ball-plasma .item-name { color: #a855f7; }
+.ball-explosive .item-name { color: #ef4444; }
+.ball-sniper .item-name { color: #10b981; }
+
+/* Prestige Button */
+.prestige-btn {
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%) !important;
+  border-color: #8b5cf6 !important;
+}
+
+.prestige-btn:hover:not(:disabled) {
+  border-color: #a78bfa !important;
+  box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Footer */
+.footer {
+  margin-top: 20px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-reset {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.btn-reset:hover {
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+}
+
+.auto-save-status {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Scrollbar styling */
+.shop-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.shop-panel::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.shop-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.shop-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 1000px) {
+  main {
+    flex-direction: column;
+  }
+
+  .game-area {
+    min-width: 100%;
+    max-width: 100%;
+    height: 400px;
+  }
+
+  .shop-panel {
+    width: 100%;
+    max-height: none;
+  }
+}
+
+@media (max-width: 600px) {
+  header h1 {
+    font-size: 1.8rem;
+  }
+
+  .stats {
+    gap: 10px;
+  }
+
+  .stat {
+    padding: 10px 15px;
+    min-width: 80px;
+  }
+
+  .stat-value {
+    font-size: 1.3rem;
+  }
+}
