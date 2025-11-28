@@ -19,6 +19,8 @@ export class GameScene extends Phaser.Scene {
   private brickSprites: Map<string, PhysicsBrick> = new Map();
   private brickGroup!: Phaser.Physics.Arcade.StaticGroup;
   private viewportOffset: { x: number; y: number } = { x: 0, y: 0 };
+  private regenerationCheckTimer: number = 0;
+  private readonly REGENERATION_CHECK_INTERVAL: number = 500; // Check every 500ms
 
   constructor() {
     super({ key: 'GameScene' });
@@ -85,7 +87,7 @@ export class GameScene extends Phaser.Scene {
   /**
    * Update loop - called each frame
    */
-  update(): void {
+  update(_time: number, delta: number): void {
     // Sync ball count with store
     this.syncBalls();
 
@@ -97,6 +99,23 @@ export class GameScene extends Phaser.Scene {
 
     // Update collision handler for new balls/bricks
     this.updateCollisions();
+
+    // Check if we need to regenerate bricks (throttled)
+    this.regenerationCheckTimer += delta;
+    if (this.regenerationCheckTimer >= this.REGENERATION_CHECK_INTERVAL) {
+      this.regenerationCheckTimer = 0;
+      this.checkAndRegenerateBricks();
+    }
+  }
+
+  /**
+   * Checks if all visible bricks are destroyed and regenerates them
+   */
+  private checkAndRegenerateBricks(): void {
+    const store = useGameStore.getState();
+    if (!store.hasVisibleBricks()) {
+      store.regenerateBricks();
+    }
   }
 
   /**

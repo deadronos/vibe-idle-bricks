@@ -54,6 +54,8 @@ interface GameActions {
   initializeBricks: () => void;
   getVisibleBricks: () => BrickData[];
   getBrickById: (id: string) => BrickData | undefined;
+  regenerateBricks: () => void;
+  hasVisibleBricks: () => boolean;
   resetGame: () => void;
 }
 
@@ -382,6 +384,74 @@ export const useGameStore = create<GameStore>((set, get) => ({
    */
   getBrickById: (id: string) => {
     return get().brickGrid.get(id);
+  },
+
+  /**
+   * Checks if there are any visible (non-destroyed) bricks
+   */
+  hasVisibleBricks: () => {
+    const state = get();
+    const { viewportX, viewportY, brickGrid } = state;
+    
+    const startRow = Math.floor(viewportY / (GAME_CONSTANTS.BRICK_HEIGHT + GAME_CONSTANTS.BRICK_PADDING));
+    const endRow = startRow + Math.ceil(GAME_CONSTANTS.GAME_HEIGHT / (GAME_CONSTANTS.BRICK_HEIGHT + GAME_CONSTANTS.BRICK_PADDING)) + GAME_CONSTANTS.VIEWPORT_PADDING;
+    
+    const startCol = Math.floor(viewportX / (GAME_CONSTANTS.BRICK_WIDTH + GAME_CONSTANTS.BRICK_PADDING));
+    const endCol = startCol + Math.ceil(GAME_CONSTANTS.GAME_WIDTH / (GAME_CONSTANTS.BRICK_WIDTH + GAME_CONSTANTS.BRICK_PADDING)) + GAME_CONSTANTS.VIEWPORT_PADDING;
+    
+    for (let row = Math.max(0, startRow); row <= endRow; row++) {
+      for (let col = Math.max(0, startCol); col <= endCol; col++) {
+        const brickId = `${row}-${col}`;
+        const brick = brickGrid.get(brickId);
+        if (brick && !brick.destroyed) {
+          return true;
+        }
+      }
+    }
+    return false;
+  },
+
+  /**
+   * Regenerates all destroyed bricks in the visible area with increased health
+   */
+  regenerateBricks: () => {
+    const state = get();
+    const { viewportX, viewportY, brickGrid } = state;
+    
+    const startRow = Math.floor(viewportY / (GAME_CONSTANTS.BRICK_HEIGHT + GAME_CONSTANTS.BRICK_PADDING));
+    const endRow = startRow + Math.ceil(GAME_CONSTANTS.GAME_HEIGHT / (GAME_CONSTANTS.BRICK_HEIGHT + GAME_CONSTANTS.BRICK_PADDING)) + GAME_CONSTANTS.VIEWPORT_PADDING;
+    
+    const startCol = Math.floor(viewportX / (GAME_CONSTANTS.BRICK_WIDTH + GAME_CONSTANTS.BRICK_PADDING));
+    const endCol = startCol + Math.ceil(GAME_CONSTANTS.GAME_WIDTH / (GAME_CONSTANTS.BRICK_WIDTH + GAME_CONSTANTS.BRICK_PADDING)) + GAME_CONSTANTS.VIEWPORT_PADDING;
+    
+    const newBrickGrid = new Map(brickGrid);
+    let regeneratedCount = 0;
+    
+    for (let row = Math.max(0, startRow); row <= endRow; row++) {
+      for (let col = Math.max(0, startCol); col <= endCol; col++) {
+        const brickId = `${row}-${col}`;
+        const existingBrick = brickGrid.get(brickId);
+        
+        if (existingBrick && existingBrick.destroyed) {
+          // Regenerate with slightly more health each wave
+          const waveMultiplier = 1 + Math.floor(state.destroyedBricks / 100) * 0.1;
+          const baseHealth = 1 + Math.floor(row / 10);
+          const newHealth = new Decimal(baseHealth * waveMultiplier);
+          
+          newBrickGrid.set(brickId, {
+            ...existingBrick,
+            health: newHealth,
+            maxHealth: newHealth,
+            destroyed: false,
+          });
+          regeneratedCount++;
+        }
+      }
+    }
+    
+    if (regeneratedCount > 0) {
+      set({ brickGrid: newBrickGrid });
+    }
   },
 
   /**
