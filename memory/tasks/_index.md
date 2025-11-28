@@ -10,6 +10,7 @@ _No pending tasks._
 
 ## Completed
 
+- [TASK002] Introduce Export/Import Save Buttons - Completed on 2025-11-28
 - [TASK001] Create GitHub Pages Deployment Workflow - Completed on 2025-11-28
 
 ## Abandoned

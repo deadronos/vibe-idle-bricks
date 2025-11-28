@@ -609,4 +609,237 @@ describe('gameStore', () => {
       expect(useGameStore.getState().balls[0].type).toBe('basic')
     })
   })
+
+  describe('exportSave', () => {
+    beforeEach(() => {
+      resetStore()
+    })
+
+    it('should return valid JSON string', () => {
+      const exported = useGameStore.getState().exportSave()
+      expect(() => JSON.parse(exported)).not.toThrow()
+    })
+
+    it('should include all essential game state', () => {
+      useGameStore.setState({
+        coins: new Decimal(5000),
+        bricksBroken: new Decimal(250),
+        totalBricksBroken: new Decimal(1000),
+        prestigeLevel: 3,
+        upgrades: { speed: 2, damage: 3, coinMult: 1 },
+        currentTier: 4,
+        balls: [
+          { id: 'ball-1', type: 'basic', x: 100, y: 100, dx: 1, dy: -1 },
+          { id: 'ball-2', type: 'plasma', x: 200, y: 200, dx: -1, dy: -1 },
+        ],
+      })
+
+      const exported = useGameStore.getState().exportSave()
+      const data = JSON.parse(exported)
+
+      expect(data.coins).toBe('5000')
+      expect(data.bricksBroken).toBe('250')
+      expect(data.totalBricksBroken).toBe('1000')
+      expect(data.prestigeLevel).toBe(3)
+      expect(data.upgrades).toEqual({ speed: 2, damage: 3, coinMult: 1 })
+      expect(data.currentTier).toBe(4)
+      expect(data.balls).toEqual(['basic', 'plasma'])
+    })
+
+    it('should include version number', () => {
+      const exported = useGameStore.getState().exportSave()
+      const data = JSON.parse(exported)
+      expect(data.version).toBe(1)
+    })
+
+    it('should include timestamp', () => {
+      const beforeExport = Date.now()
+      const exported = useGameStore.getState().exportSave()
+      const afterExport = Date.now()
+
+      const data = JSON.parse(exported)
+      expect(data.timestamp).toBeGreaterThanOrEqual(beforeExport)
+      expect(data.timestamp).toBeLessThanOrEqual(afterExport)
+    })
+
+    it('should serialize ball costs as strings', () => {
+      const exported = useGameStore.getState().exportSave()
+      const data = JSON.parse(exported)
+
+      expect(typeof data.ballCosts.basic).toBe('string')
+      expect(typeof data.ballCosts.plasma).toBe('string')
+    })
+
+    it('should serialize upgrade costs as strings', () => {
+      const exported = useGameStore.getState().exportSave()
+      const data = JSON.parse(exported)
+
+      expect(typeof data.upgradeCosts.speed).toBe('string')
+      expect(typeof data.upgradeCosts.damage).toBe('string')
+      expect(typeof data.upgradeCosts.coinMult).toBe('string')
+    })
+  })
+
+  describe('importSave', () => {
+    beforeEach(() => {
+      resetStore()
+    })
+
+    it('should return true on successful import', () => {
+      const saveData = {
+        coins: '5000',
+        bricksBroken: '250',
+        totalBricksBroken: '1000',
+        prestigeLevel: 3,
+        upgrades: { speed: 2, damage: 3, coinMult: 1 },
+        ballCosts: { basic: '15', fast: '75', heavy: '150', plasma: '750', explosive: '1500', sniper: '3750' },
+        upgradeCosts: { speed: '150', damage: '225', coinMult: '300' },
+        currentTier: 4,
+        balls: ['basic', 'plasma'],
+        timestamp: Date.now(),
+        version: 1,
+      }
+
+      const result = useGameStore.getState().importSave(JSON.stringify(saveData))
+      expect(result).toBe(true)
+    })
+
+    it('should restore game state from imported data', () => {
+      const saveData = {
+        coins: '5000',
+        bricksBroken: '250',
+        totalBricksBroken: '1000',
+        prestigeLevel: 3,
+        upgrades: { speed: 2, damage: 3, coinMult: 1 },
+        ballCosts: { basic: '15', fast: '75', heavy: '150', plasma: '750', explosive: '1500', sniper: '3750' },
+        upgradeCosts: { speed: '150', damage: '225', coinMult: '300' },
+        currentTier: 4,
+        balls: ['basic', 'plasma'],
+        timestamp: Date.now(),
+        version: 1,
+      }
+
+      useGameStore.getState().importSave(JSON.stringify(saveData))
+
+      const state = useGameStore.getState()
+      expect(state.coins.eq(5000)).toBe(true)
+      expect(state.bricksBroken.eq(250)).toBe(true)
+      expect(state.totalBricksBroken.eq(1000)).toBe(true)
+      expect(state.prestigeLevel).toBe(3)
+      expect(state.upgrades).toEqual({ speed: 2, damage: 3, coinMult: 1 })
+      expect(state.currentTier).toBe(4)
+      expect(state.balls.length).toBe(2)
+      expect(state.balls.map(b => b.type)).toEqual(['basic', 'plasma'])
+    })
+
+    it('should return false for invalid JSON', () => {
+      const result = useGameStore.getState().importSave('not valid json {{{')
+      expect(result).toBe(false)
+    })
+
+    it('should return false for missing required fields', () => {
+      const invalidData = { somethingElse: 'value' }
+      const result = useGameStore.getState().importSave(JSON.stringify(invalidData))
+      expect(result).toBe(false)
+    })
+
+    it('should clear bricks and explosions on import', () => {
+      useGameStore.setState({
+        bricks: [
+          { id: 'brick-1', x: 0, y: 0, width: 50, height: 20, tier: 1, health: new Decimal(10), maxHealth: new Decimal(10), value: new Decimal(5) },
+        ],
+        explosions: [{ x: 100, y: 100, radius: 50, life: 200, maxLife: 300 }],
+      })
+
+      const saveData = {
+        coins: '100',
+        prestigeLevel: 0,
+        balls: ['basic'],
+        timestamp: Date.now(),
+      }
+
+      useGameStore.getState().importSave(JSON.stringify(saveData))
+
+      expect(useGameStore.getState().bricks.length).toBe(0)
+      expect(useGameStore.getState().explosions.length).toBe(0)
+    })
+
+    it('should use defaults for missing optional fields', () => {
+      const minimalData = {
+        coins: '100',
+        prestigeLevel: 0,
+        balls: ['basic'],
+      }
+
+      useGameStore.getState().importSave(JSON.stringify(minimalData))
+
+      const state = useGameStore.getState()
+      expect(state.currentTier).toBe(1)
+      expect(state.upgrades).toEqual({ speed: 0, damage: 0, coinMult: 0 })
+    })
+
+    it('should create default ball if balls array is empty', () => {
+      const saveData = {
+        coins: '100',
+        prestigeLevel: 0,
+        balls: [],
+      }
+
+      useGameStore.getState().importSave(JSON.stringify(saveData))
+
+      expect(useGameStore.getState().balls.length).toBe(1)
+      expect(useGameStore.getState().balls[0].type).toBe('basic')
+    })
+
+    it('should restore ball costs as Decimals', () => {
+      const saveData = {
+        coins: '100',
+        prestigeLevel: 0,
+        ballCosts: { basic: '999', fast: '1000', heavy: '2000', plasma: '5000', explosive: '10000', sniper: '25000' },
+        balls: ['basic'],
+      }
+
+      useGameStore.getState().importSave(JSON.stringify(saveData))
+
+      const state = useGameStore.getState()
+      expect(state.ballCosts.basic.eq(999)).toBe(true)
+      expect(state.ballCosts.fast.eq(1000)).toBe(true)
+    })
+
+    it('should work with data exported by exportSave', () => {
+      // Set up initial state
+      useGameStore.setState({
+        coins: new Decimal(12345),
+        bricksBroken: new Decimal(500),
+        totalBricksBroken: new Decimal(2000),
+        prestigeLevel: 5,
+        upgrades: { speed: 10, damage: 8, coinMult: 6 },
+        currentTier: 7,
+        balls: [
+          { id: 'ball-1', type: 'sniper', x: 100, y: 100, dx: 1, dy: -1 },
+          { id: 'ball-2', type: 'explosive', x: 200, y: 200, dx: -1, dy: -1 },
+        ],
+      })
+
+      // Export
+      const exported = useGameStore.getState().exportSave()
+
+      // Reset to different state
+      resetStore()
+
+      // Import
+      const result = useGameStore.getState().importSave(exported)
+      expect(result).toBe(true)
+
+      // Verify
+      const state = useGameStore.getState()
+      expect(state.coins.eq(12345)).toBe(true)
+      expect(state.bricksBroken.eq(500)).toBe(true)
+      expect(state.totalBricksBroken.eq(2000)).toBe(true)
+      expect(state.prestigeLevel).toBe(5)
+      expect(state.upgrades).toEqual({ speed: 10, damage: 8, coinMult: 6 })
+      expect(state.currentTier).toBe(7)
+      expect(state.balls.map(b => b.type)).toEqual(['sniper', 'explosive'])
+    })
+  })
 })

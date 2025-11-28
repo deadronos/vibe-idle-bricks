@@ -6,8 +6,10 @@ import { Footer } from '../../src/components/Footer'
 import { useGameStore } from '../../src/store/gameStore'
 import { BALL_TYPES } from '../../src/types/game'
 
-// Mock window.confirm
+// Mock window.confirm and window.alert and window.prompt
 vi.stubGlobal('confirm', vi.fn())
+vi.stubGlobal('alert', vi.fn())
+vi.stubGlobal('prompt', vi.fn())
 
 // Reset store before each test
 const resetStore = () => {
@@ -126,5 +128,202 @@ describe('Footer', () => {
     await user.click(resetButton)
     
     expect(useGameStore.getState().coins.eq(10000)).toBe(true)
+  })
+
+  it('should render export button', () => {
+    render(<Footer />)
+    expect(screen.getByRole('button', { name: /export/i })).toBeInTheDocument()
+  })
+
+  it('should render import button', () => {
+    render(<Footer />)
+    expect(screen.getByRole('button', { name: /import/i })).toBeInTheDocument()
+  })
+
+  describe('export functionality', () => {
+    beforeEach(() => {
+      resetStore()
+      vi.clearAllMocks()
+    })
+
+    it('should copy save data to clipboard when export clicked', async () => {
+      const user = userEvent.setup()
+      const writeTextMock = vi.fn().mockResolvedValue(undefined)
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: writeTextMock },
+        writable: true,
+        configurable: true,
+      })
+
+      useGameStore.setState({
+        coins: new Decimal(5000),
+        prestigeLevel: 2,
+      })
+
+      render(<Footer />)
+
+      const exportButton = screen.getByRole('button', { name: /export/i })
+      await user.click(exportButton)
+
+      expect(writeTextMock).toHaveBeenCalledWith(expect.any(String))
+      // Verify the copied data is valid JSON with expected fields
+      const copiedData = JSON.parse(writeTextMock.mock.calls[0][0])
+      expect(copiedData.coins).toBe('5000')
+      expect(copiedData.prestigeLevel).toBe(2)
+    })
+
+    it('should show success alert after export', async () => {
+      const user = userEvent.setup()
+      const writeTextMock = vi.fn().mockResolvedValue(undefined)
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: writeTextMock },
+        writable: true,
+        configurable: true,
+      })
+
+      render(<Footer />)
+
+      const exportButton = screen.getByRole('button', { name: /export/i })
+      await user.click(exportButton)
+
+      expect(alert).toHaveBeenCalledWith(expect.stringContaining('clipboard'))
+    })
+
+    it('should fallback to prompt if clipboard fails', async () => {
+      const user = userEvent.setup()
+      const writeTextMock = vi.fn().mockRejectedValue(new Error('Clipboard error'))
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: writeTextMock },
+        writable: true,
+        configurable: true,
+      })
+
+      render(<Footer />)
+
+      const exportButton = screen.getByRole('button', { name: /export/i })
+      await user.click(exportButton)
+
+      expect(prompt).toHaveBeenCalledWith(
+        expect.stringContaining('Copy'),
+        expect.any(String)
+      )
+    })
+  })
+
+  describe('import functionality', () => {
+    beforeEach(() => {
+      resetStore()
+      vi.clearAllMocks()
+    })
+
+    it('should prompt for save data when import clicked', async () => {
+      const user = userEvent.setup()
+      vi.mocked(prompt).mockReturnValue(null)
+
+      render(<Footer />)
+
+      const importButton = screen.getByRole('button', { name: /import/i })
+      await user.click(importButton)
+
+      expect(prompt).toHaveBeenCalledWith(expect.stringContaining('Paste'))
+    })
+
+    it('should do nothing if prompt cancelled', async () => {
+      const user = userEvent.setup()
+      vi.mocked(prompt).mockReturnValue(null)
+
+      useGameStore.setState({ coins: new Decimal(5000) })
+
+      render(<Footer />)
+
+      const importButton = screen.getByRole('button', { name: /import/i })
+      await user.click(importButton)
+
+      // State should be unchanged
+      expect(useGameStore.getState().coins.eq(5000)).toBe(true)
+    })
+
+    it('should ask for confirmation before importing', async () => {
+      const user = userEvent.setup()
+      const saveData = { coins: '100', prestigeLevel: 0, balls: ['basic'] }
+      vi.mocked(prompt).mockReturnValue(JSON.stringify(saveData))
+      vi.mocked(confirm).mockReturnValue(false)
+
+      render(<Footer />)
+
+      const importButton = screen.getByRole('button', { name: /import/i })
+      await user.click(importButton)
+
+      expect(confirm).toHaveBeenCalledWith(expect.stringContaining('overwrite'))
+    })
+
+    it('should import save data when confirmed', async () => {
+      const user = userEvent.setup()
+      const saveData = {
+        coins: '9999',
+        bricksBroken: '500',
+        totalBricksBroken: '1000',
+        prestigeLevel: 4,
+        upgrades: { speed: 5, damage: 3, coinMult: 2 },
+        currentTier: 6,
+        balls: ['plasma', 'sniper'],
+      }
+      vi.mocked(prompt).mockReturnValue(JSON.stringify(saveData))
+      vi.mocked(confirm).mockReturnValue(true)
+
+      render(<Footer />)
+
+      const importButton = screen.getByRole('button', { name: /import/i })
+      await user.click(importButton)
+
+      const state = useGameStore.getState()
+      expect(state.coins.eq(9999)).toBe(true)
+      expect(state.prestigeLevel).toBe(4)
+      expect(state.balls.map(b => b.type)).toEqual(['plasma', 'sniper'])
+    })
+
+    it('should show success alert after successful import', async () => {
+      const user = userEvent.setup()
+      const saveData = { coins: '100', prestigeLevel: 0, balls: ['basic'] }
+      vi.mocked(prompt).mockReturnValue(JSON.stringify(saveData))
+      vi.mocked(confirm).mockReturnValue(true)
+
+      render(<Footer />)
+
+      const importButton = screen.getByRole('button', { name: /import/i })
+      await user.click(importButton)
+
+      expect(alert).toHaveBeenCalledWith(expect.stringContaining('successfully'))
+    })
+
+    it('should show error alert for invalid save data', async () => {
+      const user = userEvent.setup()
+      vi.mocked(prompt).mockReturnValue('not valid json {{{')
+      vi.mocked(confirm).mockReturnValue(true)
+
+      render(<Footer />)
+
+      const importButton = screen.getByRole('button', { name: /import/i })
+      await user.click(importButton)
+
+      expect(alert).toHaveBeenCalledWith(expect.stringContaining('Failed'))
+    })
+
+    it('should not import if confirm cancelled', async () => {
+      const user = userEvent.setup()
+      const saveData = { coins: '9999', prestigeLevel: 4, balls: ['basic'] }
+      vi.mocked(prompt).mockReturnValue(JSON.stringify(saveData))
+      vi.mocked(confirm).mockReturnValue(false)
+
+      useGameStore.setState({ coins: new Decimal(100) })
+
+      render(<Footer />)
+
+      const importButton = screen.getByRole('button', { name: /import/i })
+      await user.click(importButton)
+
+      // State should be unchanged
+      expect(useGameStore.getState().coins.eq(100)).toBe(true)
+    })
   })
 })
