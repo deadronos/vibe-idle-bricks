@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import Decimal from 'break_infinity.js'
 import { Shop } from '../../src/components/Shop'
 import { useGameStore } from '../../src/store/gameStore'
-import { BALL_TYPES, PRESTIGE_THRESHOLD } from '../../src/types/game'
+import { BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeThreshold } from '../../src/types/game'
 
 // Mock window.confirm
 vi.stubGlobal('confirm', vi.fn())
@@ -176,6 +176,18 @@ describe('Shop', () => {
       expect(screen.getByText(/break 5.00K more bricks/i)).toBeInTheDocument()
     })
 
+    it('should scale required bricks with prestige level', () => {
+      const nextThreshold = getPrestigeThreshold(1)
+      useGameStore.setState({
+        prestigeLevel: 1,
+        bricksBroken: new Decimal(nextThreshold - 1000),
+      })
+
+      render(<Shop />)
+
+      expect(screen.getByText(/break 1.00K more bricks/i)).toBeInTheDocument()
+    })
+
     it('should enable prestige when threshold met', () => {
       useGameStore.setState({ 
         bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
@@ -189,7 +201,7 @@ describe('Shop', () => {
 
     it('should show bonus info when can prestige', () => {
       useGameStore.setState({ 
-        bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
+        bricksBroken: new Decimal(getPrestigeThreshold(2)),
         prestigeLevel: 2,
       })
       render(<Shop />)

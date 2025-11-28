@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import Decimal from 'break_infinity.js'
 import { useGameStore } from '../../src/store/gameStore'
-import { BALL_TYPES, PRESTIGE_THRESHOLD } from '../../src/types/game'
+import { BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeThreshold, MAX_TIER } from '../../src/types/game'
 
 // Mock localStorage
 const createLocalStorageMock = () => {
@@ -124,11 +124,11 @@ describe('gameStore', () => {
       expect(useGameStore.getState().currentTier).toBe(2)
     })
 
-    it('should cap tier at 10', () => {
-      useGameStore.setState({ bricksBroken: new Decimal(999) })
+    it('should cap tier at MAX_TIER', () => {
+      useGameStore.setState({ bricksBroken: new Decimal(MAX_TIER * 100) })
       const store = useGameStore.getState()
       store.incrementBricksBroken()
-      expect(useGameStore.getState().currentTier).toBe(10)
+      expect(useGameStore.getState().currentTier).toBe(MAX_TIER)
     })
   })
 
@@ -200,13 +200,13 @@ describe('gameStore', () => {
       expect(newCost).toBeGreaterThan(initialCost)
     })
 
-    it('should apply 20% cost increase per upgrade', () => {
+    it('should apply 15% cost increase per upgrade', () => {
       useGameStore.setState({ coins: new Decimal(10000) })
       const initialCost = useGameStore.getState().upgradeCosts.speed.toNumber()
       useGameStore.getState().buyUpgrade('speed')
       const newCost = useGameStore.getState().upgradeCosts.speed.toNumber()
-      // Cost should increase by 20%
-      expect(newCost).toBe(Math.ceil(initialCost * 1.2))
+      // Cost should increase by 15%
+      expect(newCost).toBe(Math.ceil(initialCost * 1.15))
     })
   })
 
@@ -262,6 +262,18 @@ describe('gameStore', () => {
       })
       useGameStore.getState().prestige()
       expect(useGameStore.getState().totalBricksBroken.eq(15000)).toBe(true)
+    })
+
+    it('should scale prestige threshold with prestige level', () => {
+      const levelOneThreshold = getPrestigeThreshold(1)
+      useGameStore.setState({ 
+        prestigeLevel: 1,
+        bricksBroken: new Decimal(levelOneThreshold - 1),
+      })
+      expect(useGameStore.getState().canPrestige()).toBe(false)
+
+      useGameStore.setState({ bricksBroken: new Decimal(levelOneThreshold) })
+      expect(useGameStore.getState().canPrestige()).toBe(true)
     })
   })
 

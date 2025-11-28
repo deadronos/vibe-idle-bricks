@@ -1,5 +1,5 @@
 import { useGameStore } from '../store';
-import { type BallType, BALL_TYPES, PRESTIGE_BONUS, PRESTIGE_THRESHOLD } from '../types';
+import { type BallType, BALL_TYPES, PRESTIGE_BONUS, getPrestigeThreshold } from '../types';
 import { formatNumber } from '../utils';
 
 const ballTypes: BallType[] = ['basic', 'fast', 'heavy', 'plasma', 'explosive', 'sniper'];
@@ -25,7 +25,8 @@ export function Shop() {
 
   const prestigePercent = Math.round(PRESTIGE_BONUS * 100);
   const canDoPrestige = canPrestige();
-  const bricksNeeded = PRESTIGE_THRESHOLD - bricksBroken.toNumber();
+  const prestigeThreshold = getPrestigeThreshold(prestigeLevel);
+  const bricksNeeded = Math.max(0, prestigeThreshold - bricksBroken.toNumber());
 
   return (
     <aside className="shop-panel">

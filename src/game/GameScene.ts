@@ -451,6 +451,7 @@ class BrickManager {
         // Health scales linearly with tier: tier 1 = 3, tier 5 = 15, tier 10 = 30
         const maxHealth = new Decimal(tier * 3);
 
+        const brickValue = Math.floor(Math.pow(tier, 1.2));
         bricks.push({
           id: generateId(),
           x,
@@ -460,7 +461,7 @@ class BrickManager {
           tier,
           health: maxHealth,
           maxHealth,
-          value: new Decimal(tier),
+          value: new Decimal(brickValue),
         });
         created++;
       }
@@ -506,6 +507,7 @@ class BrickManager {
           // Health scales linearly with tier: tier 1 = 3, tier 5 = 15, tier 10 = 30
           const maxHealth = new Decimal(tier * 3);
 
+          const brickValue = Math.floor(Math.pow(tier, 1.2));
           newBricks.push({
             id: generateId(),
             x,
@@ -515,7 +517,7 @@ class BrickManager {
             tier,
             health: maxHealth,
             maxHealth,
-            value: new Decimal(tier),
+            value: new Decimal(brickValue),
           });
         }
       }

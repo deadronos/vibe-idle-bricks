@@ -1,6 +1,6 @@
 # DESIGN003 - Game Balance Improvements
 
-**Status:** Proposed  
+**Status:** Implemented  
 **Created:** 2025-11-28  
 **Related Analysis:** [docs/game-balance-analysis.md](../../docs/game-balance-analysis.md)
 
@@ -270,13 +270,14 @@ The Splitter ball type has been deferred to a separate design document due to im
 
 ### DR-003: Prestige Threshold Scaling
 
-**Decision:** Use fixed thresholds [10k, 25k, 50k] rather than exponential formula
+**Decision:** Use fixed thresholds [10k, 20k, 40k] rather than exponential formula
 
 **Rationale:**
-- Predictable milestones are easier for players to understand
-- Exponential would make later prestiges feel impossible
-- Three tiers covers most player engagement range
+
+- Predictable milestones with a 2× curve are easier for players to understand
+- Doubling cadence preserves challenge without making later prestiges feel impossible
+- Three tiers cover the primary engagement range without over-complicating UI copy
 
 ---
 
-*Design by AI Assistant | November 2025*
+Design by AI Assistant | November 2025

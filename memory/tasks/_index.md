@@ -6,10 +6,11 @@ _No tasks currently in progress._
 
 ## Pending
 
-- [TASK003] Game Balance Improvements - Implement balance changes from DESIGN003
+_No pending tasks._
 
 ## Completed
 
+- [TASK003] Game Balance Improvements - Completed on 2025-11-28 (awaiting manual playtest)
 - [TASK002] Introduce Export/Import Save Buttons - Completed on 2025-11-28
 - [TASK001] Create GitHub Pages Deployment Workflow - Completed on 2025-11-28
 

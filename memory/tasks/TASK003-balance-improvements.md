@@ -1,6 +1,6 @@
 # [TASK003] - Game Balance Improvements
 
-**Status:** Pending  
+**Status:** Completed  
 **Added:** 2025-11-28  
 **Updated:** 2025-11-28  
 **Design:** [DESIGN003-balance-improvements.md](../designs/DESIGN003-balance-improvements.md)
@@ -42,39 +42,49 @@ Key considerations:
 
 ## Progress Tracking
 
-**Overall Status:** Not Started - 0%
+**Overall Status:** Completed - 95% (manual playtest still pending)
 
 ### Subtasks
 
 | ID  | Description | Status | Updated | Notes |
 |-----|-------------|--------|---------|-------|
-| 1.1 | Reduce Fast ball cost to 30 | Not Started | 2025-11-28 | `src/types/game.ts` |
-| 1.2 | Increase Explosive radius to 70 | Not Started | 2025-11-28 | `src/types/game.ts` |
-| 1.3 | Increase tier cap to 20 | Not Started | 2025-11-28 | `src/store/gameStore.ts` |
-| 2.1 | Implement exponential brick value | Not Started | 2025-11-28 | `src/game/GameScene.ts` |
-| 2.2 | Increase Sniper cost to 3500 | Not Started | 2025-11-28 | `src/types/game.ts` |
-| 2.3 | Reduce upgrade cost growth to ×1.15 | Not Started | 2025-11-28 | `src/store/gameStore.ts` |
-| 3.1 | Add scaling prestige thresholds | Not Started | 2025-11-28 | `src/types/game.ts`, `src/store/gameStore.ts` |
-| 3.2 | Update UI to show current threshold | Not Started | 2025-11-28 | `src/components/Stats.tsx` |
-| 4.1 | Add/update unit tests for changes | Not Started | 2025-11-28 | `tests/` |
-| 4.2 | Manual playtesting validation | Not Started | 2025-11-28 | Verify pacing improvements |
+| 1.1 | Reduce Fast ball cost to 30 | Complete | 2025-11-28 | Updated `BALL_TYPES.fast.baseCost` |
+| 1.2 | Increase Explosive radius to 70 | Complete | 2025-11-28 | `BALL_TYPES.explosive.explosionRadius` |
+| 1.3 | Increase tier cap to 20 | Complete | 2025-11-28 | Introduced `MAX_TIER` limiting logic |
+| 2.1 | Implement exponential brick value | Complete | 2025-11-28 | `tier^1.2` formula in `GameScene` |
+| 2.2 | Increase Sniper cost to 3500 | Complete | 2025-11-28 | Adjusted `BALL_TYPES.sniper.baseCost` |
+| 2.3 | Reduce upgrade cost growth to ×1.15 | Complete | 2025-11-28 | New multiplier in `buyUpgrade` |
+| 3.1 | Add scaling prestige thresholds | Complete | 2025-11-28 | Added `PRESTIGE_THRESHOLDS` + helper |
+| 3.2 | Update UI to show current threshold | Complete | 2025-11-28 | Stats panel + prestige messaging |
+| 4.1 | Add/update unit tests for changes | Complete | 2025-11-28 | Types/store/component test suites |
+| 4.2 | Manual playtesting validation | Not Started | 2025-11-28 | Still needs human validation of pacing |
 
 ## Progress Log
 
-### 2025-11-28
+### 2025-11-28 (Planning)
+
 - Created task file from DESIGN003
 - Outlined all subtasks across 3 phases plus testing
 - Ready for implementation
 
+### 2025-11-28 (Implementation)
+
+- Implemented all balance constants (ball costs, explosion radius, tier cap, prestige thresholds)
+- Added `MAX_TIER` + `getPrestigeThreshold` helper and surfaced prestige goals in Stats + Shop
+- Applied exponential brick value scaling and upgrade cost multiplier change
+- Expanded Vitest coverage (types, store, Shop, Stats) and ran full test suite (`npm run test`)
+- Manual playtesting still outstanding; recommend human QA sweep focused on pacing
+
 ## Testing Checklist
 
-- [ ] Verify Fast ball cost is 30
-- [ ] Verify Sniper ball cost is 3500
-- [ ] Verify Explosive radius is 70
-- [ ] Verify tier cap is 20
-- [ ] Verify brick value formula: `Math.floor(tier^1.2)`
-- [ ] Verify upgrade cost growth is ×1.15
-- [ ] Verify prestige thresholds scale correctly [10k, 20k, 40k]
+- [x] Verify Fast ball cost is 30
+- [x] Verify Sniper ball cost is 3500
+- [x] Verify Explosive radius is 70
+- [x] Verify tier cap is 20
+- [x] Verify brick value formula: `Math.floor(tier^1.2)`
+- [x] Verify upgrade cost growth is ×1.15
+- [x] Verify prestige thresholds scale correctly [10k, 20k, 40k]
+- [ ] Manual playtesting of pacing and perceived difficulty curve
 
 ## Files to Modify
 
@@ -95,4 +105,4 @@ Key considerations:
 
 ---
 
-*Task created from DESIGN003 | 2025-11-28*
+Task created from DESIGN003 | 2025-11-28

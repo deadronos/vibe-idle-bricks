@@ -11,6 +11,7 @@ Memory Bank initialization completed. The project is in a functional MVP state w
 - Established task tracking system
 - Added GitHub Pages deployment workflow (`.github/workflows/deploy.yml`)
 - Configured Vite base path for GitHub Pages deployment
+- Implemented TASK003 balance pass (ball costs, tier cap 20, prestige scaling)
 
 ## Current State
 

@@ -6,7 +6,8 @@ import {
   UPGRADE_MULTIPLIER,
   PRESTIGE_BONUS,
   OFFLINE_EARNINGS_RATE,
-  PRESTIGE_THRESHOLD,
+  MAX_TIER,
+  getPrestigeThreshold,
 } from '../types';
 import type {
   BallType,
@@ -128,7 +129,7 @@ export const useGameStore = create<GameStore>()(
       });
 
       // Check if we need to increase tier
-      const newTier = Math.min(10, 1 + Math.floor(state.bricksBroken.add(1).toNumber() / 100));
+      const newTier = Math.min(MAX_TIER, 1 + Math.floor(state.bricksBroken.add(1).toNumber() / 100));
       if (newTier > state.currentTier) {
         set({ currentTier: newTier });
       }
@@ -180,7 +181,7 @@ export const useGameStore = create<GameStore>()(
           },
           upgradeCosts: {
             ...state.upgradeCosts,
-            [type]: cost.mul(1.2).ceil(),
+            [type]: cost.mul(1.15).ceil(),
           },
         });
         return true;
@@ -190,7 +191,8 @@ export const useGameStore = create<GameStore>()(
 
     canPrestige: () => {
       const state = get();
-      return state.bricksBroken.gte(PRESTIGE_THRESHOLD);
+      const threshold = getPrestigeThreshold(state.prestigeLevel);
+      return state.bricksBroken.gte(threshold);
     },
 
     prestige: () => {

@@ -86,6 +86,14 @@ describe('Stats', () => {
     expect(screen.getByText('Balls')).toBeInTheDocument()
   })
 
+  it('should display next prestige threshold', () => {
+    useGameStore.setState({ prestigeLevel: 2 })
+    render(<Stats />)
+
+    expect(screen.getByText('Next Prestige')).toBeInTheDocument()
+    expect(screen.getByText('40.00K')).toBeInTheDocument()
+  })
+
   it('should update when store changes', () => {
     const { rerender } = render(<Stats />)
     
