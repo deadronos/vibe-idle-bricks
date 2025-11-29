@@ -4,6 +4,7 @@
   margin: 0 auto;
   padding: 20px;
   min-height: 100vh;
+  font-family: 'Rajdhani', sans-serif;
 }
 
 /* Header */
@@ -13,38 +14,66 @@ header {
 }
 
 header h1 {
-  font-size: 2.5rem;
+  font-size: 3rem;
   color: #ffd700;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
   margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 /* Stats */
 .stats {
   display: flex;
   justify-content: center;
-  gap: 30px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
 .stat {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 15px 25px;
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px 20px;
+  border-radius: 12px;
   text-align: center;
-  min-width: 120px;
+  min-width: 140px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.stat-icon {
+  color: #aaa;
+  margin-bottom: 5px;
 }
 
 .stat-value {
   display: block;
-  font-size: 1.8rem;
-  font-weight: bold;
+  font-size: 2rem;
+  font-weight: 700;
   color: #4ade80;
+  line-height: 1;
 }
 
 .stat label {
   font-size: 0.9rem;
   color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(74, 222, 128, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+
+.shop-item.affordable {
+  animation: pulse-glow 2s infinite;
+  border-color: #4ade80;
 }
 
 /* Main Layout */

@@ -17,8 +17,8 @@
 ### Progression ✅
 
 - Coin earning based on brick value
-- Tier progression (every 100 bricks)
-- Prestige system at 10,000 bricks
+- Tier progression (every 100 bricks up to tier 20)
+- Prestige system with scaling thresholds (10k → 20k → 40k)
 - Speed, damage, and coin multiplier upgrades
 
 ### Persistence ✅

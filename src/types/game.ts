@@ -80,7 +80,7 @@ export const BALL_TYPES: Record<BallType, BallTypeConfig> = {
     pierce: false,
     explosive: false,
     targeting: false,
-    baseCost: 50,
+    baseCost: 30,
     description: '2x speed',
   },
   heavy: {
@@ -109,7 +109,7 @@ export const BALL_TYPES: Record<BallType, BallTypeConfig> = {
     color: '#ef4444',
     pierce: false,
     explosive: true,
-    explosionRadius: 50,
+    explosionRadius: 70,
     targeting: false,
     baseCost: 1000,
     description: 'Damages nearby bricks',
@@ -121,7 +121,7 @@ export const BALL_TYPES: Record<BallType, BallTypeConfig> = {
     pierce: false,
     explosive: false,
     targeting: true,
-    baseCost: 2500,
+    baseCost: 3500,
     description: 'Targets weakest bricks',
   },
 };
@@ -129,4 +129,10 @@ export const BALL_TYPES: Record<BallType, BallTypeConfig> = {
 export const UPGRADE_MULTIPLIER = 0.1; // 10% boost per upgrade level
 export const PRESTIGE_BONUS = 0.25; // 25% bonus per prestige level
 export const OFFLINE_EARNINGS_RATE = 0.5; // 50% of theoretical earnings while offline
-export const PRESTIGE_THRESHOLD = 10000;
+export const MAX_TIER = 20;
+export const PRESTIGE_THRESHOLDS = [10000, 20000, 40000];
+export const PRESTIGE_THRESHOLD = PRESTIGE_THRESHOLDS[0];
+export const getPrestigeThreshold = (prestigeLevel: number): number => {
+  const index = Math.min(prestigeLevel, PRESTIGE_THRESHOLDS.length - 1);
+  return PRESTIGE_THRESHOLDS[index];
+};

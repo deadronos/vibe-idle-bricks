@@ -5,6 +5,9 @@ import {
   PRESTIGE_BONUS,
   OFFLINE_EARNINGS_RATE,
   PRESTIGE_THRESHOLD,
+  PRESTIGE_THRESHOLDS,
+  MAX_TIER,
+  getPrestigeThreshold,
 } from '../../src/types/game'
 import type { BallType } from '../../src/types/game'
 
@@ -79,9 +82,29 @@ describe('BALL_TYPES', () => {
       expect(BALL_TYPES.explosive.baseCost).toBeLessThan(BALL_TYPES.sniper.baseCost)
     })
   })
+
+  describe('balance adjustments', () => {
+    it('fast ball should cost 30 coins', () => {
+      expect(BALL_TYPES.fast.baseCost).toBe(30)
+    })
+
+    it('sniper ball should cost 3500 coins', () => {
+      expect(BALL_TYPES.sniper.baseCost).toBe(3500)
+    })
+
+    it('explosive ball should have 70px radius', () => {
+      expect(BALL_TYPES.explosive.explosionRadius).toBe(70)
+    })
+  })
 })
 
 describe('Game Constants', () => {
+  describe('MAX_TIER', () => {
+    it('should extend tier cap to 20', () => {
+      expect(MAX_TIER).toBe(20)
+    })
+  })
+
   describe('UPGRADE_MULTIPLIER', () => {
     it('should be 0.1 (10% per level)', () => {
       expect(UPGRADE_MULTIPLIER).toBe(0.1)
@@ -113,6 +136,21 @@ describe('Game Constants', () => {
     it('should be a positive integer', () => {
       expect(PRESTIGE_THRESHOLD).toBeGreaterThan(0)
       expect(Number.isInteger(PRESTIGE_THRESHOLD)).toBe(true)
+    })
+  })
+
+  describe('PRESTIGE_THRESHOLDS', () => {
+    it('should define the scaling thresholds', () => {
+      expect(PRESTIGE_THRESHOLDS).toEqual([10000, 20000, 40000])
+    })
+  })
+
+  describe('getPrestigeThreshold', () => {
+    it('should clamp levels beyond defined thresholds', () => {
+      expect(getPrestigeThreshold(0)).toBe(10000)
+      expect(getPrestigeThreshold(1)).toBe(20000)
+      expect(getPrestigeThreshold(2)).toBe(40000)
+      expect(getPrestigeThreshold(5)).toBe(40000)
     })
   })
 })

@@ -3,24 +3,45 @@ import Decimal from 'break_infinity.js';
 import { useGameStore } from '../store';
 import { BALL_TYPES } from '../types';
 import type { BallData, BrickData } from '../types';
-import { generateId, getTierColor, adjustBrightness } from '../utils';
+import { generateId, getTierColor, adjustBrightness, formatNumber } from '../utils';
 
 export class GameScene extends Phaser.Scene {
   private ballGraphics: Map<string, Phaser.GameObjects.Graphics> = new Map();
   private brickGraphics: Map<string, Phaser.GameObjects.Graphics> = new Map();
+  private brickTexts: Map<string, Phaser.GameObjects.Text> = new Map();
   private explosionGraphics: Phaser.GameObjects.Graphics[] = [];
   private backgroundGraphics!: Phaser.GameObjects.Graphics;
   private brickManager!: BrickManager;
   private unsubscribe: (() => void) | null = null;
+  
+  // Visual Effects
+  private particleEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
+  private floatingTexts: Phaser.GameObjects.Text[] = [];
+  private trailGraphics: Phaser.GameObjects.Graphics[] = [];
 
   constructor() {
     super({ key: 'GameScene' });
   }
 
   create() {
+    // Generate textures
+    const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+    graphics.fillStyle(0xffffff);
+    graphics.fillRect(0, 0, 4, 4);
+    graphics.generateTexture('particle', 4, 4);
+
     // Draw background
     this.backgroundGraphics = this.add.graphics();
     this.drawBackground();
+
+    // Initialize particle emitter
+    this.particleEmitter = this.add.particles(0, 0, 'particle', {
+      lifespan: 600,
+      speed: { min: 50, max: 150 },
+      scale: { start: 1, end: 0 },
+      alpha: { start: 1, end: 0 },
+      emitting: false
+    });
 
     // Initialize brick manager
     this.brickManager = new BrickManager(this);
@@ -103,6 +124,37 @@ export class GameScene extends Phaser.Scene {
     this.renderBalls(store.balls);
     this.renderBricks(store.bricks);
     this.renderExplosions();
+    this.updateFloatingTexts(delta);
+  }
+
+  showFloatingText(x: number, y: number, text: string, color: string = '#ffffff') {
+    const floatingText = this.add.text(x, y, text, {
+      fontSize: '16px',
+      fontStyle: 'bold',
+      color: color,
+      stroke: '#000000',
+      strokeThickness: 2
+    });
+    floatingText.setOrigin(0.5);
+    // Store creation time to handle fade out
+    floatingText.setData('life', 1000);
+    this.floatingTexts.push(floatingText);
+  }
+
+  updateFloatingTexts(delta: number) {
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const text = this.floatingTexts[i];
+      const life = text.getData('life') - delta;
+      
+      if (life <= 0) {
+        text.destroy();
+        this.floatingTexts.splice(i, 1);
+      } else {
+        text.setData('life', life);
+        text.y -= 0.05 * delta; // Float up
+        text.setAlpha(life / 1000);
+      }
+    }
   }
 
   updateBalls(delta: number) {
@@ -221,14 +273,35 @@ export class GameScene extends Phaser.Scene {
       if (this.ballCollidesWithBrick(ball, brick)) {
         const result = store.damageBrick(brick.id, actualDamage);
 
-        if (result?.destroyed) {
-          store.addCoins(brick.value.mul(coinMult));
-          store.incrementBricksBroken();
+        if (result) {
+          // Floating text for damage
+          // Only show if damage is significant or it's a special ball to reduce clutter
+          if (config.damage > 1 || config.explosive || config.type === 'sniper') {
+             this.showFloatingText(brick.x + brick.width/2, brick.y, `-${formatNumber(actualDamage)}`, '#ff4444');
+          }
+
+          if (result.destroyed) {
+            const coinsEarned = brick.value.mul(coinMult);
+            store.addCoins(coinsEarned);
+            store.incrementBricksBroken();
+            
+            // Visual effects
+            const color = getTierColor(brick.tier);
+            const colorNum = Phaser.Display.Color.HexStringToColor(color).color;
+            
+            this.particleEmitter.setPosition(brick.x + brick.width / 2, brick.y + brick.height / 2);
+            this.particleEmitter.setParticleTint(colorNum);
+            this.particleEmitter.explode(10);
+            
+            // Floating text for coins
+            this.showFloatingText(brick.x + brick.width/2, brick.y, `+${formatNumber(coinsEarned)}`, '#ffd700');
+          }
         }
 
         // Explosive effect
         if (config.explosive && config.explosionRadius) {
           this.explode(ball.x, ball.y, config.explosionRadius, actualDamage, coinMult);
+          this.cameras.main.shake(100, 0.005); // Screen shake
         }
 
         // Bounce unless piercing
@@ -280,6 +353,13 @@ export class GameScene extends Phaser.Scene {
         if (result?.destroyed) {
           store.addCoins(brick.value.mul(coinMult));
           store.incrementBricksBroken();
+
+          // Particles for exploded bricks
+          const color = getTierColor(brick.tier);
+          const colorNum = Phaser.Display.Color.HexStringToColor(color).color;
+          this.particleEmitter.setPosition(brick.x + brick.width / 2, brick.y + brick.height / 2);
+          this.particleEmitter.setParticleTint(colorNum);
+          this.particleEmitter.explode(8);
         }
       }
     }
@@ -309,6 +389,15 @@ export class GameScene extends Phaser.Scene {
       const config = BALL_TYPES[ball.type];
       const color = Phaser.Display.Color.HexStringToColor(config.color).color;
 
+      // Draw trail for fast/special balls
+      if (config.speed > 300 || config.type === 'sniper' || config.type === 'plasma') {
+         graphics.lineStyle(4, color, 0.3);
+         graphics.beginPath();
+         graphics.moveTo(ball.x, ball.y);
+         graphics.lineTo(ball.x - ball.dx * 0.15, ball.y - ball.dy * 0.15);
+         graphics.strokePath();
+      }
+
       // Draw glow
       graphics.fillStyle(color, 0.3);
       graphics.fillCircle(ball.x, ball.y, 16);
@@ -324,12 +413,18 @@ export class GameScene extends Phaser.Scene {
   }
 
   renderBricks(bricks: BrickData[]) {
-    // Remove old graphics for bricks that no longer exist
+    // Remove old graphics and text for bricks that no longer exist
     const currentIds = new Set(bricks.map((b) => b.id));
     for (const [id, graphics] of this.brickGraphics) {
       if (!currentIds.has(id)) {
         graphics.destroy();
         this.brickGraphics.delete(id);
+      }
+    }
+    for (const [id, text] of this.brickTexts) {
+      if (!currentIds.has(id)) {
+        text.destroy();
+        this.brickTexts.delete(id);
       }
     }
 
@@ -369,19 +464,32 @@ export class GameScene extends Phaser.Scene {
 
       // Draw tier number
       if (brick.tier > 1) {
-        const text = this.add.text(
-          brick.x + brick.width / 2,
-          brick.y + brick.height / 2,
-          brick.tier.toString(),
-          {
-            fontSize: '12px',
-            fontStyle: 'bold',
-            color: '#ffffff',
-          }
-        );
-        text.setOrigin(0.5);
-        // Clean up text after a frame
-        this.time.delayedCall(16, () => text.destroy());
+        let text = this.brickTexts.get(brick.id);
+        if (!text) {
+          text = this.add.text(
+            brick.x + brick.width / 2,
+            brick.y + brick.height / 2,
+            brick.tier.toString(),
+            {
+              fontSize: '12px',
+              fontStyle: 'bold',
+              color: '#ffffff',
+            }
+          );
+          text.setOrigin(0.5);
+          this.brickTexts.set(brick.id, text);
+        } else {
+          // Update position just in case, though bricks don't move currently
+          text.setPosition(brick.x + brick.width / 2, brick.y + brick.height / 2);
+          text.setText(brick.tier.toString());
+        }
+      } else {
+        // If tier is 1, we don't show text, so remove it if it exists
+        const text = this.brickTexts.get(brick.id);
+        if (text) {
+          text.destroy();
+          this.brickTexts.delete(brick.id);
+        }
       }
     }
   }
@@ -451,6 +559,7 @@ class BrickManager {
         // Health scales linearly with tier: tier 1 = 3, tier 5 = 15, tier 10 = 30
         const maxHealth = new Decimal(tier * 3);
 
+        const brickValue = Math.floor(Math.pow(tier, 1.2));
         bricks.push({
           id: generateId(),
           x,
@@ -460,7 +569,7 @@ class BrickManager {
           tier,
           health: maxHealth,
           maxHealth,
-          value: new Decimal(tier),
+          value: new Decimal(brickValue),
         });
         created++;
       }
@@ -506,6 +615,7 @@ class BrickManager {
           // Health scales linearly with tier: tier 1 = 3, tier 5 = 15, tier 10 = 30
           const maxHealth = new Decimal(tier * 3);
 
+          const brickValue = Math.floor(Math.pow(tier, 1.2));
           newBricks.push({
             id: generateId(),
             x,
@@ -515,7 +625,7 @@ class BrickManager {
             tier,
             health: maxHealth,
             maxHealth,
-            value: new Decimal(tier),
+            value: new Decimal(brickValue),
           });
         }
       }
