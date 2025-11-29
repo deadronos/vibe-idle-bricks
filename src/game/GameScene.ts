@@ -17,7 +17,6 @@ export class GameScene extends Phaser.Scene {
   // Visual Effects
   private particleEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
   private floatingTexts: Phaser.GameObjects.Text[] = [];
-  private trailGraphics: Phaser.GameObjects.Graphics[] = [];
 
   constructor() {
     super({ key: 'GameScene' });
@@ -25,7 +24,7 @@ export class GameScene extends Phaser.Scene {
 
   create() {
     // Generate textures
-    const graphics = this.make.graphics({ x: 0, y: 0, add: false });
+    const graphics = this.make.graphics({ x: 0, y: 0 });
     graphics.fillStyle(0xffffff);
     graphics.fillRect(0, 0, 4, 4);
     graphics.generateTexture('particle', 4, 4);
@@ -276,7 +275,7 @@ export class GameScene extends Phaser.Scene {
         if (result) {
           // Floating text for damage
           // Only show if damage is significant or it's a special ball to reduce clutter
-          if (config.damage > 1 || config.explosive || config.type === 'sniper') {
+          if (config.damage > 1 || config.explosive || ball.type === 'sniper') {
              this.showFloatingText(brick.x + brick.width/2, brick.y, `-${formatNumber(actualDamage)}`, '#ff4444');
           }
 
@@ -390,7 +389,7 @@ export class GameScene extends Phaser.Scene {
       const color = Phaser.Display.Color.HexStringToColor(config.color).color;
 
       // Draw trail for fast/special balls
-      if (config.speed > 300 || config.type === 'sniper' || config.type === 'plasma') {
+      if (config.speed > 5 || ball.type === 'sniper' || ball.type === 'plasma') {
          graphics.lineStyle(4, color, 0.3);
          graphics.beginPath();
          graphics.moveTo(ball.x, ball.y);
