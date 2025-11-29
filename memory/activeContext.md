@@ -6,6 +6,12 @@ Memory Bank initialization completed. The project is in a functional MVP state w
 
 ## Recent Changes
 
+- Implemented TASK004 Visual Polish:
+  - Added `lucide-react` icons to UI
+  - Integrated "Rajdhani" Google Font
+  - Added particle effects, screen shake, and ball trails
+  - Implemented floating text for damage/coins
+  - Optimized text rendering in `GameScene.ts` (fixed performance bottleneck)
 - Created Memory Bank structure with all core files
 - Documented project architecture and patterns
 - Established task tracking system
@@ -18,22 +24,22 @@ Memory Bank initialization completed. The project is in a functional MVP state w
 The game is fully playable with:
 
 - ✅ 6 ball types with unique behaviors
-- ✅ Brick generation and tier progression (1-10)
+- ✅ Brick generation and tier progression (1-20)
 - ✅ Shop for balls and upgrades
-- ✅ Prestige system (10,000 bricks threshold)
+- ✅ Prestige system (scaling thresholds)
 - ✅ Auto-save every 30 seconds
 - ✅ Offline earnings on return
 - ✅ Responsive canvas sizing
+- ✅ Visual effects (particles, shake, trails)
 
 ## Next Steps
 
 Potential areas for enhancement:
 
-1. **Balance Tuning**: Adjust costs, damage, and progression curves
-2. **Visual Polish**: Add particle effects, screen shake, sound effects
-3. **New Features**: Achievements, statistics screen, more ball types
-4. **Mobile Optimization**: Touch controls, UI scaling
-5. **Accessibility**: Pause button, keyboard controls, colorblind modes
+1. **Sound Effects**: Add audio feedback for hits, purchases, etc.
+2. **New Features**: Achievements, statistics screen, more ball types
+3. **Mobile Optimization**: Touch controls, UI scaling
+4. **Accessibility**: Pause button, keyboard controls, colorblind modes
 
 ## Active Decisions
 
@@ -46,6 +52,5 @@ Potential areas for enhancement:
 
 ## Known Considerations
 
-- Phaser text objects are created/destroyed each frame for tier numbers (potential optimization)
-- Explosive balls may cause performance issues with many simultaneous explosions
+- Explosive balls may cause performance issues with many simultaneous explosions (mitigated by particle pooling/limits)
 - Mobile touch events not explicitly handled (relies on Phaser defaults)

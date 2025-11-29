@@ -1,4 +1,5 @@
 import { useGameStore } from '../store';
+import { Save, Upload, Download, RotateCcw } from 'lucide-react';
 
 export function Footer() {
   const save = useGameStore((state) => state.save);
@@ -45,16 +46,16 @@ export function Footer() {
   return (
     <footer className="footer">
       <button className="btn btn-save" onClick={handleSave}>
-        💾 Save
+        <Save size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} /> Save
       </button>
       <button className="btn btn-export" onClick={handleExport}>
-        📤 Export
+        <Upload size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} /> Export
       </button>
       <button className="btn btn-import" onClick={handleImport}>
-        📥 Import
+        <Download size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} /> Import
       </button>
       <button className="btn btn-reset" onClick={handleReset}>
-        🔄 Reset
+        <RotateCcw size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} /> Reset
       </button>
       <span className="auto-save-status">Auto-saves every 30s</span>
     </footer>

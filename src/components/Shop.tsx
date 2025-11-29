@@ -1,9 +1,19 @@
 import { useGameStore } from '../store';
 import { type BallType, BALL_TYPES, PRESTIGE_BONUS, getPrestigeThreshold } from '../types';
 import { formatNumber } from '../utils';
+import { ShoppingCart, Zap, Crosshair, Bomb, Circle, Hexagon, Star, ArrowUpCircle, Coins, TrendingUp } from 'lucide-react';
 
 const ballTypes: BallType[] = ['basic', 'fast', 'heavy', 'plasma', 'explosive', 'sniper'];
 type UpgradeType = 'speed' | 'damage' | 'coinMult';
+
+const BallIcons: Record<BallType, React.ElementType> = {
+  basic: Circle,
+  fast: Zap,
+  heavy: Hexagon,
+  plasma: Star,
+  explosive: Bomb,
+  sniper: Crosshair,
+};
 
 export function Shop() {
   const coins = useGameStore((state) => state.coins);
@@ -30,7 +40,7 @@ export function Shop() {
 
   return (
     <aside className="shop-panel">
-      <h2>🛒 Shop</h2>
+      <h2><ShoppingCart className="inline-icon" size={24} /> Shop</h2>
 
       <div className="shop-section">
         <h3>Buy Balls</h3>
@@ -39,15 +49,17 @@ export function Shop() {
             const config = BALL_TYPES[type];
             const cost = ballCosts[type];
             const canAfford = coins.gte(cost);
+            const Icon = BallIcons[type];
 
             return (
               <button
                 key={type}
-                className={`shop-item ball-${type}`}
+                className={`shop-item ball-${type} ${canAfford ? 'affordable' : ''}`}
                 disabled={!canAfford}
                 onClick={() => buyBall(type)}
               >
                 <span className="item-name">
+                  <Icon size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} />
                   {type.charAt(0).toUpperCase() + type.slice(1)} Ball
                 </span>
                 <span className="item-cost">{formatNumber(cost)}</span> coins
@@ -64,6 +76,7 @@ export function Shop() {
           <UpgradeButton
             type="speed"
             name="Speed Boost"
+            icon={Zap}
             description="All balls +10% speed"
             cost={upgradeCosts.speed}
             coins={coins}
@@ -73,6 +86,7 @@ export function Shop() {
           <UpgradeButton
             type="damage"
             name="Power Boost"
+            icon={ArrowUpCircle}
             description="All balls +10% damage"
             cost={upgradeCosts.damage}
             coins={coins}
@@ -82,6 +96,7 @@ export function Shop() {
           <UpgradeButton
             type="coinMult"
             name="Coin Multiplier"
+            icon={Coins}
             description="+10% coins earned"
             cost={upgradeCosts.coinMult}
             coins={coins}
@@ -94,11 +109,11 @@ export function Shop() {
       <div className="shop-section">
         <h3>Prestige</h3>
         <button
-          className="shop-item prestige-btn"
+          className={`shop-item prestige-btn ${canDoPrestige ? 'affordable' : ''}`}
           disabled={!canDoPrestige}
           onClick={handlePrestige}
         >
-          <span className="item-name">🌟 Prestige</span>
+          <span className="item-name"><TrendingUp size={16} className="inline-block mr-2" /> Prestige</span>
           <span className="item-desc">Reset for permanent bonuses</span>
           <span className="item-desc">
             {canDoPrestige
@@ -114,6 +129,7 @@ export function Shop() {
 interface UpgradeButtonProps {
   type: UpgradeType;
   name: string;
+  icon: React.ElementType;
   description: string;
   cost: import('break_infinity.js').default;
   coins: import('break_infinity.js').default;
@@ -121,12 +137,15 @@ interface UpgradeButtonProps {
   onBuy: () => void;
 }
 
-function UpgradeButton({ name, description, cost, coins, level, onBuy }: UpgradeButtonProps) {
+function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBuy }: UpgradeButtonProps) {
   const canAfford = coins.gte(cost);
 
   return (
-    <button className="shop-item" disabled={!canAfford} onClick={onBuy}>
-      <span className="item-name">{name} <span className="item-level">Lv.{level}</span></span>
+    <button className={`shop-item ${canAfford ? 'affordable' : ''}`} disabled={!canAfford} onClick={onBuy}>
+      <span className="item-name">
+        <Icon size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} />
+        {name} <span className="item-level">Lv.{level}</span>
+      </span>
       <span className="item-cost">{formatNumber(cost)}</span> coins
       <div className="item-desc">{description}</div>
     </button>
