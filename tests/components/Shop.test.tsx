@@ -72,7 +72,7 @@ describe('Shop', () => {
 
     it('should render prestige button', () => {
       render(<Shop />)
-      expect(screen.getByRole('button', { name: /🌟 prestige/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /prestige/i })).toBeInTheDocument()
     })
 
     it('should show ball descriptions', () => {

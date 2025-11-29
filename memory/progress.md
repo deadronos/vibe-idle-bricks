@@ -48,7 +48,7 @@
 - [ ] Statistics/history screen
 - [ ] More ball types
 - [ ] Special brick types (bonus coins, power-ups)
-- [ ] Visual particle effects
+- [x] Visual particle effects (Completed in TASK004)
 
 ### Low Priority
 
@@ -66,10 +66,9 @@
 
 ## Known Issues
 
-1. **Performance**: Tier text created/destroyed every frame instead of pooled
-2. **Mobile**: No explicit touch event handling
-3. **Edge Case**: Very high ball counts may cause frame drops
-4. **UI**: Shop doesn't scroll on small screens
+1. **Mobile**: No explicit touch event handling
+2. **Edge Case**: Very high ball counts may cause frame drops
+3. **UI**: Shop doesn't scroll on small screens
 
 ## Milestones
 

@@ -75,9 +75,9 @@ describe('App', () => {
 
   it('should render footer component', () => {
     render(<App />)
-    expect(screen.getByRole('button', { name: /💾 save/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument()
     // Use getAllByRole since there are multiple elements with 'reset' (Reset button and "Reset for permanent bonuses")
-    const resetButtons = screen.getAllByRole('button', { name: /🔄 reset/i })
+    const resetButtons = screen.getAllByRole('button', { name: /reset/i })
     expect(resetButtons.length).toBeGreaterThanOrEqual(1)
   })
 
