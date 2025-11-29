@@ -6,6 +6,10 @@ Memory Bank initialization completed. The project is in a functional MVP state w
 
 ## Recent Changes
 
+- Fixed TypeScript errors in `GameScene.ts`:
+  - Removed unused `trailGraphics` property
+  - Removed invalid `add: false` property from `make.graphics`
+  - Fixed `BallTypeConfig` type errors by using `ball.type` instead of `config.type`
 - Fixed test suite failures:
   - Updated `App.test.tsx` and `Shop.test.tsx` to match new Lucide icon usage
   - Verified all tests pass with `npm run test:run`
