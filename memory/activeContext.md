@@ -6,6 +6,10 @@ Memory Bank initialization completed. The project is in a functional MVP state w
 
 ## Recent Changes
 
+- Fixed test suite failures:
+  - Updated `App.test.tsx` and `Shop.test.tsx` to match new Lucide icon usage
+  - Verified all tests pass with `npm run test:run`
+  - Verified typecheck and linting pass
 - Implemented TASK004 Visual Polish:
   - Added `lucide-react` icons to UI
   - Integrated "Rajdhani" Google Font
