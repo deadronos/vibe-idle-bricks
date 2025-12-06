@@ -1,6 +1,12 @@
 import { PhaserGame, Stats, Shop, Footer } from './components';
 import './App.css';
 
+/**
+ * Main application component.
+ * Layouts the game header, main game area, shop, and footer.
+ *
+ * @returns {JSX.Element} The root application UI.
+ */
 function App() {
   return (
     <div className="game-container">

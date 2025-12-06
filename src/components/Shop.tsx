@@ -3,9 +3,12 @@ import { type BallType, BALL_TYPES, PRESTIGE_BONUS, getPrestigeThreshold } from 
 import { formatNumber } from '../utils';
 import { ShoppingCart, Zap, Crosshair, Bomb, Circle, Hexagon, Star, ArrowUpCircle, Coins, TrendingUp } from 'lucide-react';
 
+/** List of available ball types in the shop order. */
 const ballTypes: BallType[] = ['basic', 'fast', 'heavy', 'plasma', 'explosive', 'sniper'];
+/** List of available upgrades. */
 type UpgradeType = 'speed' | 'damage' | 'coinMult';
 
+/** Mapping of ball types to their icon components. */
 const BallIcons: Record<BallType, React.ElementType> = {
   basic: Circle,
   fast: Zap,
@@ -15,6 +18,12 @@ const BallIcons: Record<BallType, React.ElementType> = {
   sniper: Crosshair,
 };
 
+/**
+ * Shop component where players can buy new balls and upgrades.
+ * Displays current costs, affordability, and handles purchase actions.
+ *
+ * @returns {JSX.Element} The shop UI panel.
+ */
 export function Shop() {
   const coins = useGameStore((state) => state.coins);
   const ballCosts = useGameStore((state) => state.ballCosts);
@@ -126,17 +135,32 @@ export function Shop() {
   );
 }
 
+/** Props for the UpgradeButton component. */
 interface UpgradeButtonProps {
+  /** The type of upgrade. */
   type: UpgradeType;
+  /** Display name of the upgrade. */
   name: string;
+  /** Icon component for the upgrade. */
   icon: React.ElementType;
+  /** Description of the upgrade's effect. */
   description: string;
+  /** Current cost of the upgrade. */
   cost: import('break_infinity.js').default;
+  /** Player's current coin balance. */
   coins: import('break_infinity.js').default;
+  /** Current level of the upgrade. */
   level: number;
+  /** Callback to trigger purchase. */
   onBuy: () => void;
 }
 
+/**
+ * Reusable button component for purchasing upgrades.
+ *
+ * @param props - Component props.
+ * @returns {JSX.Element} The upgrade button.
+ */
 function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBuy }: UpgradeButtonProps) {
   const canAfford = coins.gte(cost);
 

@@ -18,46 +18,174 @@ import type {
 } from '../types';
 import { generateId } from '../utils/helpers';
 
+/**
+ * Interface defining the entire state and actions of the game store.
+ */
 interface GameStore {
   // State
+  /** Current amount of coins available to the player. */
   coins: Decimal;
+  /** Number of bricks broken in the current prestige run. */
   bricksBroken: Decimal;
+  /** Total number of bricks broken across all runs (lifetime stats). */
   totalBricksBroken: Decimal;
+  /** Current prestige level, granting global bonuses. */
   prestigeLevel: number;
+  /** Current levels of all purchased upgrades. */
   upgrades: Upgrades;
+  /** Current cost to purchase the next ball of each type. */
   ballCosts: Record<BallType, Decimal>;
+  /** Current cost to purchase the next level of each upgrade. */
   upgradeCosts: Record<keyof Upgrades, Decimal>;
+  /** Current difficulty tier for new bricks. */
   currentTier: number;
+  /** List of all active balls. */
   balls: BallData[];
+  /** List of all active bricks. */
   bricks: BrickData[];
+  /** List of active explosion effects. */
   explosions: Explosion[];
+  /** The dimensions of the game canvas. */
   canvasSize: { width: number; height: number };
+  /** Whether the game simulation is currently paused. */
   isPaused: boolean;
 
   // Actions
+  /**
+   * Updates the canvas dimensions and initializes the first ball if needed.
+   * @param width - The new width of the canvas.
+   * @param height - The new height of the canvas.
+   */
   setCanvasSize: (width: number, height: number) => void;
+
+  /**
+   * Adds coins to the player's balance, applying prestige bonuses.
+   * @param amount - The base amount of coins to add.
+   */
   addCoins: (amount: Decimal) => void;
+
+  /**
+   * Increments the count of broken bricks and updates the tier if necessary.
+   */
   incrementBricksBroken: () => void;
+
+  /**
+   * Attempts to purchase a new ball of the specified type.
+   * @param type - The type of ball to buy.
+   * @returns {boolean} True if the purchase was successful, false otherwise.
+   */
   buyBall: (type: BallType) => boolean;
+
+  /**
+   * Attempts to purchase an upgrade.
+   * @param type - The type of upgrade to buy.
+   * @returns {boolean} True if the purchase was successful, false otherwise.
+   */
   buyUpgrade: (type: keyof Upgrades) => boolean;
+
+  /**
+   * Checks if the player meets the requirements to prestige.
+   * @returns {boolean} True if prestige is available.
+   */
   canPrestige: () => boolean;
+
+  /**
+   * Resets the game progress to gain prestige levels and bonuses.
+   * @returns {boolean} True if prestige was successful.
+   */
   prestige: () => boolean;
+
+  /**
+   * Updates the list of active bricks (e.g., from the game loop).
+   * @param bricks - The new list of bricks.
+   */
   setBricks: (bricks: BrickData[]) => void;
+
+  /**
+   * Removes a specific brick by ID.
+   * @param id - The ID of the brick to remove.
+   */
   removeBrick: (id: string) => void;
+
+  /**
+   * Applies damage to a specific brick and handles its potential destruction.
+   * @param id - The ID of the brick to damage.
+   * @param damage - The amount of damage to deal.
+   * @returns {{ destroyed: boolean; value: Decimal } | null} The result of the damage (destroyed status and coin value), or null if brick not found.
+   */
   damageBrick: (id: string, damage: Decimal) => { destroyed: boolean; value: Decimal } | null;
+
+  /**
+   * Spawns an explosion effect at the specified location.
+   * @param x - The X coordinate.
+   * @param y - The Y coordinate.
+   * @param radius - The radius of the explosion.
+   */
   addExplosion: (x: number, y: number, radius: number) => void;
+
+  /**
+   * Updates the state of all active explosions (reduces life).
+   * @param deltaTime - Time elapsed since last frame.
+   */
   updateExplosions: (deltaTime: number) => void;
+
+  /**
+   * Persists the current game state to local storage.
+   */
   save: () => void;
+
+  /**
+   * Loads the game state from local storage and handles offline progress.
+   */
   load: () => void;
+
+  /**
+   * Resets the entire game state to default (hard reset).
+   */
   reset: () => void;
+
+  /**
+   * Exports the current save data as a JSON string.
+   * @returns {string} The exported save string.
+   */
   exportSave: () => string;
+
+  /**
+   * Imports a save from a string.
+   * @param data - The save data string to import.
+   * @returns {boolean} True if import was successful.
+   */
   importSave: (data: string) => boolean;
+
+  /**
+   * Pauses or unpauses the game.
+   * @param paused - True to pause, false to unpause.
+   */
   setPaused: (paused: boolean) => void;
+
+  /**
+   * Calculates the current global damage multiplier.
+   * @returns {number} The damage multiplier.
+   */
   getDamageMult: () => number;
+
+  /**
+   * Calculates the current global coin multiplier.
+   * @returns {number} The coin multiplier.
+   */
   getCoinMult: () => number;
+
+  /**
+   * Calculates the current global speed multiplier.
+   * @returns {number} The speed multiplier.
+   */
   getSpeedMult: () => number;
 }
 
+/**
+ * Returns the default costs for all ball types.
+ * @returns {Record<BallType, Decimal>} A map of ball types to their initial costs.
+ */
 const getDefaultBallCosts = (): Record<BallType, Decimal> => ({
   basic: new Decimal(BALL_TYPES.basic.baseCost),
   fast: new Decimal(BALL_TYPES.fast.baseCost),
@@ -67,12 +195,22 @@ const getDefaultBallCosts = (): Record<BallType, Decimal> => ({
   sniper: new Decimal(BALL_TYPES.sniper.baseCost),
 });
 
+/**
+ * Returns the default costs for all upgrades.
+ * @returns {Record<keyof Upgrades, Decimal>} A map of upgrades to their initial costs.
+ */
 const getDefaultUpgradeCosts = (): Record<keyof Upgrades, Decimal> => ({
   speed: new Decimal(100),
   damage: new Decimal(150),
   coinMult: new Decimal(200),
 });
 
+/**
+ * Creates the initial basic ball for a new game or run.
+ * @param canvasWidth - The width of the canvas.
+ * @param canvasHeight - The height of the canvas.
+ * @returns {BallData} The initial ball object.
+ */
 const createInitialBall = (canvasWidth: number, canvasHeight: number): BallData => {
   const x = canvasWidth / 2 + (Math.random() - 0.5) * 200;
   const y = canvasHeight - 50;
@@ -89,6 +227,10 @@ const createInitialBall = (canvasWidth: number, canvasHeight: number): BallData 
   };
 };
 
+/**
+ * The main Zustand store hook for managing game state.
+ * Uses `subscribeWithSelector` middleware for reactive updates.
+ */
 export const useGameStore = create<GameStore>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
@@ -337,14 +479,22 @@ export const useGameStore = create<GameStore>()(
           };
         });
 
-        const ballCosts: Record<BallType, Decimal> = {} as Record<BallType, Decimal>;
-        for (const [key, value] of Object.entries(saveData.ballCosts || {})) {
-          ballCosts[key as BallType] = new Decimal(value as string);
+        const ballCosts = getDefaultBallCosts();
+        if (saveData.ballCosts) {
+          for (const [key, value] of Object.entries(saveData.ballCosts)) {
+            if (Object.prototype.hasOwnProperty.call(ballCosts, key)) {
+              ballCosts[key as BallType] = new Decimal(value as string);
+            }
+          }
         }
 
-        const upgradeCosts: Record<keyof Upgrades, Decimal> = {} as Record<keyof Upgrades, Decimal>;
-        for (const [key, value] of Object.entries(saveData.upgradeCosts || {})) {
-          upgradeCosts[key as keyof Upgrades] = new Decimal(value as string);
+        const upgradeCosts = getDefaultUpgradeCosts();
+        if (saveData.upgradeCosts) {
+          for (const [key, value] of Object.entries(saveData.upgradeCosts)) {
+            if (Object.prototype.hasOwnProperty.call(upgradeCosts, key)) {
+              upgradeCosts[key as keyof Upgrades] = new Decimal(value as string);
+            }
+          }
         }
 
         set({
@@ -353,8 +503,8 @@ export const useGameStore = create<GameStore>()(
           totalBricksBroken: new Decimal(saveData.totalBricksBroken || 0),
           prestigeLevel: saveData.prestigeLevel || 0,
           upgrades: saveData.upgrades || { speed: 0, damage: 0, coinMult: 0 },
-          ballCosts: Object.keys(ballCosts).length > 0 ? ballCosts : getDefaultBallCosts(),
-          upgradeCosts: Object.keys(upgradeCosts).length > 0 ? upgradeCosts : getDefaultUpgradeCosts(),
+          ballCosts,
+          upgradeCosts,
           currentTier: saveData.currentTier || 1,
           balls: balls.length > 0 ? balls : [createInitialBall(width, height)],
           bricks: [],

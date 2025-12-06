@@ -1,12 +1,23 @@
 import Decimal from 'break_infinity.js';
 
+/**
+ * Generates a unique 9-character string ID.
+ * @returns {string} A random alphanumeric string.
+ */
 export const generateId = (): string => {
   return Math.random().toString(36).substring(2, 11);
 };
 
+/**
+ * Formats a number (or Decimal) into a human-readable string with suffixes (K, M, B).
+ * Handles very large numbers using exponential notation.
+ *
+ * @param num - The number to format, either a primitive number or a Decimal.
+ * @returns {string} The formatted string (e.g., "1.50K", "2.00M").
+ */
 export const formatNumber = (num: Decimal | number): string => {
   const decimal = num instanceof Decimal ? num : new Decimal(num);
-  
+
   if (decimal.gte(1e12)) {
     return decimal.toExponential(2);
   } else if (decimal.gte(1e9)) {
@@ -19,6 +30,13 @@ export const formatNumber = (num: Decimal | number): string => {
   return decimal.floor().toString();
 };
 
+/**
+ * Adjusts the brightness of a hex color.
+ *
+ * @param hex - The hex color code (e.g., "#ff0000").
+ * @param percent - The percentage to adjust brightness (positive to lighten, negative to darken).
+ * @returns {string} The adjusted hex color code.
+ */
 export const adjustBrightness = (hex: string, percent: number): string => {
   const num = parseInt(hex.replace('#', ''), 16);
   const amt = Math.round(2.55 * percent);
@@ -28,6 +46,13 @@ export const adjustBrightness = (hex: string, percent: number): string => {
   return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
 };
 
+/**
+ * Returns the color associated with a specific brick tier.
+ * Colors cycle or clamp based on the tier index.
+ *
+ * @param tier - The tier level of the brick (1-based).
+ * @returns {string} The hex color code for the tier.
+ */
 export const getTierColor = (tier: number): string => {
   const colors = [
     '#4ade80', // Green - Tier 1

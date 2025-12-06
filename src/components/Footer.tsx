@@ -1,6 +1,12 @@
 import { useGameStore } from '../store';
 import { Save, Upload, Download, RotateCcw } from 'lucide-react';
 
+/**
+ * Footer component containing save management controls.
+ * Allows saving, loading, exporting, resetting, and importing game data.
+ *
+ * @returns {JSX.Element} The footer toolbar.
+ */
 export function Footer() {
   const save = useGameStore((state) => state.save);
   const reset = useGameStore((state) => state.reset);
