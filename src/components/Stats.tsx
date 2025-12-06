@@ -3,6 +3,12 @@ import { formatNumber } from '../utils';
 import { getPrestigeThreshold } from '../types';
 import { Coins, BrickWall, Layers, Circle, TrendingUp } from 'lucide-react';
 
+/**
+ * Stats component displaying current game metrics.
+ * Shows coins, bricks broken, ball count, and prestige progress.
+ *
+ * @returns {JSX.Element} The stats dashboard.
+ */
 export function Stats() {
   const coins = useGameStore((state) => state.coins);
   const bricksBroken = useGameStore((state) => state.bricksBroken);

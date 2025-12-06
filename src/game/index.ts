@@ -1,6 +1,10 @@
 import Phaser from 'phaser';
 import { GameScene } from './GameScene';
 
+/**
+ * Phaser game configuration object.
+ * Defines the renderer, scaling dimensions, and active scenes.
+ */
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: 'game-container',
