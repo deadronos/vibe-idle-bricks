@@ -5,6 +5,10 @@ import { BALL_TYPES } from '../types';
 import type { BallData, BrickData } from '../types';
 import { generateId, getTierColor, adjustBrightness, formatNumber } from '../utils';
 
+/**
+ * Main game scene that handles the physics, rendering, and game loop.
+ * Connects the Phaser game engine with the Zustand store.
+ */
 export class GameScene extends Phaser.Scene {
   private ballGraphics: Map<string, Phaser.GameObjects.Graphics> = new Map();
   private brickGraphics: Map<string, Phaser.GameObjects.Graphics> = new Map();
@@ -13,7 +17,7 @@ export class GameScene extends Phaser.Scene {
   private backgroundGraphics!: Phaser.GameObjects.Graphics;
   private brickManager!: BrickManager;
   private unsubscribe: (() => void) | null = null;
-  
+
   // Visual Effects
   private particleEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
   private floatingTexts: Phaser.GameObjects.Text[] = [];
@@ -22,6 +26,10 @@ export class GameScene extends Phaser.Scene {
     super({ key: 'GameScene' });
   }
 
+  /**
+   * Initializes the scene, sets up graphics, inputs, and the game loop.
+   * Called once when the scene starts.
+   */
   create() {
     // Generate textures
     const graphics = this.make.graphics({ x: 0, y: 0 });
@@ -67,11 +75,18 @@ export class GameScene extends Phaser.Scene {
     this.scale.on('resize', this.handleResize, this);
   }
 
+  /**
+   * Handles the window resize event to update canvas size in the store.
+   * @param gameSize - The new size of the game canvas.
+   */
   handleResize(gameSize: Phaser.Structs.Size) {
     useGameStore.getState().setCanvasSize(gameSize.width, gameSize.height);
     this.drawBackground();
   }
 
+  /**
+   * Draws the background grid and background color.
+   */
   drawBackground() {
     const { width, height } = this.cameras.main;
     this.backgroundGraphics.clear();
@@ -98,6 +113,13 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Main game loop, called every frame.
+   * Updates game logic and renders entities.
+   *
+   * @param _time - The current time.
+   * @param delta - The time elapsed since the last frame in ms.
+   */
   update(_time: number, delta: number) {
     const store = useGameStore.getState();
     if (store.isPaused) return;
@@ -126,6 +148,15 @@ export class GameScene extends Phaser.Scene {
     this.updateFloatingTexts(delta);
   }
 
+  /**
+   * Spawns a floating text effect at the specified position.
+   * Used for damage numbers and coin gains.
+   *
+   * @param x - X coordinate.
+   * @param y - Y coordinate.
+   * @param text - The text to display.
+   * @param color - The hex color string.
+   */
   showFloatingText(x: number, y: number, text: string, color: string = '#ffffff') {
     const floatingText = this.add.text(x, y, text, {
       fontSize: '16px',
@@ -140,11 +171,15 @@ export class GameScene extends Phaser.Scene {
     this.floatingTexts.push(floatingText);
   }
 
+  /**
+   * Updates and renders all active floating text effects.
+   * @param delta - Time elapsed since last frame.
+   */
   updateFloatingTexts(delta: number) {
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const text = this.floatingTexts[i];
       const life = text.getData('life') - delta;
-      
+
       if (life <= 0) {
         text.destroy();
         this.floatingTexts.splice(i, 1);
@@ -156,6 +191,12 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Updates the physics and position of all balls.
+   * Handles movement, wall collisions, and interaction with bricks.
+   *
+   * @param delta - Time elapsed since last frame.
+   */
   updateBalls(delta: number) {
     const store = useGameStore.getState();
     const { width, height } = this.cameras.main;
@@ -224,6 +265,15 @@ export class GameScene extends Phaser.Scene {
     useGameStore.setState({ balls: updatedBalls });
   }
 
+  /**
+   * Calculates a steering vector for a ball to target the weakest brick.
+   *
+   * @param ball - The ball to steer.
+   * @param dx - Current X velocity.
+   * @param dy - Current Y velocity.
+   * @param bricks - List of potential target bricks.
+   * @returns {[number, number]} The new velocity vector [dx, dy].
+   */
   seekWeakestBrick(
     ball: BallData,
     dx: number,
@@ -259,6 +309,16 @@ export class GameScene extends Phaser.Scene {
     return [dx, dy];
   }
 
+  /**
+   * Checks for collisions between a ball and any brick.
+   * Handles damage application, bouncing, and effects.
+   *
+   * @param ball - The ball to check.
+   * @param damageMult - Global damage multiplier.
+   * @param coinMult - Global coin multiplier.
+   * @param config - The ball's configuration.
+   * @returns {{ dx: number; dy: number } | null} New velocity vector if bounced, or null if no collision.
+   */
   checkBrickCollisions(
     ball: BallData,
     damageMult: number,
@@ -283,15 +343,15 @@ export class GameScene extends Phaser.Scene {
             const coinsEarned = brick.value.mul(coinMult);
             store.addCoins(coinsEarned);
             store.incrementBricksBroken();
-            
+
             // Visual effects
             const color = getTierColor(brick.tier);
             const colorNum = Phaser.Display.Color.HexStringToColor(color).color;
-            
+
             this.particleEmitter.setPosition(brick.x + brick.width / 2, brick.y + brick.height / 2);
             this.particleEmitter.setParticleTint(colorNum);
             this.particleEmitter.explode(10);
-            
+
             // Floating text for coins
             this.showFloatingText(brick.x + brick.width/2, brick.y, `+${formatNumber(coinsEarned)}`, '#ffd700');
           }
@@ -312,6 +372,13 @@ export class GameScene extends Phaser.Scene {
     return null;
   }
 
+  /**
+   * Determines if a ball overlaps with a brick.
+   *
+   * @param ball - The ball.
+   * @param brick - The brick.
+   * @returns {boolean} True if they collide.
+   */
   ballCollidesWithBrick(ball: BallData, brick: BrickData): boolean {
     const closestX = Math.max(brick.x, Math.min(ball.x, brick.x + brick.width));
     const closestY = Math.max(brick.y, Math.min(ball.y, brick.y + brick.height));
@@ -320,6 +387,13 @@ export class GameScene extends Phaser.Scene {
     return distX * distX + distY * distY < 64; // 8 * 8 radius squared
   }
 
+  /**
+   * Calculates the bounce direction when a ball hits a brick.
+   *
+   * @param ball - The ball.
+   * @param brick - The brick.
+   * @returns {{ dx: number; dy: number }} The new velocity vector.
+   */
   calculateBounce(ball: BallData, brick: BrickData): { dx: number; dy: number } {
     const brickCenterX = brick.x + brick.width / 2;
     const brickCenterY = brick.y + brick.height / 2;
@@ -336,6 +410,15 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Triggers an area-of-effect explosion.
+   *
+   * @param x - Center X.
+   * @param y - Center Y.
+   * @param radius - Explosion radius.
+   * @param damage - Damage to deal to bricks in range.
+   * @param coinMult - Coin multiplier for destroyed bricks.
+   */
   explode(x: number, y: number, radius: number, damage: Decimal, coinMult: number) {
     const store = useGameStore.getState();
     const explosionDamage = damage.mul(0.5);
@@ -366,6 +449,10 @@ export class GameScene extends Phaser.Scene {
     store.addExplosion(x, y, radius);
   }
 
+  /**
+   * Renders the balls on the canvas using Phaser Graphics.
+   * @param balls - List of balls to render.
+   */
   renderBalls(balls: BallData[]) {
     // Remove old graphics for balls that no longer exist
     const currentIds = new Set(balls.map((b) => b.id));
@@ -411,6 +498,10 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Renders the bricks on the canvas.
+   * @param bricks - List of bricks to render.
+   */
   renderBricks(bricks: BrickData[]) {
     // Remove old graphics and text for bricks that no longer exist
     const currentIds = new Set(bricks.map((b) => b.id));
@@ -493,6 +584,9 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Renders active explosions.
+   */
   renderExplosions() {
     // Clean up old explosion graphics
     for (const graphics of this.explosionGraphics) {
@@ -518,6 +612,9 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Cleanup when the scene is shut down.
+   */
   shutdown() {
     if (this.unsubscribe) {
       this.unsubscribe();
@@ -526,6 +623,9 @@ export class GameScene extends Phaser.Scene {
   }
 }
 
+/**
+ * Helper class to manage brick generation and placement.
+ */
 class BrickManager {
   private scene: GameScene;
   private brickWidth = 60;
@@ -538,6 +638,13 @@ class BrickManager {
     this.scene = scene;
   }
 
+  /**
+   * Generates a grid of bricks.
+   *
+   * @param count - Total number of bricks to generate.
+   * @param baseTier - Base difficulty tier for the bricks.
+   * @returns {BrickData[]} List of generated bricks.
+   */
   generateBricks(count: number, baseTier: number): BrickData[] {
     const { width } = this.scene.cameras.main;
     const bricks: BrickData[] = [];
@@ -577,6 +684,13 @@ class BrickManager {
     return bricks;
   }
 
+  /**
+   * Adds new bricks to fill empty space on the screen.
+   *
+   * @param currentBricks - Existing bricks to avoid overlapping.
+   * @param baseTier - Base difficulty tier.
+   * @returns {BrickData[]} List of newly added bricks.
+   */
   addBricksToFillScreen(currentBricks: BrickData[], baseTier: number): BrickData[] {
     const { width, height } = this.scene.cameras.main;
     const cols = Math.floor(
