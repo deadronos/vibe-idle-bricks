@@ -543,14 +543,22 @@ export const useGameStore = create<GameStore>()(
           };
         });
 
-        const ballCosts: Record<BallType, Decimal> = {} as Record<BallType, Decimal>;
-        for (const [key, value] of Object.entries(saveData.ballCosts || {})) {
-          ballCosts[key as BallType] = new Decimal(value as string);
+        const ballCosts = getDefaultBallCosts();
+        if (saveData.ballCosts) {
+          for (const [key, value] of Object.entries(saveData.ballCosts)) {
+            if (Object.prototype.hasOwnProperty.call(ballCosts, key)) {
+              ballCosts[key as BallType] = new Decimal(value as string);
+            }
+          }
         }
 
-        const upgradeCosts: Record<keyof Upgrades, Decimal> = {} as Record<keyof Upgrades, Decimal>;
-        for (const [key, value] of Object.entries(saveData.upgradeCosts || {})) {
-          upgradeCosts[key as keyof Upgrades] = new Decimal(value as string);
+        const upgradeCosts = getDefaultUpgradeCosts();
+        if (saveData.upgradeCosts) {
+          for (const [key, value] of Object.entries(saveData.upgradeCosts)) {
+            if (Object.prototype.hasOwnProperty.call(upgradeCosts, key)) {
+              upgradeCosts[key as keyof Upgrades] = new Decimal(value as string);
+            }
+          }
         }
 
         set({
@@ -559,8 +567,8 @@ export const useGameStore = create<GameStore>()(
           totalBricksBroken: new Decimal(saveData.totalBricksBroken || 0),
           prestigeLevel: saveData.prestigeLevel || 0,
           upgrades: saveData.upgrades || { speed: 0, damage: 0, coinMult: 0 },
-          ballCosts: Object.keys(ballCosts).length > 0 ? ballCosts : getDefaultBallCosts(),
-          upgradeCosts: Object.keys(upgradeCosts).length > 0 ? upgradeCosts : getDefaultUpgradeCosts(),
+          ballCosts,
+          upgradeCosts,
           currentTier: saveData.currentTier || 1,
           balls: balls.length > 0 ? balls : [createInitialBall(width, height)],
         });
