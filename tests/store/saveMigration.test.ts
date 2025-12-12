@@ -143,8 +143,7 @@ describe('Save Migration and Backward Compatibility', () => {
     const state = useGameStore.getState()
 
     expect(state.ballCosts.basic.eq(20)).toBe(true)
-    // TypeScript check prevents access, but at runtime it should not be there (if my hasOwnProperty fix works)
-    // We can cast to any to check runtime object
-    expect((state.ballCosts as any).fakeBall).toBeUndefined()
+    // TypeScript check prevents access, but at runtime it should not be there (if our migration fix works)
+    expect(Object.prototype.hasOwnProperty.call(state.ballCosts, 'fakeBall')).toBe(false)
   })
 })

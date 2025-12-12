@@ -49,10 +49,9 @@ describe('GameStore load legacy/partial save', () => {
 
     // Check all ball types
     Object.keys(BALL_TYPES).forEach((type) => {
-        // @ts-ignore
-        expect(state.ballCosts[type]).toBeDefined();
-        // @ts-ignore
-        expect(state.ballCosts[type]).toBeInstanceOf(Decimal);
+        const key = type as keyof typeof BALL_TYPES;
+        expect(state.ballCosts[key]).toBeDefined();
+        expect(state.ballCosts[key]).toBeInstanceOf(Decimal);
     });
   });
 

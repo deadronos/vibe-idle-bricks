@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Decimal from 'break_infinity.js'
 import { Shop } from '../../src/components/Shop'
@@ -62,12 +62,16 @@ describe('Shop', () => {
       expect(screen.getByText(/sniper ball/i)).toBeInTheDocument()
     })
 
-    it('should render upgrade buttons', () => {
+    it('should render upgrade buttons', async () => {
       render(<Shop />)
+      // open upgrades tab to show upgrade items
+      const upgradesTab = screen.getByRole('button', { name: /upgrades/i })
+        const user = userEvent.setup()
+        await user.click(upgradesTab)
       
-      expect(screen.getByText('Speed Boost')).toBeInTheDocument()
-      expect(screen.getByText('Power Boost')).toBeInTheDocument()
-      expect(screen.getByText('Coin Multiplier')).toBeInTheDocument()
+      expect(screen.getByText(/speed boost/i)).toBeInTheDocument()
+      expect(screen.getByText(/power boost/i)).toBeInTheDocument()
+      expect(screen.getByText(/coin multiplier/i)).toBeInTheDocument()
     })
 
     it('should render prestige button', () => {
@@ -133,18 +137,24 @@ describe('Shop', () => {
   })
 
   describe('upgrade purchases', () => {
-    it('should disable upgrades when cannot afford', () => {
+    it('should disable upgrades when cannot afford', async () => {
       render(<Shop />)
+      const upgradesTab = screen.getByRole('button', { name: /upgrades/i })
+        const user = userEvent.setup()
+        await user.click(upgradesTab)
       
-      const speedButton = screen.getByRole('button', { name: /speed boost/i })
+      const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getByRole('button', { name: /speed boost/i })
       expect(speedButton).toBeDisabled()
     })
 
-    it('should enable upgrades when can afford', () => {
+    it('should enable upgrades when can afford', async () => {
       useGameStore.setState({ coins: new Decimal(200) })
       render(<Shop />)
+      const upgradesTab = screen.getByRole('button', { name: /upgrades/i })
+        const user = userEvent.setup()
+        await user.click(upgradesTab)
       
-      const speedButton = screen.getByRole('button', { name: /speed boost/i })
+      const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getByRole('button', { name: /speed boost/i })
       expect(speedButton).not.toBeDisabled()
     })
 
@@ -152,8 +162,10 @@ describe('Shop', () => {
       const user = userEvent.setup()
       useGameStore.setState({ coins: new Decimal(200) })
       render(<Shop />)
-      
-      const speedButton = screen.getByRole('button', { name: /speed boost/i })
+      const upgradesTab = screen.getByRole('button', { name: /upgrades/i })
+      await user.click(upgradesTab)
+
+      const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getByRole('button', { name: /speed boost/i })
       await user.click(speedButton)
       
       expect(useGameStore.getState().upgrades.speed).toBe(1)
@@ -161,22 +173,28 @@ describe('Shop', () => {
   })
 
   describe('prestige', () => {
-    it('should disable prestige when threshold not met', () => {
+    it('should disable prestige when threshold not met', async () => {
       useGameStore.setState({ bricksBroken: new Decimal(5000) })
       render(<Shop />)
+      const user = userEvent.setup()
+      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      await user.click(prestigeTab)
       
-      const prestigeButton = screen.getByRole('button', { name: /prestige/i })
+      const prestigeButton = within(screen.getByRole('heading', { name: /prestige/i }).parentElement!).getByRole('button', { name: /prestige/i })
       expect(prestigeButton).toBeDisabled()
     })
 
-    it('should show bricks needed when cannot prestige', () => {
+    it('should show bricks needed when cannot prestige', async () => {
       useGameStore.setState({ bricksBroken: new Decimal(5000) })
       render(<Shop />)
+      const user = userEvent.setup()
+      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      await user.click(prestigeTab)
       
       expect(screen.getByText(/break 5.00K more bricks/i)).toBeInTheDocument()
     })
 
-    it('should scale required bricks with prestige level', () => {
+    it('should scale required bricks with prestige level', async () => {
       const nextThreshold = getPrestigeThreshold(1)
       useGameStore.setState({
         prestigeLevel: 1,
@@ -184,27 +202,36 @@ describe('Shop', () => {
       })
 
       render(<Shop />)
+      const user = userEvent.setup()
+      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      await user.click(prestigeTab)
 
       expect(screen.getByText(/break 1.00K more bricks/i)).toBeInTheDocument()
     })
 
-    it('should enable prestige when threshold met', () => {
+    it('should enable prestige when threshold met', async () => {
       useGameStore.setState({ 
         bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
         canvasSize: { width: 800, height: 500 }
       })
       render(<Shop />)
+      const user = userEvent.setup()
+      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      await user.click(prestigeTab)
       
-      const prestigeButton = screen.getByRole('button', { name: /prestige/i })
+      const prestigeButton = within(screen.getByRole('heading', { name: /prestige/i }).parentElement!).getByRole('button', { name: /prestige/i })
       expect(prestigeButton).not.toBeDisabled()
     })
 
-    it('should show bonus info when can prestige', () => {
+    it('should show bonus info when can prestige', async () => {
       useGameStore.setState({ 
         bricksBroken: new Decimal(getPrestigeThreshold(2)),
         prestigeLevel: 2,
       })
       render(<Shop />)
+      const user = userEvent.setup()
+      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      await user.click(prestigeTab)
       
       expect(screen.getByText(/\+25% coin bonus/i)).toBeInTheDocument()
       expect(screen.getByText(/current: \+50%/i)).toBeInTheDocument()
@@ -219,8 +246,9 @@ describe('Shop', () => {
         canvasSize: { width: 800, height: 500 }
       })
       render(<Shop />)
-      
-      const prestigeButton = screen.getByRole('button', { name: /prestige/i })
+      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      await user.click(prestigeTab)
+      const prestigeButton = within(screen.getByRole('heading', { name: /prestige/i }).parentElement!).getByRole('button', { name: /prestige/i })
       await user.click(prestigeButton)
       
       expect(confirm).toHaveBeenCalled()
@@ -237,8 +265,9 @@ describe('Shop', () => {
         canvasSize: { width: 800, height: 500 }
       })
       render(<Shop />)
-      
-      const prestigeButton = screen.getByRole('button', { name: /prestige/i })
+      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      await user.click(prestigeTab)
+      const prestigeButton = within(screen.getByRole('heading', { name: /prestige/i }).parentElement!).getByRole('button', { name: /prestige/i })
       await user.click(prestigeButton)
       
       expect(useGameStore.getState().prestigeLevel).toBe(1)
