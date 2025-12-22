@@ -53,7 +53,7 @@ describe('Shop', () => {
 
     it('should render all ball types', () => {
       render(<Shop />)
-      
+
       expect(screen.getByText(/basic ball/i)).toBeInTheDocument()
       expect(screen.getByText(/fast ball/i)).toBeInTheDocument()
       expect(screen.getByText(/heavy ball/i)).toBeInTheDocument()
@@ -65,10 +65,10 @@ describe('Shop', () => {
     it('should render upgrade buttons', async () => {
       render(<Shop />)
       // open upgrades tab to show upgrade items
-      const upgradesTab = screen.getByRole('button', { name: /upgrades/i })
+      const upgradesTab = screen.getByRole('tab', { name: /upgrades/i })
         const user = userEvent.setup()
         await user.click(upgradesTab)
-      
+
       expect(screen.getByText(/speed boost/i)).toBeInTheDocument()
       expect(screen.getByText(/power boost/i)).toBeInTheDocument()
       expect(screen.getByText(/coin multiplier/i)).toBeInTheDocument()
@@ -76,12 +76,12 @@ describe('Shop', () => {
 
     it('should render prestige button', () => {
       render(<Shop />)
-      expect(screen.getByRole('button', { name: /prestige/i })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: /prestige/i })).toBeInTheDocument()
     })
 
     it('should show ball descriptions', () => {
       render(<Shop />)
-      
+
       expect(screen.getByText('Standard ball')).toBeInTheDocument()
       expect(screen.getByText('2x speed')).toBeInTheDocument()
       expect(screen.getByText('3x damage')).toBeInTheDocument()
@@ -92,7 +92,7 @@ describe('Shop', () => {
   describe('ball purchases', () => {
     it('should disable ball buttons when cannot afford', () => {
       render(<Shop />)
-      
+
       const basicButton = screen.getByRole('button', { name: /basic ball/i })
       expect(basicButton).toBeDisabled()
     })
@@ -100,7 +100,7 @@ describe('Shop', () => {
     it('should enable ball buttons when can afford', () => {
       useGameStore.setState({ coins: new Decimal(100) })
       render(<Shop />)
-      
+
       const basicButton = screen.getByRole('button', { name: /basic ball/i })
       expect(basicButton).not.toBeDisabled()
     })
@@ -109,10 +109,10 @@ describe('Shop', () => {
       const user = userEvent.setup()
       useGameStore.setState({ coins: new Decimal(100) })
       render(<Shop />)
-      
+
       const basicButton = screen.getByRole('button', { name: /basic ball/i })
       await user.click(basicButton)
-      
+
       expect(useGameStore.getState().balls.length).toBe(1)
       expect(useGameStore.getState().coins.lt(100)).toBe(true)
     })
@@ -120,17 +120,17 @@ describe('Shop', () => {
     it('should update cost display after purchase', async () => {
       const user = userEvent.setup()
       useGameStore.setState({ coins: new Decimal(1000) })
-      
+
       const { rerender } = render(<Shop />)
-      
+
       // Initial cost is 10
       expect(screen.getByText('10')).toBeInTheDocument()
-      
+
       const basicButton = screen.getByRole('button', { name: /basic ball/i })
       await user.click(basicButton)
-      
+
       rerender(<Shop />)
-      
+
       // Cost should have increased (10 * 1.15 = 11.5, rounded up to 12)
       expect(screen.getByText('12')).toBeInTheDocument()
     })
@@ -139,10 +139,10 @@ describe('Shop', () => {
   describe('upgrade purchases', () => {
     it('should disable upgrades when cannot afford', async () => {
       render(<Shop />)
-      const upgradesTab = screen.getByRole('button', { name: /upgrades/i })
+      const upgradesTab = screen.getByRole('tab', { name: /upgrades/i })
         const user = userEvent.setup()
         await user.click(upgradesTab)
-      
+
       const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getByRole('button', { name: /speed boost/i })
       expect(speedButton).toBeDisabled()
     })
@@ -150,10 +150,10 @@ describe('Shop', () => {
     it('should enable upgrades when can afford', async () => {
       useGameStore.setState({ coins: new Decimal(200) })
       render(<Shop />)
-      const upgradesTab = screen.getByRole('button', { name: /upgrades/i })
+      const upgradesTab = screen.getByRole('tab', { name: /upgrades/i })
         const user = userEvent.setup()
         await user.click(upgradesTab)
-      
+
       const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getByRole('button', { name: /speed boost/i })
       expect(speedButton).not.toBeDisabled()
     })
@@ -162,12 +162,12 @@ describe('Shop', () => {
       const user = userEvent.setup()
       useGameStore.setState({ coins: new Decimal(200) })
       render(<Shop />)
-      const upgradesTab = screen.getByRole('button', { name: /upgrades/i })
+      const upgradesTab = screen.getByRole('tab', { name: /upgrades/i })
       await user.click(upgradesTab)
 
       const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getByRole('button', { name: /speed boost/i })
       await user.click(speedButton)
-      
+
       expect(useGameStore.getState().upgrades.speed).toBe(1)
     })
   })
@@ -177,9 +177,9 @@ describe('Shop', () => {
       useGameStore.setState({ bricksBroken: new Decimal(5000) })
       render(<Shop />)
       const user = userEvent.setup()
-      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      const prestigeTab = screen.getByRole('tab', { name: /prestige/i })
       await user.click(prestigeTab)
-      
+
       const prestigeButton = within(screen.getByRole('heading', { name: /prestige/i }).parentElement!).getByRole('button', { name: /prestige/i })
       expect(prestigeButton).toBeDisabled()
     })
@@ -188,9 +188,9 @@ describe('Shop', () => {
       useGameStore.setState({ bricksBroken: new Decimal(5000) })
       render(<Shop />)
       const user = userEvent.setup()
-      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      const prestigeTab = screen.getByRole('tab', { name: /prestige/i })
       await user.click(prestigeTab)
-      
+
       expect(screen.getByText(/break 5.00K more bricks/i)).toBeInTheDocument()
     })
 
@@ -203,36 +203,36 @@ describe('Shop', () => {
 
       render(<Shop />)
       const user = userEvent.setup()
-      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      const prestigeTab = screen.getByRole('tab', { name: /prestige/i })
       await user.click(prestigeTab)
 
       expect(screen.getByText(/break 1.00K more bricks/i)).toBeInTheDocument()
     })
 
     it('should enable prestige when threshold met', async () => {
-      useGameStore.setState({ 
+      useGameStore.setState({
         bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
         canvasSize: { width: 800, height: 500 }
       })
       render(<Shop />)
       const user = userEvent.setup()
-      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      const prestigeTab = screen.getByRole('tab', { name: /prestige/i })
       await user.click(prestigeTab)
-      
+
       const prestigeButton = within(screen.getByRole('heading', { name: /prestige/i }).parentElement!).getByRole('button', { name: /prestige/i })
       expect(prestigeButton).not.toBeDisabled()
     })
 
     it('should show bonus info when can prestige', async () => {
-      useGameStore.setState({ 
+      useGameStore.setState({
         bricksBroken: new Decimal(getPrestigeThreshold(2)),
         prestigeLevel: 2,
       })
       render(<Shop />)
       const user = userEvent.setup()
-      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      const prestigeTab = screen.getByRole('tab', { name: /prestige/i })
       await user.click(prestigeTab)
-      
+
       expect(screen.getByText(/\+25% coin bonus/i)).toBeInTheDocument()
       expect(screen.getByText(/current: \+50%/i)).toBeInTheDocument()
     })
@@ -240,38 +240,67 @@ describe('Shop', () => {
     it('should show confirm dialog when prestige clicked', async () => {
       const user = userEvent.setup()
       vi.mocked(confirm).mockReturnValue(false)
-      
-      useGameStore.setState({ 
+
+      useGameStore.setState({
         bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
         canvasSize: { width: 800, height: 500 }
       })
       render(<Shop />)
-      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      const prestigeTab = screen.getByRole('tab', { name: /prestige/i })
       await user.click(prestigeTab)
       const prestigeButton = within(screen.getByRole('heading', { name: /prestige/i }).parentElement!).getByRole('button', { name: /prestige/i })
       await user.click(prestigeButton)
-      
+
       expect(confirm).toHaveBeenCalled()
     })
 
     it('should prestige when confirmed', async () => {
       const user = userEvent.setup()
       vi.mocked(confirm).mockReturnValue(true)
-      
-      useGameStore.setState({ 
+
+      useGameStore.setState({
         bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
         coins: new Decimal(10000),
         prestigeLevel: 0,
         canvasSize: { width: 800, height: 500 }
       })
       render(<Shop />)
-      const prestigeTab = screen.getByRole('button', { name: /prestige/i })
+      const prestigeTab = screen.getByRole('tab', { name: /prestige/i })
       await user.click(prestigeTab)
       const prestigeButton = within(screen.getByRole('heading', { name: /prestige/i }).parentElement!).getByRole('button', { name: /prestige/i })
       await user.click(prestigeButton)
-      
+
       expect(useGameStore.getState().prestigeLevel).toBe(1)
       expect(useGameStore.getState().coins.eq(0)).toBe(true)
+    })
+  })
+
+  describe('accessibility', () => {
+    it('should navigate tabs with arrow keys', async () => {
+      render(<Shop />)
+      const user = userEvent.setup()
+
+      const ballsTab = screen.getByRole('tab', { name: /balls/i })
+      const upgradesTab = screen.getByRole('tab', { name: /upgrades/i })
+      const prestigeTab = screen.getByRole('tab', { name: /prestige/i })
+
+      ballsTab.focus()
+      await user.keyboard('{ArrowRight}')
+
+      expect(upgradesTab).toHaveAttribute('aria-selected', 'true')
+      expect(upgradesTab).toHaveFocus()
+
+      await user.keyboard('{ArrowRight}')
+      expect(prestigeTab).toHaveAttribute('aria-selected', 'true')
+      expect(prestigeTab).toHaveFocus()
+
+      await user.keyboard('{ArrowRight}')
+      expect(ballsTab).toHaveAttribute('aria-selected', 'true')
+      expect(ballsTab).toHaveFocus()
+
+      await user.keyboard('{ArrowLeft}')
+      expect(prestigeTab).toHaveAttribute('aria-selected', 'true')
+      expect(prestigeTab).toHaveFocus()
     })
   })
 })

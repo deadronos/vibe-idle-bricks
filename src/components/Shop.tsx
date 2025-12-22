@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { useGameStore } from '../store';
 import { type BallType, BALL_TYPES, PRESTIGE_BONUS, getPrestigeThreshold } from '../types';
 import { formatNumber } from '../utils';
@@ -19,6 +19,12 @@ const BallIcons: Record<BallType, React.ElementType> = {
   sniper: Crosshair,
 };
 
+const TABS = [
+  { id: 'balls', label: 'Balls' },
+  { id: 'upgrades', label: 'Upgrades' },
+  { id: 'prestige', label: 'Prestige' },
+] as const;
+
 /**
  * Shop component where players can buy new balls and upgrades.
  * Displays current costs, affordability, and handles purchase actions.
@@ -26,7 +32,8 @@ const BallIcons: Record<BallType, React.ElementType> = {
  * @returns {JSX.Element} The shop UI panel.
  */
 export function Shop() {
-  const [activeTab, setActiveTab] = useState<'balls' | 'upgrades' | 'prestige'>('balls');
+  const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('balls');
+  const shopId = useId();
   const coins = useGameStore((state) => state.coins);
   const ballCosts = useGameStore((state) => state.ballCosts);
   const upgradeCosts = useGameStore((state) => state.upgradeCosts);
@@ -44,6 +51,22 @@ export function Shop() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const nextIndex = (index + 1) % TABS.length;
+      const nextTabId = TABS[nextIndex].id;
+      setActiveTab(nextTabId);
+      document.getElementById(`${shopId}-tab-${nextTabId}`)?.focus();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prevIndex = (index - 1 + TABS.length) % TABS.length;
+      const prevTabId = TABS[prevIndex].id;
+      setActiveTab(prevTabId);
+      document.getElementById(`${shopId}-tab-${prevTabId}`)?.focus();
+    }
+  };
+
   const prestigePercent = Math.round(PRESTIGE_BONUS * 100);
   const canDoPrestige = canPrestige();
   const prestigeThreshold = getPrestigeThreshold(prestigeLevel);
@@ -51,31 +74,28 @@ export function Shop() {
 
   return (
     <aside className="shop-panel">
-      <h2><ShoppingCart className="inline-icon" size={24} /> Shop</h2>
+      <h2><ShoppingCart className="inline-icon" size={24} aria-hidden="true" /> Shop</h2>
 
-      <div className="shop-tabs">
-        <button 
-          className={`shop-tab-btn ${activeTab === 'balls' ? 'active' : ''}`}
-          onClick={() => setActiveTab('balls')}
-        >
-          Balls
-        </button>
-        <button 
-          className={`shop-tab-btn ${activeTab === 'upgrades' ? 'active' : ''}`}
-          onClick={() => setActiveTab('upgrades')}
-        >
-          Upgrades
-        </button>
-        <button 
-          className={`shop-tab-btn ${activeTab === 'prestige' ? 'active' : ''}`}
-          onClick={() => setActiveTab('prestige')}
-        >
-          Prestige
-        </button>
+      <div className="shop-tabs" role="tablist" aria-label="Shop Sections">
+        {TABS.map((tab, index) => (
+          <button
+            key={tab.id}
+            id={`${shopId}-tab-${tab.id}`}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={`${shopId}-panel-${tab.id}`}
+            tabIndex={activeTab === tab.id ? 0 : -1}
+            className={`shop-tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+            onKeyDown={(e) => handleKeyDown(e, index)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {activeTab === 'balls' && (
-        <div className="shop-section">
+        <div className="shop-section" role="tabpanel" id={`${shopId}-panel-balls`} aria-labelledby={`${shopId}-tab-balls`}>
           <h3>Buy Balls</h3>
           <div className="shop-items">
             {ballTypes.map((type) => {
@@ -92,7 +112,7 @@ export function Shop() {
                   onClick={() => buyBall(type)}
                 >
                   <span className="item-name">
-                    <Icon size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} />
+                    <Icon size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} aria-hidden="true" />
                     {type.charAt(0).toUpperCase() + type.slice(1)} Ball
                   </span>
                   <span className="item-cost">{formatNumber(cost)}</span> coins
@@ -105,7 +125,7 @@ export function Shop() {
       )}
 
       {activeTab === 'upgrades' && (
-        <div className="shop-section">
+        <div className="shop-section" role="tabpanel" id={`${shopId}-panel-upgrades`} aria-labelledby={`${shopId}-tab-upgrades`}>
           <h3>Upgrades</h3>
           <div className="shop-items">
             <UpgradeButton
@@ -143,14 +163,14 @@ export function Shop() {
       )}
 
       {activeTab === 'prestige' && (
-        <div className="shop-section">
+        <div className="shop-section" role="tabpanel" id={`${shopId}-panel-prestige`} aria-labelledby={`${shopId}-tab-prestige`}>
           <h3>Prestige</h3>
           <button
             className={`shop-item prestige-btn ${canDoPrestige ? 'affordable' : ''}`}
             disabled={!canDoPrestige}
             onClick={handlePrestige}
           >
-            <span className="item-name"><TrendingUp size={16} className="inline-block mr-2" /> Prestige</span>
+            <span className="item-name"><TrendingUp size={16} className="inline-block mr-2" aria-hidden="true" /> Prestige</span>
             <span className="item-desc">Reset for permanent bonuses</span>
             <span className="item-desc">
               {canDoPrestige
@@ -196,7 +216,7 @@ function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBu
   return (
     <button className={`shop-item ${canAfford ? 'affordable' : ''}`} disabled={!canAfford} onClick={onBuy}>
       <span className="item-name">
-        <Icon size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} />
+        <Icon size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} aria-hidden="true" />
         {name} <span className="item-level">Lv.{level}</span>
       </span>
       <span className="item-cost">{formatNumber(cost)}</span> coins
