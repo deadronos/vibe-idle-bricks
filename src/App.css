@@ -5,6 +5,7 @@
   padding: 20px;
   min-height: 100vh;
   font-family: 'Rajdhani', sans-serif;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -20,6 +21,7 @@ header h1 {
   margin-bottom: 15px;
   text-transform: uppercase;
   letter-spacing: 2px;
+  margin-top: 0;
 }
 
 /* Stats */
@@ -43,6 +45,8 @@ header h1 {
   flex-direction: column;
   align-items: center;
   gap: 5px;
+  flex: 1 1 140px; /* Allow shrinking/growing */
+  max-width: 200px;
 }
 
 .stat-icon {
@@ -56,6 +60,7 @@ header h1 {
   font-weight: 700;
   color: #4ade80;
   line-height: 1;
+  word-break: break-word; /* Prevent overflow of large numbers */
 }
 
 .stat label {
@@ -81,18 +86,21 @@ main {
   display: flex;
   gap: 20px;
   flex-wrap: wrap;
+  align-items: flex-start; /* Align top */
 }
 
 .game-area {
-  flex: 1;
-  min-width: 400px;
-  max-width: calc(100vw - 380px);
+  flex: 1 1 600px; /* Basis of 600px, but can grow/shrink */
+  min-width: 300px; /* Minimum width before breaking layout or scrolling */
   background: rgba(0, 0, 0, 0.3);
   border-radius: 15px;
   padding: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  /* Responsive height calculation */
   height: calc(100vh - 220px);
-  max-height: 600px;
+  min-height: 400px;
+  max-height: 700px;
+  position: relative; /* Context for absolute children if needed */
 }
 
 .game-canvas {
@@ -107,16 +115,22 @@ main {
 .game-canvas canvas {
   width: 100% !important;
   height: 100% !important;
+  display: block; /* Remove inline-block spacing */
 }
 
 /* Shop Panel */
 .shop-panel {
+  flex: 0 0 320px; /* Fixed width basis */
   width: 320px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 15px;
   padding: 20px;
-  max-height: 80vh;
+  /* Make shop panel height match game area or fill screen appropriately */
+  height: calc(100vh - 220px);
+  min-height: 400px;
+  max-height: 700px;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .shop-panel h2 {
@@ -124,6 +138,7 @@ main {
   color: #ffd700;
   margin-bottom: 20px;
   font-size: 1.5rem;
+  margin-top: 0;
 }
 
 .shop-section {
@@ -144,6 +159,7 @@ main {
   margin-bottom: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 15px;
+  flex-wrap: wrap;
 }
 
 .shop-tab-btn {
@@ -155,6 +171,7 @@ main {
   font-size: 0.9rem;
   border-radius: 6px;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .shop-tab-btn:hover {
@@ -184,12 +201,14 @@ main {
   cursor: pointer;
   transition: all 0.2s ease;
   color: #eee;
+  position: relative;
 }
 
 .shop-item:hover:not(:disabled) {
   border-color: #ffd700;
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
+  z-index: 1;
 }
 
 .shop-item:disabled {
@@ -249,6 +268,7 @@ main {
   justify-content: center;
   align-items: center;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -299,39 +319,122 @@ main {
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Responsive design */
-@media (max-width: 1000px) {
-  main {
-    flex-direction: column;
+/* Responsive Design Adjustments */
+
+/* Tablet / Intermediate Screens */
+@media (max-width: 1024px) {
+  .game-container {
+    padding: 15px;
   }
 
   .game-area {
-    min-width: 100%;
+    /* Allow it to be slightly smaller */
+    min-height: 50vh;
+  }
+}
+
+/* Mobile Screens */
+@media (max-width: 768px) {
+  .game-container {
+    padding: 10px;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  header h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+
+  /* Stack main content vertically */
+  main {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .stats {
+    gap: 8px;
+  }
+
+  .stat {
+    padding: 8px 5px;
+    min-width: 80px;
+    /* Force 2 per row if possible, or 3 */
+    flex: 1 1 30%;
+    gap: 2px;
+  }
+
+  .stat-value {
+    font-size: 1.2rem;
+  }
+
+  .stat-icon {
+    font-size: 1.2rem;
+    margin-bottom: 2px;
+  }
+
+  .stat label {
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+  }
+
+  .game-area {
+    width: 100%;
+    flex: none; /* Reset flex */
+    /* On mobile, give it a fixed height relative to viewport width usually,
+       or a reasonable fixed height so it doesn't take up whole screen */
+    height: 50vh;
+    min-height: 300px;
+    max-height: 500px;
     max-width: 100%;
-    height: 400px;
   }
 
   .shop-panel {
     width: 100%;
-    max-height: none;
+    flex: none;
+    height: auto; /* Let content dictate height up to a max */
+    max-height: 400px; /* Scrollable if too long */
+    margin-bottom: 20px;
+  }
+
+  .shop-tabs {
+    overflow-x: auto;
+    padding-bottom: 5px; /* Space for scrollbar if needed */
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 10px;
   }
 }
 
-@media (max-width: 600px) {
+/* Very Small Screens */
+@media (max-width: 480px) {
   header h1 {
-    font-size: 1.8rem;
-  }
-
-  .stats {
-    gap: 10px;
+    font-size: 1.5rem;
   }
 
   .stat {
-    padding: 10px 15px;
-    min-width: 80px;
+    /* Still allow 2 per row on very small screens, maybe even 3 if small enough */
+    flex: 1 1 45%;
+    min-width: 70px;
+    padding: 6px;
   }
 
   .stat-value {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
+  }
+
+  .game-area {
+    height: 45vh;
+    min-height: 250px;
+  }
+
+  .shop-item {
+    padding: 10px;
+  }
+
+  .shop-item .item-name {
+    font-size: 0.9rem;
   }
 }
