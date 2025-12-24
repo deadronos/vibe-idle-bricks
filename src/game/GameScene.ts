@@ -73,6 +73,9 @@ export class GameScene extends Phaser.Scene {
 
     // Handle resize
     this.scale.on('resize', this.handleResize, this);
+
+    // Initial resize trigger to ensure bricks are placed correctly
+    this.handleResize(this.scale.gameSize);
   }
 
   /**
@@ -80,8 +83,14 @@ export class GameScene extends Phaser.Scene {
    * @param gameSize - The new size of the game canvas.
    */
   handleResize(gameSize: Phaser.Structs.Size) {
-    useGameStore.getState().setCanvasSize(gameSize.width, gameSize.height);
+    const { width, height } = gameSize;
+    useGameStore.getState().setCanvasSize(width, height);
     this.drawBackground();
+
+    // Update existing bricks position ratio if needed, or just let them be.
+    // Ideally we might want to re-layout bricks, but for now let's just ensure
+    // the brick manager knows about the new bounds for FUTURE bricks.
+    // The BrickManager reads from cameras.main which is updated by Phaser automatically.
   }
 
   /**
@@ -631,8 +640,10 @@ class BrickManager {
   private brickWidth = 60;
   private brickHeight = 25;
   private padding = 5;
-  private offsetTop = 50;
-  private offsetLeft = 50;
+
+  // Dynamic offsets
+  private get offsetTop() { return Math.max(20, this.scene.cameras.main.height * 0.1); }
+  private get offsetLeft() { return Math.max(20, (this.scene.cameras.main.width % (this.brickWidth + this.padding)) / 2); }
 
   constructor(scene: GameScene) {
     this.scene = scene;
