@@ -353,17 +353,29 @@ main {
   }
 
   .stats {
-    gap: 10px;
+    gap: 8px;
   }
 
   .stat {
-    padding: 10px;
-    min-width: 100px;
-    flex: 1 1 40%; /* 2 per row roughly */
+    padding: 8px 5px;
+    min-width: 80px;
+    /* Force 2 per row if possible, or 3 */
+    flex: 1 1 30%;
+    gap: 2px;
   }
 
   .stat-value {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+  }
+
+  .stat-icon {
+    font-size: 1.2rem;
+    margin-bottom: 2px;
+  }
+
+  .stat label {
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
   }
 
   .game-area {
@@ -403,7 +415,14 @@ main {
   }
 
   .stat {
-    flex: 1 1 100%; /* 1 per row */
+    /* Still allow 2 per row on very small screens, maybe even 3 if small enough */
+    flex: 1 1 45%;
+    min-width: 70px;
+    padding: 6px;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
   }
 
   .game-area {
