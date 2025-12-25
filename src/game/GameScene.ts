@@ -4,6 +4,7 @@ import { useGameStore } from '../store';
 import { BALL_TYPES } from '../types';
 import type { BallData, BrickData } from '../types';
 import { generateId, getTierColor, adjustBrightness, formatNumber } from '../utils';
+import { SpatialGrid } from './SpatialGrid';
 
 /**
  * Main game scene that handles the physics, rendering, and game loop.
@@ -17,6 +18,7 @@ export class GameScene extends Phaser.Scene {
   private backgroundGraphics!: Phaser.GameObjects.Graphics;
   private brickManager!: BrickManager;
   private unsubscribe: (() => void) | null = null;
+  private spatialGrid: SpatialGrid = new SpatialGrid(100);
 
   // Visual Effects
   private particleEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -53,7 +55,14 @@ export class GameScene extends Phaser.Scene {
     // Initialize brick manager
     this.brickManager = new BrickManager(this);
 
-    // Subscribe to store changes
+    // Subscribe to store changes to keep spatial grid in sync
+    this.unsubscribe = useGameStore.subscribe(
+      (state) => state.bricks,
+      (bricks) => {
+        this.spatialGrid.rebuild(bricks);
+      }
+    );
+
     const store = useGameStore.getState();
     store.setCanvasSize(this.cameras.main.width, this.cameras.main.height);
 
@@ -336,8 +345,10 @@ export class GameScene extends Phaser.Scene {
   ): { dx: number; dy: number } | null {
     const store = useGameStore.getState();
     const actualDamage = new Decimal(config.damage).mul(damageMult);
+    // Ball radius is 8
+    const potentialBricks = this.spatialGrid.query(ball, 8);
 
-    for (const brick of store.bricks) {
+    for (const brick of potentialBricks) {
       if (this.ballCollidesWithBrick(ball, brick)) {
         const result = store.damageBrick(brick.id, actualDamage);
 
