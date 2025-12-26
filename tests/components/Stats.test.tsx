@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import Decimal from 'break_infinity.js'
 import { Stats } from '../../src/components/Stats'
 import { useGameStore } from '../../src/store/gameStore'
@@ -99,11 +99,14 @@ describe('Stats', () => {
     
     // Initially coins are 0
     const coinsLabel = screen.getByText('Coins')
-    const coinsContainer = coinsLabel.closest('.stat')
+    let coinsContainer = coinsLabel.closest('.stat')
     expect(coinsContainer).toHaveTextContent('0')
     
-    useGameStore.setState({ coins: new Decimal(5000) })
+    act(() => {
+      useGameStore.setState({ coins: new Decimal(5000) })
+    })
     rerender(<Stats />)
+    coinsContainer = screen.getByText('Coins').closest('.stat')
     
     expect(coinsContainer).toHaveTextContent('5.00K')
   })
