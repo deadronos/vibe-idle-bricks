@@ -4,6 +4,12 @@ This document provides instructions for AI coding agents working on this project
 
 > **See also:** [.github/copilot-instructions.md](.github/copilot-instructions.md) for additional project guidance, patterns, and conventions.
 
+## Important
+Before finishing after making code changes, ensure that:
+- All tests pass (`npm run test`)
+- TypeScript compiles without errors (`npm run build`)
+- Linting passes (`npm run lint`)
+
 ## Project Overview
 
 **Idle Bricks** is an idle/incremental breakout-style game built with:

@@ -1,4 +1,4 @@
-import { BrickData, BallData } from '../types';
+import type { BrickData, BallData } from '../types';
 
 export class SpatialGrid {
   private cellSize: number;

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SpatialGrid } from '../../src/game/SpatialGrid';
-import { BrickData, BallData } from '../../src/types';
+import type { BrickData, BallData } from '../../src/types';
 import Decimal from 'break_infinity.js';
 
 describe('SpatialGrid', () => {
