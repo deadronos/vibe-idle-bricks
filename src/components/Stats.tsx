@@ -13,7 +13,8 @@ export function Stats() {
   const coins = useGameStore((state) => state.coins);
   const bricksBroken = useGameStore((state) => state.bricksBroken);
   const totalBricksBroken = useGameStore((state) => state.totalBricksBroken);
-  const balls = useGameStore((state) => state.balls);
+  // Selector selects just the length to avoid re-rendering on every frame when ball positions update
+  const ballCount = useGameStore((state) => state.balls.length);
   const prestigeLevel = useGameStore((state) => state.prestigeLevel);
   const prestigeTarget = getPrestigeThreshold(prestigeLevel);
 
@@ -36,7 +37,7 @@ export function Stats() {
       </div>
       <div className="stat">
         <Circle className="stat-icon" size={24} />
-        <span className="stat-value">{balls.length}</span>
+        <span className="stat-value">{ballCount}</span>
         <label>Balls</label>
       </div>
       <div className="stat">

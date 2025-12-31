@@ -1,0 +1,3 @@
+## 2024-05-23 - State Management in High-Frequency Loops
+**Learning:** Pushing 60FPS game state updates (like ball positions) through Zustand and having React subscribe to it is generally an anti-pattern for performance, but in this specific architecture, the game logic itself (Phaser) is also reading from Zustand state. The issue is that Zustand updates are triggering subscribers. If React components subscribe to `balls`, they will re-render 60 times a second.
+**Action:** Verify if any React components are subscribing to rapidly changing state like `balls` or `explosions`. If so, move that state to a mutable ref or separate store that doesn't trigger React renders, or ensure components only subscribe to what they absolutely need.
