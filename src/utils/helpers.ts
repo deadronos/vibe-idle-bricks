@@ -1,4 +1,6 @@
 import Decimal from 'break_infinity.js';
+import { BALL_TYPES } from '../types';
+import type { BallType, BallData } from '../types';
 
 /**
  * Generates a unique 9-character string ID.
@@ -67,4 +69,31 @@ export const getTierColor = (tier: number): string => {
     '#fbbf24', // Amber - Tier 10+
   ];
   return colors[Math.min(tier - 1, colors.length - 1)];
+};
+
+/**
+ * Creates a new ball of the specified type with random position and velocity.
+ * @param type - The type of ball to create.
+ * @param canvasWidth - The width of the canvas.
+ * @param canvasHeight - The height of the canvas.
+ * @returns {BallData} The new ball object.
+ */
+export const createBall = (
+  type: BallType,
+  canvasWidth: number,
+  canvasHeight: number
+): BallData => {
+  const config = BALL_TYPES[type] || BALL_TYPES.basic;
+  const x = canvasWidth / 2 + (Math.random() - 0.5) * 200;
+  const y = canvasHeight - 50;
+  const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI / 3;
+
+  return {
+    id: generateId(),
+    type,
+    x,
+    y,
+    dx: Math.cos(angle) * config.speed,
+    dy: Math.sin(angle) * config.speed,
+  };
 };
