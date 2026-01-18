@@ -15,6 +15,7 @@ import type {
   BrickData,
   Upgrades,
   Explosion,
+  SaveData,
 } from '../types';
 import { createBall } from '../utils/helpers';
 
@@ -212,7 +213,7 @@ const getDefaultUpgradeCosts = (): Record<keyof Upgrades, Decimal> => ({
  * @param canvasHeight - Current canvas height.
  * @returns {Partial<GameStore>} The partial state to merge.
  */
-const parseSaveData = (saveData: any, canvasWidth: number, canvasHeight: number) => {
+const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: number) => {
   // Recreate balls
   const balls: BallData[] = (saveData.balls || ['basic']).map((type: BallType) => {
     return createBall(type, canvasWidth, canvasHeight);
@@ -506,7 +507,8 @@ export const useGameStore = create<GameStore>()(
         // Remove timestamp from partialState before setting
         const { timestamp, ...stateToSet } = partialState;
 
-        set(stateToSet as any); // Type assertion needed because partialState might have extra props or strict partial match issues
+        // Ensure stateToSet conforms to partial GameStore state
+        set(stateToSet as Partial<GameStore>);
 
         // Calculate offline progress
         if (timestamp) {
