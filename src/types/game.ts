@@ -128,6 +128,23 @@ export interface Explosion {
 }
 
 /**
+ * Interface representing the structure of the game save data.
+ */
+export interface SaveData {
+  coins?: string;
+  bricksBroken?: string;
+  totalBricksBroken?: string;
+  prestigeLevel?: number;
+  upgrades?: Upgrades;
+  ballCosts?: Record<string, string>;
+  upgradeCosts?: Record<string, string>;
+  currentTier?: number;
+  balls?: BallType[];
+  timestamp?: number;
+  version?: number;
+}
+
+/**
  * Static configuration for all ball types.
  * Defines the stats and abilities for each ball type.
  */

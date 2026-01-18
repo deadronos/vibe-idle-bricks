@@ -49,6 +49,11 @@ Phaser Game Engine (GameScene.ts)
 
 ## Critical Constraints
 
+### Type Safety
+
+- **No `any` usage**: Do not use the `any` type. Always define proper interfaces or types for data structures. Use `unknown` if the type is truly uncertain, and then narrow it safely.
+- **Strict Typing**: Ensure all functions and variables are explicitly typed where inference is insufficient.
+
 ### Large Number Handling
 
 All numeric game values (coins, health, damage) **must** use `break_infinity.js` Decimal:

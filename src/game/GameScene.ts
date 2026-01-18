@@ -661,6 +661,34 @@ class BrickManager {
   }
 
   /**
+   * Creates a single brick instance.
+   * @param x - X coordinate.
+   * @param y - Y coordinate.
+   * @param baseTier - Base difficulty tier.
+   * @returns {BrickData} The new brick.
+   */
+  private createBrick(x: number, y: number, baseTier: number): BrickData {
+    const tierVariation = Math.floor(Math.random() * 3) - 1;
+    const tier = Math.max(1, baseTier + tierVariation);
+    // Health scales linearly with tier: tier 1 = 3, tier 5 = 15, tier 10 = 30
+    const maxHealth = new Decimal(tier * 3);
+
+    const brickValue = Math.floor(Math.pow(tier, 1.2));
+
+    return {
+      id: generateId(),
+      x,
+      y,
+      width: this.brickWidth,
+      height: this.brickHeight,
+      tier,
+      health: maxHealth,
+      maxHealth,
+      value: new Decimal(brickValue),
+    };
+  }
+
+  /**
    * Generates a grid of bricks.
    *
    * @param count - Total number of bricks to generate.
@@ -682,23 +710,7 @@ class BrickManager {
         const x = this.offsetLeft + col * (this.brickWidth + this.padding);
         const y = this.offsetTop + row * (this.brickHeight + this.padding);
 
-        const tierVariation = Math.floor(Math.random() * 3) - 1;
-        const tier = Math.max(1, baseTier + tierVariation);
-        // Health scales linearly with tier: tier 1 = 3, tier 5 = 15, tier 10 = 30
-        const maxHealth = new Decimal(tier * 3);
-
-        const brickValue = Math.floor(Math.pow(tier, 1.2));
-        bricks.push({
-          id: generateId(),
-          x,
-          y,
-          width: this.brickWidth,
-          height: this.brickHeight,
-          tier,
-          health: maxHealth,
-          maxHealth,
-          value: new Decimal(brickValue),
-        });
+        bricks.push(this.createBrick(x, y, baseTier));
         created++;
       }
     }
@@ -745,23 +757,7 @@ class BrickManager {
           const x = this.offsetLeft + col * (this.brickWidth + this.padding);
           const y = this.offsetTop + row * (this.brickHeight + this.padding);
 
-          const tierVariation = Math.floor(Math.random() * 3) - 1;
-          const tier = Math.max(1, baseTier + tierVariation);
-          // Health scales linearly with tier: tier 1 = 3, tier 5 = 15, tier 10 = 30
-          const maxHealth = new Decimal(tier * 3);
-
-          const brickValue = Math.floor(Math.pow(tier, 1.2));
-          newBricks.push({
-            id: generateId(),
-            x,
-            y,
-            width: this.brickWidth,
-            height: this.brickHeight,
-            tier,
-            health: maxHealth,
-            maxHealth,
-            value: new Decimal(brickValue),
-          });
+          newBricks.push(this.createBrick(x, y, baseTier));
         }
       }
     }

@@ -15,8 +15,9 @@ import type {
   BrickData,
   Upgrades,
   Explosion,
+  SaveData,
 } from '../types';
-import { generateId } from '../utils/helpers';
+import { createBall } from '../utils/helpers';
 
 /**
  * Interface defining the entire state and actions of the game store.
@@ -206,24 +207,47 @@ const getDefaultUpgradeCosts = (): Record<keyof Upgrades, Decimal> => ({
 });
 
 /**
- * Creates the initial basic ball for a new game or run.
- * @param canvasWidth - The width of the canvas.
- * @param canvasHeight - The height of the canvas.
- * @returns {BallData} The initial ball object.
+ * Parses save data and reconstructs the game state.
+ * @param saveData - The raw JSON object from storage.
+ * @param canvasWidth - Current canvas width.
+ * @param canvasHeight - Current canvas height.
+ * @returns {Partial<GameStore>} The partial state to merge.
  */
-const createInitialBall = (canvasWidth: number, canvasHeight: number): BallData => {
-  const x = canvasWidth / 2 + (Math.random() - 0.5) * 200;
-  const y = canvasHeight - 50;
-  const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI / 3;
-  const speed = BALL_TYPES.basic.speed;
+const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: number) => {
+  // Recreate balls
+  const balls: BallData[] = (saveData.balls || ['basic']).map((type: BallType) => {
+    return createBall(type, canvasWidth, canvasHeight);
+  });
+
+  const ballCosts = getDefaultBallCosts();
+  if (saveData.ballCosts) {
+    for (const [key, value] of Object.entries(saveData.ballCosts)) {
+      if (Object.prototype.hasOwnProperty.call(ballCosts, key)) {
+        ballCosts[key as BallType] = new Decimal(value as string);
+      }
+    }
+  }
+
+  const upgradeCosts = getDefaultUpgradeCosts();
+  if (saveData.upgradeCosts) {
+    for (const [key, value] of Object.entries(saveData.upgradeCosts)) {
+      if (Object.prototype.hasOwnProperty.call(upgradeCosts, key)) {
+        upgradeCosts[key as keyof Upgrades] = new Decimal(value as string);
+      }
+    }
+  }
 
   return {
-    id: generateId(),
-    type: 'basic',
-    x,
-    y,
-    dx: Math.cos(angle) * speed,
-    dy: Math.sin(angle) * speed,
+    coins: new Decimal(saveData.coins || 0),
+    bricksBroken: new Decimal(saveData.bricksBroken || 0),
+    totalBricksBroken: new Decimal(saveData.totalBricksBroken || 0),
+    prestigeLevel: saveData.prestigeLevel || 0,
+    upgrades: saveData.upgrades || { speed: 0, damage: 0, coinMult: 0 },
+    ballCosts,
+    upgradeCosts,
+    currentTier: saveData.currentTier || 1,
+    balls: balls.length > 0 ? balls : [createBall('basic', canvasWidth, canvasHeight)],
+    timestamp: saveData.timestamp,
   };
 };
 
@@ -253,7 +277,7 @@ export const useGameStore = create<GameStore>()(
       // Initialize first ball if none exist
       const state = get();
       if (state.balls.length === 0) {
-        set({ balls: [createInitialBall(width, height)] });
+        set({ balls: [createBall('basic', width, height)] });
       }
     },
 
@@ -282,20 +306,8 @@ export const useGameStore = create<GameStore>()(
       const cost = state.ballCosts[type];
 
       if (state.coins.gte(cost)) {
-        const config = BALL_TYPES[type];
         const { width, height } = state.canvasSize;
-        const x = width / 2 + (Math.random() - 0.5) * 200;
-        const y = height - 50;
-        const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI / 3;
-
-        const newBall: BallData = {
-          id: generateId(),
-          type,
-          x,
-          y,
-          dx: Math.cos(angle) * config.speed,
-          dy: Math.sin(angle) * config.speed,
-        };
+        const newBall = createBall(type, width, height);
 
         set({
           coins: state.coins.sub(cost),
@@ -352,7 +364,7 @@ export const useGameStore = create<GameStore>()(
         upgrades: { speed: 0, damage: 0, coinMult: 0 },
         ballCosts: getDefaultBallCosts(),
         upgradeCosts: getDefaultUpgradeCosts(),
-        balls: [createInitialBall(width, height)],
+        balls: [createBall('basic', width, height)],
         bricks: [],
         explosions: [],
       });
@@ -463,50 +475,10 @@ export const useGameStore = create<GameStore>()(
           return false;
         }
 
-        // Recreate balls
-        const balls: BallData[] = (saveData.balls || ['basic']).map((type: BallType) => {
-          const config = BALL_TYPES[type] || BALL_TYPES.basic;
-          const x = width / 2 + (Math.random() - 0.5) * 200;
-          const y = height - 50;
-          const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI / 3;
-          return {
-            id: generateId(),
-            type,
-            x,
-            y,
-            dx: Math.cos(angle) * config.speed,
-            dy: Math.sin(angle) * config.speed,
-          };
-        });
-
-        const ballCosts = getDefaultBallCosts();
-        if (saveData.ballCosts) {
-          for (const [key, value] of Object.entries(saveData.ballCosts)) {
-            if (Object.prototype.hasOwnProperty.call(ballCosts, key)) {
-              ballCosts[key as BallType] = new Decimal(value as string);
-            }
-          }
-        }
-
-        const upgradeCosts = getDefaultUpgradeCosts();
-        if (saveData.upgradeCosts) {
-          for (const [key, value] of Object.entries(saveData.upgradeCosts)) {
-            if (Object.prototype.hasOwnProperty.call(upgradeCosts, key)) {
-              upgradeCosts[key as keyof Upgrades] = new Decimal(value as string);
-            }
-          }
-        }
+        const partialState = parseSaveData(saveData, width, height);
 
         set({
-          coins: new Decimal(saveData.coins || 0),
-          bricksBroken: new Decimal(saveData.bricksBroken || 0),
-          totalBricksBroken: new Decimal(saveData.totalBricksBroken || 0),
-          prestigeLevel: saveData.prestigeLevel || 0,
-          upgrades: saveData.upgrades || { speed: 0, damage: 0, coinMult: 0 },
-          ballCosts,
-          upgradeCosts,
-          currentTier: saveData.currentTier || 1,
-          balls: balls.length > 0 ? balls : [createInitialBall(width, height)],
+          ...partialState,
           bricks: [],
           explosions: [],
         });
@@ -527,55 +499,20 @@ export const useGameStore = create<GameStore>()(
         const state = get();
         const { width, height } = state.canvasSize;
 
-        // Recreate balls
-        const balls: BallData[] = (saveData.balls || ['basic']).map((type: BallType) => {
-          const config = BALL_TYPES[type] || BALL_TYPES.basic;
-          const x = width / 2 + (Math.random() - 0.5) * 200;
-          const y = height - 50;
-          const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI / 3;
-          return {
-            id: generateId(),
-            type,
-            x,
-            y,
-            dx: Math.cos(angle) * config.speed,
-            dy: Math.sin(angle) * config.speed,
-          };
-        });
+        const partialState = parseSaveData(saveData, width, height);
+        // Exclude timestamp from state as it is not part of GameStore state (except conceptually, but not typed in state update)
+        // Wait, the interface says `timestamp` is not in GameStore interface, but it IS in GameState in types.
+        // Let's check GameStore interface again. It does NOT have timestamp.
 
-        const ballCosts = getDefaultBallCosts();
-        if (saveData.ballCosts) {
-          for (const [key, value] of Object.entries(saveData.ballCosts)) {
-            if (Object.prototype.hasOwnProperty.call(ballCosts, key)) {
-              ballCosts[key as BallType] = new Decimal(value as string);
-            }
-          }
-        }
+        // Remove timestamp from partialState before setting
+        const { timestamp, ...stateToSet } = partialState;
 
-        const upgradeCosts = getDefaultUpgradeCosts();
-        if (saveData.upgradeCosts) {
-          for (const [key, value] of Object.entries(saveData.upgradeCosts)) {
-            if (Object.prototype.hasOwnProperty.call(upgradeCosts, key)) {
-              upgradeCosts[key as keyof Upgrades] = new Decimal(value as string);
-            }
-          }
-        }
-
-        set({
-          coins: new Decimal(saveData.coins || 0),
-          bricksBroken: new Decimal(saveData.bricksBroken || 0),
-          totalBricksBroken: new Decimal(saveData.totalBricksBroken || 0),
-          prestigeLevel: saveData.prestigeLevel || 0,
-          upgrades: saveData.upgrades || { speed: 0, damage: 0, coinMult: 0 },
-          ballCosts,
-          upgradeCosts,
-          currentTier: saveData.currentTier || 1,
-          balls: balls.length > 0 ? balls : [createInitialBall(width, height)],
-        });
+        // Ensure stateToSet conforms to partial GameStore state
+        set(stateToSet as Partial<GameStore>);
 
         // Calculate offline progress
-        if (saveData.timestamp) {
-          const offlineTime = Date.now() - saveData.timestamp;
+        if (timestamp) {
+          const offlineTime = Date.now() - timestamp;
           const seconds = offlineTime / 1000;
           const minutes = seconds / 60;
 
@@ -612,7 +549,7 @@ export const useGameStore = create<GameStore>()(
         upgrades: { speed: 0, damage: 0, coinMult: 0 },
         ballCosts: getDefaultBallCosts(),
         upgradeCosts: getDefaultUpgradeCosts(),
-        balls: [createInitialBall(width, height)],
+        balls: [createBall('basic', width, height)],
         bricks: [],
         explosions: [],
       });
