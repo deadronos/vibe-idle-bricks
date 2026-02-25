@@ -206,6 +206,33 @@ const getDefaultUpgradeCosts = (): Record<keyof Upgrades, Decimal> => ({
   coinMult: new Decimal(200),
 });
 
+type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
+
+const isStorageLike = (value: unknown): value is StorageLike => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const candidate = value as Partial<StorageLike>;
+  return (
+    typeof candidate.getItem === 'function' &&
+    typeof candidate.setItem === 'function' &&
+    typeof candidate.removeItem === 'function'
+  );
+};
+
+const getLocalStorage = (): StorageLike | undefined => {
+  if (typeof window !== 'undefined' && isStorageLike(window.localStorage)) {
+    return window.localStorage;
+  }
+
+  const maybeLocalStorage = (globalThis as { localStorage?: unknown }).localStorage;
+  if (isStorageLike(maybeLocalStorage)) {
+    return maybeLocalStorage;
+  }
+
+  return undefined;
+};
+
 /**
  * Parses save data and reconstructs the game state.
  * @param saveData - The raw JSON object from storage.
@@ -421,6 +448,9 @@ export const useGameStore = create<GameStore>()(
     },
 
     save: () => {
+      const storage = getLocalStorage();
+      if (!storage) return;
+
       const state = get();
       const saveData = {
         coins: state.coins.toString(),
@@ -438,7 +468,7 @@ export const useGameStore = create<GameStore>()(
         balls: state.balls.map((b) => b.type),
         timestamp: Date.now(),
       };
-      localStorage.setItem('idleBricksSave', JSON.stringify(saveData));
+      storage.setItem('idleBricksSave', JSON.stringify(saveData));
     },
 
     exportSave: () => {
@@ -491,7 +521,10 @@ export const useGameStore = create<GameStore>()(
     },
 
     load: () => {
-      const saveStr = localStorage.getItem('idleBricksSave');
+      const storage = getLocalStorage();
+      if (!storage) return;
+
+      const saveStr = storage.getItem('idleBricksSave');
       if (!saveStr) return;
 
       try {
@@ -536,7 +569,8 @@ export const useGameStore = create<GameStore>()(
     },
 
     reset: () => {
-      localStorage.removeItem('idleBricksSave');
+      const storage = getLocalStorage();
+      if (storage) storage.removeItem('idleBricksSave');
       const state = get();
       const { width, height } = state.canvasSize;
 
