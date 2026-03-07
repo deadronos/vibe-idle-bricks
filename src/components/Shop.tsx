@@ -3,6 +3,7 @@ import { useGameStore } from '../store';
 import { type BallType, BALL_TYPES, PRESTIGE_BONUS, getPrestigeThreshold } from '../types';
 import { formatNumber } from '../utils';
 import { ShoppingCart, Zap, Crosshair, Bomb, Circle, Hexagon, Star, ArrowUpCircle, Coins, TrendingUp } from 'lucide-react';
+import { Modal } from './Modal';
 
 /** List of available ball types in the shop order. */
 const ballTypes: BallType[] = ['basic', 'fast', 'heavy', 'plasma', 'explosive', 'sniper'];
@@ -33,6 +34,7 @@ const TABS = [
  */
 export function Shop() {
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('balls');
+  const [prestigeOpen, setPrestigeOpen] = useState(false);
   const shopId = useId();
   const coins = useGameStore((state) => state.coins);
   const ballCosts = useGameStore((state) => state.ballCosts);
@@ -46,9 +48,12 @@ export function Shop() {
   const prestige = useGameStore((state) => state.prestige);
 
   const handlePrestige = () => {
-    if (confirm('Are you sure you want to prestige? You will lose all progress but gain a permanent 25% coin bonus.')) {
-      prestige();
-    }
+    setPrestigeOpen(true);
+  };
+
+  const confirmPrestige = () => {
+    prestige();
+    setPrestigeOpen(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
@@ -73,6 +78,7 @@ export function Shop() {
   const bricksNeeded = Math.max(0, prestigeThreshold - bricksBroken.toNumber());
 
   return (
+    <>
     <aside className="shop-panel">
       <h2><ShoppingCart className="inline-icon" size={24} aria-hidden="true" /> Shop</h2>
 
@@ -181,6 +187,20 @@ export function Shop() {
         </div>
       )}
     </aside>
+
+    <Modal
+      open={prestigeOpen}
+      title="Prestige?"
+      confirmLabel="Prestige"
+      cancelLabel="Cancel"
+      confirmVariant="primary"
+      initialFocus="confirm"
+      onConfirm={confirmPrestige}
+      onCancel={() => setPrestigeOpen(false)}
+    >
+      <p>You will lose all coins, balls, and upgrades but gain a permanent +{prestigePercent}% coin bonus.</p>
+    </Modal>
+    </>
   );
 }
 

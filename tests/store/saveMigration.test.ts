@@ -49,6 +49,7 @@ const resetStore = () => {
     explosions: [],
     canvasSize: { width: 800, height: 500 },
     isPaused: false,
+    pendingOfflineMessage: null,
   })
 }
 
