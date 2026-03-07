@@ -19,9 +19,6 @@ vi.mock('../../src/components/PhaserGame', () => ({
   PhaserGame: () => <div data-testid="phaser-game">Phaser Game Mock</div>,
 }))
 
-// Mock window.confirm
-vi.stubGlobal('confirm', vi.fn())
-
 // Reset store before each test
 const resetStore = () => {
   useGameStore.setState({

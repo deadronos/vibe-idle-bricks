@@ -1,15 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Decimal from 'break_infinity.js'
 import { Footer } from '../../src/components/Footer'
+import { ToastProvider } from '../../src/components/Toast'
 import { useGameStore } from '../../src/store/gameStore'
 import { BALL_TYPES } from '../../src/types/game'
 
-// Mock window.confirm and window.alert and window.prompt
-vi.stubGlobal('confirm', vi.fn())
-vi.stubGlobal('alert', vi.fn())
-vi.stubGlobal('prompt', vi.fn())
+/** Renders Footer inside the required ToastProvider. */
+const renderFooter = () =>
+  render(
+    <ToastProvider>
+      <Footer />
+    </ToastProvider>
+  )
 
 // Reset store before each test
 const resetStore = () => {
@@ -38,6 +42,7 @@ const resetStore = () => {
     explosions: [],
     canvasSize: { width: 800, height: 500 },
     isPaused: false,
+    pendingOfflineMessage: null,
   })
 }
 
@@ -56,88 +61,110 @@ describe('Footer', () => {
   })
 
   it('should render save button', () => {
-    render(<Footer />)
+    renderFooter()
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument()
   })
 
   it('should render reset button', () => {
-    render(<Footer />)
-    expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument()
+    renderFooter()
+    expect(screen.getByRole('button', { name: /^reset$/i })).toBeInTheDocument()
   })
 
   it('should render auto-save status', () => {
-    render(<Footer />)
+    renderFooter()
     expect(screen.getByText(/auto-saves every 30s/i)).toBeInTheDocument()
   })
 
   it('should call save when save button clicked', async () => {
     const user = userEvent.setup()
-    render(<Footer />)
-    
+    renderFooter()
+
     const saveButton = screen.getByRole('button', { name: /save/i })
     await user.click(saveButton)
-    
+
     expect(localStorageMock.setItem).toHaveBeenCalledWith(
       'idleBricksSave',
       expect.any(String)
     )
   })
 
-  it('should show confirm dialog when reset clicked', async () => {
+  it('should show a toast when save button clicked', async () => {
     const user = userEvent.setup()
-    vi.mocked(confirm).mockReturnValue(false)
-    
-    render(<Footer />)
-    
-    const resetButton = screen.getByRole('button', { name: /reset/i })
-    await user.click(resetButton)
-    
-    expect(confirm).toHaveBeenCalledWith(
-      expect.stringContaining('reset ALL progress')
+    renderFooter()
+
+    await user.click(screen.getByRole('button', { name: /save/i }))
+
+    await waitFor(() =>
+      expect(screen.getByText(/game saved/i)).toBeInTheDocument()
     )
   })
 
-  it('should reset game when confirm is accepted', async () => {
+  it('should open confirm modal when reset clicked', async () => {
     const user = userEvent.setup()
-    vi.mocked(confirm).mockReturnValue(true)
-    
-    // Set some state
+    renderFooter()
+
+    await user.click(screen.getByRole('button', { name: /^reset$/i }))
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText(/reset all progress/i)).toBeInTheDocument()
+  })
+
+  it('should reset game when confirm button in modal is clicked', async () => {
+    const user = userEvent.setup()
+
     useGameStore.setState({
       coins: new Decimal(10000),
       prestigeLevel: 5,
     })
-    
-    render(<Footer />)
-    
-    const resetButton = screen.getByRole('button', { name: /reset/i })
-    await user.click(resetButton)
-    
+
+    renderFooter()
+
+    await user.click(screen.getByRole('button', { name: /^reset$/i }))
+    // Click the "Reset" confirm button inside the dialog
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: /^reset$/i }))
+
     expect(useGameStore.getState().coins.eq(0)).toBe(true)
     expect(useGameStore.getState().prestigeLevel).toBe(0)
   })
 
-  it('should not reset when confirm is cancelled', async () => {
+  it('should not reset when cancel is clicked in modal', async () => {
     const user = userEvent.setup()
-    vi.mocked(confirm).mockReturnValue(false)
-    
     useGameStore.setState({ coins: new Decimal(10000) })
-    
-    render(<Footer />)
-    
-    const resetButton = screen.getByRole('button', { name: /reset/i })
-    await user.click(resetButton)
-    
+
+    renderFooter()
+
+    await user.click(screen.getByRole('button', { name: /^reset$/i }))
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: /cancel/i }))
+
     expect(useGameStore.getState().coins.eq(10000)).toBe(true)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('should not reset when Escape is pressed in modal', async () => {
+    const user = userEvent.setup()
+    useGameStore.setState({ coins: new Decimal(10000) })
+
+    renderFooter()
+
+    await user.click(screen.getByRole('button', { name: /^reset$/i }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+
+    expect(useGameStore.getState().coins.eq(10000)).toBe(true)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('should render export button', () => {
-    render(<Footer />)
+    renderFooter()
     expect(screen.getByRole('button', { name: /export/i })).toBeInTheDocument()
   })
 
   it('should render import button', () => {
-    render(<Footer />)
-    expect(screen.getByRole('button', { name: /import/i })).toBeInTheDocument()
+    renderFooter()
+    expect(screen.getByRole('button', { name: /^import$/i })).toBeInTheDocument()
   })
 
   describe('export functionality', () => {
@@ -160,7 +187,7 @@ describe('Footer', () => {
         prestigeLevel: 2,
       })
 
-      render(<Footer />)
+      renderFooter()
 
       const exportButton = screen.getByRole('button', { name: /export/i })
       await user.click(exportButton)
@@ -172,7 +199,7 @@ describe('Footer', () => {
       expect(copiedData.prestigeLevel).toBe(2)
     })
 
-    it('should show success alert after export', async () => {
+    it('should show success toast after export', async () => {
       const user = userEvent.setup()
       const writeTextMock = vi.fn().mockResolvedValue(undefined)
       Object.defineProperty(navigator, 'clipboard', {
@@ -181,15 +208,17 @@ describe('Footer', () => {
         configurable: true,
       })
 
-      render(<Footer />)
+      renderFooter()
 
       const exportButton = screen.getByRole('button', { name: /export/i })
       await user.click(exportButton)
 
-      expect(alert).toHaveBeenCalledWith(expect.stringContaining('clipboard'))
+      await waitFor(() =>
+        expect(screen.getByText(/copied to clipboard/i)).toBeInTheDocument()
+      )
     })
 
-    it('should fallback to prompt if clipboard fails', async () => {
+    it('should fallback to import dialog if clipboard fails', async () => {
       const user = userEvent.setup()
       const writeTextMock = vi.fn().mockRejectedValue(new Error('Clipboard error'))
       Object.defineProperty(navigator, 'clipboard', {
@@ -198,14 +227,13 @@ describe('Footer', () => {
         configurable: true,
       })
 
-      render(<Footer />)
+      renderFooter()
 
       const exportButton = screen.getByRole('button', { name: /export/i })
       await user.click(exportButton)
 
-      expect(prompt).toHaveBeenCalledWith(
-        expect.stringContaining('Copy'),
-        expect.any(String)
+      await waitFor(() =>
+        expect(screen.getByRole('dialog')).toBeInTheDocument()
       )
     })
   })
@@ -216,48 +244,48 @@ describe('Footer', () => {
       vi.clearAllMocks()
     })
 
-    it('should prompt for save data when import clicked', async () => {
+    it('should open import dialog when import clicked', async () => {
       const user = userEvent.setup()
-      vi.mocked(prompt).mockReturnValue(null)
 
-      render(<Footer />)
+      renderFooter()
 
-      const importButton = screen.getByRole('button', { name: /import/i })
-      await user.click(importButton)
+      await user.click(screen.getByRole('button', { name: /^import$/i }))
 
-      expect(prompt).toHaveBeenCalledWith(expect.stringContaining('Paste'))
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      expect(screen.getByRole('textbox', { name: /save data/i })).toBeInTheDocument()
     })
 
-    it('should do nothing if prompt cancelled', async () => {
+    it('should close dialog when cancel is clicked', async () => {
       const user = userEvent.setup()
-      vi.mocked(prompt).mockReturnValue(null)
 
-      useGameStore.setState({ coins: new Decimal(5000) })
+      renderFooter()
 
-      render(<Footer />)
+      await user.click(screen.getByRole('button', { name: /^import$/i }))
 
-      const importButton = screen.getByRole('button', { name: /import/i })
-      await user.click(importButton)
+      const dialog = screen.getByRole('dialog')
+      await user.click(within(dialog).getByRole('button', { name: /cancel/i }))
 
-      // State should be unchanged
-      expect(useGameStore.getState().coins.eq(5000)).toBe(true)
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
 
-    it('should ask for confirmation before importing', async () => {
+    it('should show error toast when import submitted with empty text', async () => {
       const user = userEvent.setup()
-      const saveData = { coins: '100', prestigeLevel: 0, balls: ['basic'] }
-      vi.mocked(prompt).mockReturnValue(JSON.stringify(saveData))
-      vi.mocked(confirm).mockReturnValue(false)
 
-      render(<Footer />)
+      renderFooter()
 
-      const importButton = screen.getByRole('button', { name: /import/i })
-      await user.click(importButton)
+      await user.click(screen.getByRole('button', { name: /^import$/i }))
+      const dialog = screen.getByRole('dialog')
+      // Click Import without typing anything
+      await user.click(within(dialog).getByRole('button', { name: /^import$/i }))
 
-      expect(confirm).toHaveBeenCalledWith(expect.stringContaining('overwrite'))
+      await waitFor(() =>
+        expect(screen.getByText(/no save data entered/i)).toBeInTheDocument()
+      )
+      // Dialog stays open
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
     })
 
-    it('should import save data when confirmed', async () => {
+    it('should import save data when valid JSON typed and confirmed', async () => {
       const user = userEvent.setup()
       const saveData = {
         coins: '9999',
@@ -268,13 +296,16 @@ describe('Footer', () => {
         currentTier: 6,
         balls: ['plasma', 'sniper'],
       }
-      vi.mocked(prompt).mockReturnValue(JSON.stringify(saveData))
-      vi.mocked(confirm).mockReturnValue(true)
 
-      render(<Footer />)
+      renderFooter()
 
-      const importButton = screen.getByRole('button', { name: /import/i })
-      await user.click(importButton)
+      await user.click(screen.getByRole('button', { name: /^import$/i }))
+
+      const textarea = screen.getByRole('textbox', { name: /save data/i })
+      fireEvent.change(textarea, { target: { value: JSON.stringify(saveData) } })
+
+      const dialog = screen.getByRole('dialog')
+      await user.click(within(dialog).getByRole('button', { name: /^import$/i }))
 
       const state = useGameStore.getState()
       expect(state.coins.eq(9999)).toBe(true)
@@ -282,45 +313,53 @@ describe('Footer', () => {
       expect(state.balls.map(b => b.type)).toEqual(['plasma', 'sniper'])
     })
 
-    it('should show success alert after successful import', async () => {
+    it('should show success toast after successful import', async () => {
       const user = userEvent.setup()
       const saveData = { coins: '100', prestigeLevel: 0, balls: ['basic'] }
-      vi.mocked(prompt).mockReturnValue(JSON.stringify(saveData))
-      vi.mocked(confirm).mockReturnValue(true)
 
-      render(<Footer />)
+      renderFooter()
 
-      const importButton = screen.getByRole('button', { name: /import/i })
-      await user.click(importButton)
+      await user.click(screen.getByRole('button', { name: /^import$/i }))
+      const textarea = screen.getByRole('textbox', { name: /save data/i })
+      fireEvent.change(textarea, { target: { value: JSON.stringify(saveData) } })
+      const dialog = screen.getByRole('dialog')
+      await user.click(within(dialog).getByRole('button', { name: /^import$/i }))
 
-      expect(alert).toHaveBeenCalledWith(expect.stringContaining('successfully'))
+      await waitFor(() =>
+        expect(screen.getByText(/imported successfully/i)).toBeInTheDocument()
+      )
     })
 
-    it('should show error alert for invalid save data', async () => {
+    it('should show error toast for invalid save data', async () => {
       const user = userEvent.setup()
-      vi.mocked(prompt).mockReturnValue('not valid json {{{')
-      vi.mocked(confirm).mockReturnValue(true)
 
-      render(<Footer />)
+      renderFooter()
 
-      const importButton = screen.getByRole('button', { name: /import/i })
-      await user.click(importButton)
+      await user.click(screen.getByRole('button', { name: /^import$/i }))
+      const textarea = screen.getByRole('textbox', { name: /save data/i })
+      fireEvent.change(textarea, { target: { value: 'not valid json' } })
+      const dialog = screen.getByRole('dialog')
+      await user.click(within(dialog).getByRole('button', { name: /^import$/i }))
 
-      expect(alert).toHaveBeenCalledWith(expect.stringContaining('Failed'))
+      await waitFor(() =>
+        expect(screen.getByText(/failed to import/i)).toBeInTheDocument()
+      )
     })
 
-    it('should not import if confirm cancelled', async () => {
+    it('should not import if dialog is closed after typing', async () => {
       const user = userEvent.setup()
       const saveData = { coins: '9999', prestigeLevel: 4, balls: ['basic'] }
-      vi.mocked(prompt).mockReturnValue(JSON.stringify(saveData))
-      vi.mocked(confirm).mockReturnValue(false)
 
       useGameStore.setState({ coins: new Decimal(100) })
 
-      render(<Footer />)
+      renderFooter()
 
-      const importButton = screen.getByRole('button', { name: /import/i })
-      await user.click(importButton)
+      await user.click(screen.getByRole('button', { name: /^import$/i }))
+      const textarea = screen.getByRole('textbox', { name: /save data/i })
+      fireEvent.change(textarea, { target: { value: JSON.stringify(saveData) } })
+
+      const dialog = screen.getByRole('dialog')
+      await user.click(within(dialog).getByRole('button', { name: /cancel/i }))
 
       // State should be unchanged
       expect(useGameStore.getState().coins.eq(100)).toBe(true)

@@ -50,6 +50,11 @@ interface GameStore {
   canvasSize: { width: number; height: number };
   /** Whether the game simulation is currently paused. */
   isPaused: boolean;
+  /**
+   * Offline-earnings message set by `load()` to be surfaced as a toast by the UI.
+   * Cleared after the UI reads it.
+   */
+  pendingOfflineMessage: string | null;
 
   // Actions
   /**
@@ -157,6 +162,11 @@ interface GameStore {
    * @returns {boolean} True if import was successful.
    */
   importSave: (data: string) => boolean;
+
+  /**
+   * Clears the pending offline notification after it has been shown.
+   */
+  clearOfflineMessage: () => void;
 
   /**
    * Pauses or unpauses the game.
@@ -298,6 +308,7 @@ export const useGameStore = create<GameStore>()(
     explosions: [],
     canvasSize: { width: 800, height: 500 },
     isPaused: false,
+    pendingOfflineMessage: null,
 
     setCanvasSize: (width, height) => {
       set({ canvasSize: { width, height } });
@@ -558,8 +569,10 @@ export const useGameStore = create<GameStore>()(
             const offlineCoins = new Decimal(coinsPerSecond * seconds * OFFLINE_EARNINGS_RATE).floor();
 
             if (offlineCoins.gt(0)) {
-              set({ coins: newState.coins.add(offlineCoins) });
-              console.log(`Welcome back! You earned ${offlineCoins.toString()} coins while away.`);
+              set({
+                coins: newState.coins.add(offlineCoins),
+                pendingOfflineMessage: `Welcome back! You earned ${offlineCoins.toString()} coins while away.`,
+              });
             }
           }
         }
@@ -590,6 +603,8 @@ export const useGameStore = create<GameStore>()(
     },
 
     setPaused: (paused) => set({ isPaused: paused }),
+
+    clearOfflineMessage: () => set({ pendingOfflineMessage: null }),
 
     getDamageMult: () => {
       const state = get();
