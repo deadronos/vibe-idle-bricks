@@ -20,11 +20,11 @@ The baseline build shows the entire game engine ships in the initial `index` chu
 - [x] Ensure the Phaser/game modules load asynchronously and preserve cleanup behavior
 - [x] Update tests for the lazy-render path
 - [x] Run full validation and compare build output
-- [ ] Push branch and open PR
+- [x] Push branch and open PR
 
 ## Progress Tracking
 
-**Overall Status:** In Progress - 90%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
@@ -35,7 +35,7 @@ The baseline build shows the entire game engine ships in the initial `index` chu
 | 1.3 | Implement UI + chunk split | Completed | 2026-03-07 | Added App-level lazy boundary and polished fallback |
 | 1.4 | Update tests | Completed | 2026-03-07 | App test now awaits lazy game surface |
 | 1.5 | Validate repo scripts | Completed | 2026-03-07 | Lint, typecheck, tests, and build all passed |
-| 1.6 | Push branch and PR | Not Started | 2026-03-07 | Pending validation |
+| 1.6 | Push branch and PR | Completed | 2026-03-07 | Branch pushed and PR #34 opened |
 
 ## Progress Log
 
@@ -49,3 +49,4 @@ The baseline build shows the entire game engine ships in the initial `index` chu
 - Kept Phaser isolated in explicit `game-engine` and `phaser-engine` async chunks via `vite.config.ts`.
 - Verified the startup bundle dropped from `1,459.55 kB` to `202.92 kB` and the build warning is now explicitly justified in config.
 - Verified `npm run lint`, `npm run typecheck`, `npm run test:run`, and `npm run build` all pass.
+- Pushed branch `deadronos/issue28` and opened [PR #34](https://github.com/deadronos/vibe-idle-bricks/pull/34).
