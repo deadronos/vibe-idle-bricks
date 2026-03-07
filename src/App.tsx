@@ -1,7 +1,39 @@
-import { useEffect } from 'react';
-import { PhaserGame, Stats, Shop, Footer, ToastProvider, useToast } from './components';
+import { lazy, Suspense, useEffect } from 'react';
+import { Footer } from './components/Footer';
+import { Shop } from './components/Shop';
+import { Stats } from './components/Stats';
+import { ToastProvider, useToast } from './components/Toast';
 import { useGameStore } from './store';
 import './App.css';
+
+const LazyPhaserGame = lazy(async () => {
+  const module = await import('./components/PhaserGame');
+
+  return {
+    default: module.PhaserGame,
+  };
+});
+
+function GameLoadingFallback() {
+  return (
+    <div
+      className="game-canvas game-canvas-loading"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="game-loading-card">
+        <div className="game-loading-spinner" aria-hidden="true" />
+        <p className="game-loading-eyebrow">Optimizing startup…</p>
+        <h2 className="game-loading-title">Preparing the arena</h2>
+        <p className="game-loading-copy">
+          The game engine is loading in the background so the shop and stats can
+          appear immediately.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Inner app wrapper that runs the load-on-mount effect and shows an offline
@@ -34,7 +66,9 @@ function GameApp() {
 
       <main>
         <div className="game-area">
-          <PhaserGame />
+          <Suspense fallback={<GameLoadingFallback />}>
+            <LazyPhaserGame />
+          </Suspense>
         </div>
         <Shop />
       </main>
