@@ -6,6 +6,13 @@ Memory Bank initialization completed. The project is in a functional MVP state w
 
 ## Recent Changes
 
+- Addressed issue #29 by optimizing `src/game/GameScene.ts` hot paths:
+  - extracted `BrickManager`, `GameEffects`, and `GameRenderers`
+  - added `SpatialGrid.queryBounds()` for bounded explosion lookups
+  - added batched brick damage updates in `gameStore.ts`
+  - reduced transient effect allocations with pooled floating text and shared explosion graphics
+  - added regression tests for bounds querying and batched brick damage
+
 - Fixed TypeScript errors in `GameScene.ts`:
   - Removed unused `trailGraphics` property
   - Removed invalid `add: false` property from `make.graphics`
@@ -52,7 +59,7 @@ Potential areas for enhancement:
 ## Active Decisions
 
 | Decision | Status | Notes |
-|----------|--------|-------|
+| -------- | ------ | ----- |
 | State management | Resolved | Zustand with selectors |
 | Large numbers | Resolved | break_infinity.js Decimal |
 | Game engine | Resolved | Phaser 3 |
@@ -60,5 +67,6 @@ Potential areas for enhancement:
 
 ## Known Considerations
 
+- `GameScene.ts` is now an orchestrator; rendering/effects/brick generation live in dedicated helpers under `src/game/`
 - Explosive balls may cause performance issues with many simultaneous explosions (mitigated by particle pooling/limits)
 - Mobile touch events not explicitly handled (relies on Phaser defaults)

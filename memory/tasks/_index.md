@@ -10,6 +10,7 @@ _No pending tasks._
 
 ## Completed
 
+- [TASK005] Game Loop Hot Path Optimization - Completed on 2026-03-07
 - [TASK004] Visual Polish & Game Juice - Completed on 2025-11-29
 - [TASK003] Game Balance Improvements - Completed on 2025-11-28 (awaiting manual playtest)
 - [TASK002] Introduce Export/Import Save Buttons - Completed on 2025-11-28
@@ -21,4 +22,4 @@ _No abandoned tasks._
 
 ---
 
-**Last Updated**: 2025-11-28
+**Last Updated**: 2026-03-07
