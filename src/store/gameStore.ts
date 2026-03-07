@@ -122,6 +122,12 @@ interface GameStore {
   damageBrick: (id: string, damage: Decimal) => { destroyed: boolean; value: Decimal } | null;
 
   /**
+   * Applies multiple brick damage operations in a single state update.
+   * Returns per-brick results for rewards and effects.
+   */
+  applyBrickDamageBatch: (operations: BrickDamageOperation[]) => BrickDamageResult[];
+
+  /**
    * Spawns an explosion effect at the specified location.
    * @param x - The X coordinate.
    * @param y - The Y coordinate.
@@ -192,6 +198,80 @@ interface GameStore {
    */
   getSpeedMult: () => number;
 }
+
+interface BrickDamageOperation {
+  id: string;
+  damage: Decimal;
+}
+
+interface BrickDamageResult {
+  id: string;
+  brick: BrickData;
+  destroyed: boolean;
+  value: Decimal;
+}
+
+const ZERO_DECIMAL = new Decimal(0);
+
+const resolveBrickDamageBatch = (
+  bricks: BrickData[],
+  operations: BrickDamageOperation[]
+) => {
+  const damageByBrickId = new Map<string, Decimal>();
+
+  for (const operation of operations) {
+    const currentDamage = damageByBrickId.get(operation.id);
+    damageByBrickId.set(
+      operation.id,
+      currentDamage ? currentDamage.add(operation.damage) : operation.damage
+    );
+  }
+
+  if (damageByBrickId.size === 0) {
+    return {
+      bricks,
+      results: [] as BrickDamageResult[],
+    };
+  }
+
+  const nextBricks: BrickData[] = [];
+  const results: BrickDamageResult[] = [];
+
+  for (const brick of bricks) {
+    const damage = damageByBrickId.get(brick.id);
+    if (!damage) {
+      nextBricks.push(brick);
+      continue;
+    }
+
+    const newHealth = brick.health.sub(damage);
+    const destroyed = newHealth.lte(0);
+
+    if (destroyed) {
+      results.push({
+        id: brick.id,
+        brick,
+        destroyed: true,
+        value: brick.value,
+      });
+      continue;
+    }
+
+    const updatedBrick = { ...brick, health: newHealth };
+    nextBricks.push(updatedBrick);
+    results.push({
+      id: brick.id,
+      brick: updatedBrick,
+      destroyed: false,
+      value: ZERO_DECIMAL,
+    });
+  }
+
+  return {
+    bricks: nextBricks,
+    results,
+  };
+};
 
 /**
  * Returns the default costs for all ball types.
@@ -417,26 +497,23 @@ export const useGameStore = create<GameStore>()(
       set({ bricks: state.bricks.filter((b) => b.id !== id) });
     },
 
-    damageBrick: (id, damage) => {
+    applyBrickDamageBatch: (operations) => {
       const state = get();
-      const brickIndex = state.bricks.findIndex((b) => b.id === id);
-      if (brickIndex === -1) return null;
-
-      const brick = state.bricks[brickIndex];
-      const newHealth = brick.health.sub(damage);
-      const destroyed = newHealth.lte(0);
-
-      if (destroyed) {
-        set({
-          bricks: state.bricks.filter((b) => b.id !== id),
-        });
-        return { destroyed: true, value: brick.value };
-      } else {
-        const newBricks = [...state.bricks];
-        newBricks[brickIndex] = { ...brick, health: newHealth };
-        set({ bricks: newBricks });
-        return { destroyed: false, value: new Decimal(0) };
+      const nextState = resolveBrickDamageBatch(state.bricks, operations);
+      if (nextState.results.length > 0) {
+        set({ bricks: nextState.bricks });
       }
+      return nextState.results;
+    },
+
+    damageBrick: (id, damage) => {
+      const [result] = get().applyBrickDamageBatch([{ id, damage }]);
+      if (!result) return null;
+
+      return {
+        destroyed: result.destroyed,
+        value: result.value,
+      };
     },
 
     addExplosion: (x, y, radius) => {
@@ -451,11 +528,16 @@ export const useGameStore = create<GameStore>()(
 
     updateExplosions: (deltaTime) => {
       const state = get();
-      set({
-        explosions: state.explosions
-          .map((e) => ({ ...e, life: e.life - deltaTime }))
-          .filter((e) => e.life > 0),
-      });
+      const nextExplosions: Explosion[] = [];
+
+      for (const explosion of state.explosions) {
+        const nextLife = explosion.life - deltaTime;
+        if (nextLife > 0) {
+          nextExplosions.push({ ...explosion, life: nextLife });
+        }
+      }
+
+      set({ explosions: nextExplosions });
     },
 
     save: () => {

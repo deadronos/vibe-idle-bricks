@@ -49,6 +49,7 @@ const resetStore = () => {
     explosions: [],
     canvasSize: { width: 800, height: 500 },
     isPaused: false,
+    pendingOfflineMessage: null,
   })
 }
 
@@ -322,6 +323,64 @@ describe('gameStore', () => {
       const result = useGameStore.getState().damageBrick('brick-1', new Decimal(3))
       expect(result?.destroyed).toBe(false)
       expect(result?.value.eq(0)).toBe(true)
+    })
+  })
+
+  describe('applyBrickDamageBatch', () => {
+    beforeEach(() => {
+      useGameStore.setState({
+        bricks: [
+          {
+            id: 'brick-1',
+            x: 0,
+            y: 0,
+            width: 50,
+            height: 20,
+            tier: 1,
+            health: new Decimal(10),
+            maxHealth: new Decimal(10),
+            value: new Decimal(5),
+          },
+          {
+            id: 'brick-2',
+            x: 60,
+            y: 0,
+            width: 50,
+            height: 20,
+            tier: 2,
+            health: new Decimal(6),
+            maxHealth: new Decimal(6),
+            value: new Decimal(9),
+          },
+        ],
+      })
+    })
+
+    it('should damage multiple bricks in one call', () => {
+      const results = useGameStore.getState().applyBrickDamageBatch([
+        { id: 'brick-1', damage: new Decimal(3) },
+        { id: 'brick-2', damage: new Decimal(6) },
+      ])
+
+      const remainingBrick = useGameStore.getState().bricks.find((brick) => brick.id === 'brick-1')
+
+      expect(results).toHaveLength(2)
+      expect(remainingBrick?.health.eq(7)).toBe(true)
+      expect(useGameStore.getState().bricks.find((brick) => brick.id === 'brick-2')).toBeUndefined()
+      expect(results.find((result) => result.id === 'brick-2')?.destroyed).toBe(true)
+    })
+
+    it('should update brick state once for batched damage', () => {
+      const brickListener = vi.fn()
+      const unsubscribe = useGameStore.subscribe((state) => state.bricks, brickListener)
+
+      useGameStore.getState().applyBrickDamageBatch([
+        { id: 'brick-1', damage: new Decimal(2) },
+        { id: 'brick-2', damage: new Decimal(1) },
+      ])
+
+      expect(brickListener).toHaveBeenCalledTimes(1)
+      unsubscribe()
     })
   })
 

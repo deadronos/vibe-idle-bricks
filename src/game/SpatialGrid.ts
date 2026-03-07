@@ -41,19 +41,21 @@ export class SpatialGrid {
   }
 
   query(ball: BallData, ballRadius: number = 8): BrickData[] {
-    // Determine the range of cells the ball overlaps with
-    // We use a bounding box for the ball for grid query
-    const minX = ball.x - ballRadius;
-    const maxX = ball.x + ballRadius;
-    const minY = ball.y - ballRadius;
-    const maxY = ball.y + ballRadius;
+    return this.queryBounds(
+      ball.x - ballRadius,
+      ball.y - ballRadius,
+      ball.x + ballRadius,
+      ball.y + ballRadius
+    );
+  }
 
+  queryBounds(minX: number, minY: number, maxX: number, maxY: number): BrickData[] {
     const startCol = Math.floor(minX / this.cellSize);
     const endCol = Math.floor(maxX / this.cellSize);
     const startRow = Math.floor(minY / this.cellSize);
     const endRow = Math.floor(maxY / this.cellSize);
 
-    const potentialBricks = new Set<BrickData>();
+    const potentialBricks = new Map<string, BrickData>();
 
     for (let col = startCol; col <= endCol; col++) {
       for (let row = startRow; row <= endRow; row++) {
@@ -61,12 +63,12 @@ export class SpatialGrid {
         const bricks = this.grid.get(key);
         if (bricks) {
           for (const brick of bricks) {
-            potentialBricks.add(brick);
+            potentialBricks.set(brick.id, brick);
           }
         }
       }
     }
 
-    return Array.from(potentialBricks);
+    return Array.from(potentialBricks.values());
   }
 }

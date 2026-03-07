@@ -74,6 +74,18 @@ describe('SpatialGrid', () => {
     expect(grid.query(createBall(210, 210))).toContain(brick2);
   });
 
+  it('should query bricks inside rectangular bounds', () => {
+    const brick1 = createBrick('1', 50, 50, 60, 25);
+    const brick2 = createBrick('2', 250, 250, 60, 25);
+
+    grid.rebuild([brick1, brick2]);
+
+    const result = grid.queryBounds(40, 40, 130, 130);
+
+    expect(result).toContain(brick1);
+    expect(result).not.toContain(brick2);
+  });
+
   it('should return empty array when no bricks in range', () => {
     const brick = createBrick('1', 50, 50, 60, 25);
     grid.add(brick);
