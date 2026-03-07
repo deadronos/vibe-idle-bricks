@@ -78,8 +78,8 @@ describe('App', () => {
     expect(resetButtons.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('should render game area with mocked Phaser', () => {
+  it('should render game area with mocked Phaser', async () => {
     render(<App />)
-    expect(screen.getByTestId('phaser-game')).toBeInTheDocument()
+    expect(await screen.findByTestId('phaser-game')).toBeInTheDocument()
   })
 })
