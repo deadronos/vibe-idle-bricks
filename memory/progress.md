@@ -4,6 +4,7 @@
 
 ### Core Gameplay ✅
 
+- Game loop hot paths optimized with bounded explosion queries, batched brick damage, and extracted render/effect helpers
 - Ball physics with wall bouncing
 - Brick collision detection and damage
 - Multiple ball types with unique behaviors:
@@ -73,7 +74,7 @@
 ## Milestones
 
 | Milestone | Status | Date |
-|-----------|--------|------|
+| --------- | ------ | ---- |
 | Project setup | ✅ Complete | — |
 | Core physics | ✅ Complete | — |
 | Ball types | ✅ Complete | — |
