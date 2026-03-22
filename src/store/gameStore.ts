@@ -17,7 +17,7 @@ import type {
   Explosion,
   SaveData,
 } from '../types';
-import { createBall } from '../utils/helpers';
+import { createBall, formatNumber } from '../utils/helpers';
 
 /**
  * Interface defining the entire state and actions of the game store.
@@ -90,6 +90,13 @@ interface GameStore {
    * @returns {boolean} True if the purchase was successful, false otherwise.
    */
   buyUpgrade: (type: keyof Upgrades) => boolean;
+
+  /**
+   * Attempts to purchase as many levels of an upgrade as possible.
+   * @param type - The type of upgrade to buy.
+   * @returns {number} The number of levels purchased.
+   */
+  buyMaxUpgrade: (type: keyof Upgrades) => number;
 
   /**
    * Checks if the player meets the requirements to prestige.
@@ -473,6 +480,40 @@ export const useGameStore = create<GameStore>()(
       return false;
     },
 
+    buyMaxUpgrade: (type) => {
+      let state = get();
+      let cost = state.upgradeCosts[type];
+      let purchased = 0;
+
+      if (state.coins.lt(cost)) return 0;
+
+      let currentCoins = state.coins;
+      let currentUpgradeLevel = state.upgrades[type];
+      let currentUpgradeCosts = { ...state.upgradeCosts };
+
+      while (currentCoins.gte(cost)) {
+        currentCoins = currentCoins.sub(cost);
+        currentUpgradeLevel++;
+        cost = cost.mul(1.15).ceil();
+        currentUpgradeCosts[type] = cost;
+        purchased++;
+
+        // Safety break to prevent infinite loops (should not happen with 1.15 multiplier)
+        if (purchased >= 1000) break;
+      }
+
+      set({
+        coins: currentCoins,
+        upgrades: {
+          ...state.upgrades,
+          [type]: currentUpgradeLevel,
+        },
+        upgradeCosts: currentUpgradeCosts,
+      });
+
+      return purchased;
+    },
+
     canPrestige: () => {
       const state = get();
       const threshold = getPrestigeThreshold(state.prestigeLevel);
@@ -653,16 +694,29 @@ export const useGameStore = create<GameStore>()(
 
           if (minutes > 1) {
             const newState = get();
-            const coinsPerSecond =
-              newState.balls.length *
-              (1 + newState.upgrades.coinMult * UPGRADE_MULTIPLIER) *
-              (1 + newState.prestigeLevel * PRESTIGE_BONUS);
-            const offlineCoins = new Decimal(coinsPerSecond * seconds * OFFLINE_EARNINGS_RATE).floor();
+            const speedMult = newState.getSpeedMult();
+            const damageMult = newState.getDamageMult();
+            const coinMult = newState.getCoinMult();
+            const prestigeBonus = 1 + newState.prestigeLevel * PRESTIGE_BONUS;
+
+            let totalBallPower = new Decimal(0);
+            for (const ball of newState.balls) {
+              const config = BALL_TYPES[ball.type];
+              let power = new Decimal(config.damage).mul(damageMult).mul(config.speed).mul(speedMult);
+              if (config.explosive) power = power.mul(1.5);
+              if (config.pierce) power = power.mul(1.3);
+              if (config.targeting) power = power.mul(1.2);
+              totalBallPower = totalBallPower.add(power);
+            }
+
+            // 0.05 is an empirical constant to balance offline earnings
+            const cps = totalBallPower.mul(coinMult).mul(prestigeBonus).mul(0.05);
+            const offlineCoins = cps.mul(seconds).mul(OFFLINE_EARNINGS_RATE).floor();
 
             if (offlineCoins.gt(0)) {
               set({
                 coins: newState.coins.add(offlineCoins),
-                pendingOfflineMessage: `Welcome back! You earned ${offlineCoins.toString()} coins while away.`,
+                pendingOfflineMessage: `Welcome back! You earned ${formatNumber(offlineCoins)} coins while away.`,
               });
             }
           }

@@ -1,6 +1,6 @@
 import { useGameStore } from '../store';
 import { formatNumber } from '../utils';
-import { getPrestigeThreshold } from '../types';
+import { getPrestigeThreshold, PRESTIGE_BONUS } from '../types';
 import { Coins, BrickWall, Layers, Circle, TrendingUp } from 'lucide-react';
 
 /**
@@ -17,6 +17,7 @@ export function Stats() {
   const ballCount = useGameStore((state) => state.balls.length);
   const prestigeLevel = useGameStore((state) => state.prestigeLevel);
   const prestigeTarget = getPrestigeThreshold(prestigeLevel);
+  const prestigeMult = 1 + prestigeLevel * PRESTIGE_BONUS;
 
   return (
     <div className="stats">
@@ -44,6 +45,11 @@ export function Stats() {
         <TrendingUp className="stat-icon" size={24} />
         <span className="stat-value">{formatNumber(prestigeTarget)}</span>
         <label>Next Prestige</label>
+      </div>
+      <div className="stat">
+        <TrendingUp className="stat-icon text-purple-400" size={24} />
+        <span className="stat-value">{prestigeMult.toFixed(2)}x</span>
+        <label>Prestige Bonus</label>
       </div>
     </div>
   );

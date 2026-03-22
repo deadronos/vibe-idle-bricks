@@ -154,7 +154,7 @@ describe('Shop', () => {
         const user = userEvent.setup()
         await user.click(upgradesTab)
 
-      const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getByRole('button', { name: /speed boost/i })
+      const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getAllByRole('button', { name: /buy/i })[0]
       expect(speedButton).toBeDisabled()
     })
 
@@ -165,7 +165,7 @@ describe('Shop', () => {
         const user = userEvent.setup()
         await user.click(upgradesTab)
 
-      const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getByRole('button', { name: /speed boost/i })
+      const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getAllByRole('button', { name: /buy/i })[0]
       expect(speedButton).not.toBeDisabled()
     })
 
@@ -176,7 +176,7 @@ describe('Shop', () => {
       const upgradesTab = screen.getByRole('tab', { name: /upgrades/i })
       await user.click(upgradesTab)
 
-      const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getByRole('button', { name: /speed boost/i })
+      const speedButton = within(screen.getByRole('heading', { name: /upgrades/i }).parentElement!).getAllByRole('button', { name: /buy/i })[0]
       await user.click(speedButton)
 
       expect(useGameStore.getState().upgrades.speed).toBe(1)
