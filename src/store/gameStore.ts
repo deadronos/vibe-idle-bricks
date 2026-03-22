@@ -55,6 +55,8 @@ interface GameStore {
    * Cleared after the UI reads it.
    */
   pendingOfflineMessage: string | null;
+  /** Timestamp of the last save or update, used for offline earnings. */
+  timestamp: number;
 
   // Actions
   /**
@@ -213,6 +215,10 @@ interface BrickDamageResult {
 
 const ZERO_DECIMAL = new Decimal(0);
 
+const isValidBallType = (value: unknown): value is BallType => {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(BALL_TYPES, value);
+};
+
 const resolveBrickDamageBatch = (
   bricks: BrickData[],
   operations: BrickDamageOperation[]
@@ -257,7 +263,7 @@ const resolveBrickDamageBatch = (
       continue;
     }
 
-    const updatedBrick = { ...brick, health: newHealth };
+    const updatedBrick = { ...brick, health: newHealth, lastHitTime: Date.now() };
     nextBricks.push(updatedBrick);
     results.push({
       id: brick.id,
@@ -331,8 +337,13 @@ const getLocalStorage = (): StorageLike | undefined => {
  * @returns {Partial<GameStore>} The partial state to merge.
  */
 const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: number) => {
-  // Recreate balls
-  const balls: BallData[] = (saveData.balls || ['basic']).map((type: BallType) => {
+  // Recreate balls, ignoring invalid values from malformed saves.
+  const savedBallTypes = Array.isArray(saveData.balls)
+    ? saveData.balls.filter(isValidBallType)
+    : [];
+  const defaultBallTypes: BallType[] = ['basic'];
+  const ballTypes = savedBallTypes.length > 0 ? savedBallTypes : defaultBallTypes;
+  const balls: BallData[] = ballTypes.map((type) => {
     return createBall(type, canvasWidth, canvasHeight);
   });
 
@@ -364,7 +375,7 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
     upgradeCosts,
     currentTier: saveData.currentTier || 1,
     balls: balls.length > 0 ? balls : [createBall('basic', canvasWidth, canvasHeight)],
-    timestamp: saveData.timestamp,
+    timestamp: saveData.timestamp || Date.now(),
   };
 };
 
@@ -389,6 +400,7 @@ export const useGameStore = create<GameStore>()(
     canvasSize: { width: 800, height: 500 },
     isPaused: false,
     pendingOfflineMessage: null,
+    timestamp: Date.now(),
 
     setCanvasSize: (width, height) => {
       set({ canvasSize: { width, height } });
@@ -485,6 +497,7 @@ export const useGameStore = create<GameStore>()(
         balls: [createBall('basic', width, height)],
         bricks: [],
         explosions: [],
+        timestamp: Date.now(),
       });
 
       return true;
@@ -626,19 +639,15 @@ export const useGameStore = create<GameStore>()(
         const { width, height } = state.canvasSize;
 
         const partialState = parseSaveData(saveData, width, height);
-        // Exclude timestamp from state as it is not part of GameStore state (except conceptually, but not typed in state update)
-        // Wait, the interface says `timestamp` is not in GameStore interface, but it IS in GameState in types.
-        // Let's check GameStore interface again. It does NOT have timestamp.
 
-        // Remove timestamp from partialState before setting
-        const { timestamp, ...stateToSet } = partialState;
-
-        // Ensure stateToSet conforms to partial GameStore state
-        set(stateToSet as Partial<GameStore>);
+        // Remove timestamp from partialState before setting to conform to GameStore if necessary,
+        // but now timestamp IS in GameStore interface.
+        set(partialState as Partial<GameStore>);
 
         // Calculate offline progress
-        if (timestamp) {
-          const offlineTime = Date.now() - timestamp;
+        const loadedTimestamp = partialState.timestamp;
+        if (loadedTimestamp) {
+          const offlineTime = Date.now() - loadedTimestamp;
           const seconds = offlineTime / 1000;
           const minutes = seconds / 60;
 
@@ -681,6 +690,7 @@ export const useGameStore = create<GameStore>()(
         balls: [createBall('basic', width, height)],
         bricks: [],
         explosions: [],
+        timestamp: Date.now(),
       });
     },
 

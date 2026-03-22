@@ -10,6 +10,7 @@ import { BallRenderer, BrickRenderer } from './GameRenderers';
 import { SpatialGrid } from './SpatialGrid';
 
 const BALL_RADIUS = 8;
+const FIXED_STEP = 8; // ms
 
 type BallConfig = (typeof BALL_TYPES)[keyof typeof BALL_TYPES];
 
@@ -25,6 +26,8 @@ export class GameScene extends Phaser.Scene {
   private effects!: GameEffects;
   private unsubscribe: (() => void) | null = null;
   private spatialGrid: SpatialGrid = new SpatialGrid(100);
+  private physicsAccumulator: number = 0;
+  private weakestBrick: BrickData | null = null;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -48,6 +51,7 @@ export class GameScene extends Phaser.Scene {
       (state) => state.bricks,
       (bricks) => {
         this.spatialGrid.rebuild(bricks);
+        this.weakestBrick = this.findWeakestBrick(bricks);
       }
     );
 
@@ -66,6 +70,10 @@ export class GameScene extends Phaser.Scene {
 
     this.scale.on('resize', this.handleResize, this);
     this.handleResize(this.scale.gameSize);
+
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      this.handleBrickClick(pointer);
+    });
   }
 
   /**
@@ -114,7 +122,12 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    this.updateBalls(delta);
+    this.physicsAccumulator += delta;
+    while (this.physicsAccumulator >= FIXED_STEP) {
+      this.updateBalls(FIXED_STEP);
+      this.physicsAccumulator -= FIXED_STEP;
+    }
+
     useGameStore.getState().updateExplosions(delta);
 
     const stateAfterSimulation = useGameStore.getState();
@@ -154,7 +167,7 @@ export class GameScene extends Phaser.Scene {
    * Updates the physics and position of all balls.
    * Handles movement, wall collisions, and interaction with bricks.
    */
-  updateBalls(delta: number) {
+  updateBalls(step: number) {
     const store = useGameStore.getState();
     const { width, height } = this.cameras.main;
     const speedMult = store.getSpeedMult();
@@ -163,7 +176,7 @@ export class GameScene extends Phaser.Scene {
     const updatedBalls = store.balls.slice();
 
     for (const ball of updatedBalls) {
-      this.simulateBall(ball, delta, speedMult, damageMult, coinMult, width, height);
+      this.simulateBall(ball, step, speedMult, damageMult, coinMult, width, height);
     }
 
     useGameStore.setState({ balls: updatedBalls });
@@ -178,15 +191,7 @@ export class GameScene extends Phaser.Scene {
     dy: number,
     bricks: BrickData[]
   ): [number, number] {
-    let weakest: BrickData | null = null;
-    let minHealth = new Decimal(Infinity);
-
-    for (const brick of bricks) {
-      if (brick.health.lt(minHealth)) {
-        minHealth = brick.health;
-        weakest = brick;
-      }
-    }
+    const weakest = this.weakestBrick ?? this.findWeakestBrick(bricks);
 
     if (weakest) {
       const targetX = weakest.x + weakest.width / 2;
@@ -205,6 +210,23 @@ export class GameScene extends Phaser.Scene {
     }
 
     return [dx, dy];
+  }
+
+  /**
+   * Finds the weakest brick in a set of bricks.
+   */
+  private findWeakestBrick(bricks: BrickData[]): BrickData | null {
+    let weakest: BrickData | null = null;
+    let minHealth = new Decimal(Infinity);
+
+    for (const brick of bricks) {
+      if (brick.health.lt(minHealth)) {
+        minHealth = brick.health;
+        weakest = brick;
+      }
+    }
+
+    return weakest;
   }
 
   /**
@@ -346,6 +368,8 @@ export class GameScene extends Phaser.Scene {
       this.unsubscribe = null;
     }
 
+    this.weakestBrick = null;
+
     this.scale.off('resize', this.handleResize, this);
     this.ballRenderer?.destroy();
     this.brickRenderer?.destroy();
@@ -386,7 +410,7 @@ export class GameScene extends Phaser.Scene {
 
   private simulateBall(
     ball: BallData,
-    delta: number,
+    step: number,
     speedMult: number,
     damageMult: number,
     coinMult: number,
@@ -413,8 +437,8 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    let x = ball.x + dx * (delta / 16);
-    let y = ball.y + dy * (delta / 16);
+    let x = ball.x + dx * (step / 16);
+    let y = ball.y + dy * (step / 16);
 
     if (x - BALL_RADIUS < 0) {
       x = BALL_RADIUS;
@@ -442,6 +466,29 @@ export class GameScene extends Phaser.Scene {
     if (bounceResult) {
       ball.dx = bounceResult.dx;
       ball.dy = bounceResult.dy;
+    }
+  }
+
+  private handleBrickClick(pointer: Phaser.Input.Pointer) {
+    const { x, y } = pointer;
+    const store = useGameStore.getState();
+    const potentialBricks = this.spatialGrid.queryBounds(x - 5, y - 5, x + 5, y + 5);
+
+    for (const brick of potentialBricks) {
+      if (x >= brick.x && x <= brick.x + brick.width && y >= brick.y && y <= brick.y + brick.height) {
+        const damageMult = store.getDamageMult();
+        const coinMult = store.getCoinMult();
+        const clickDamage = new Decimal(damageMult).mul(0.5); // 0.5 base damage scaled by upgrades
+
+        const result = store.damageBrick(brick.id, clickDamage);
+        if (result) {
+          this.showFloatingText(x, y, `-${formatNumber(clickDamage)}`, '#ffcc00');
+          if (result.destroyed) {
+            this.handleBrickDestroyed(brick, coinMult, 5, true);
+          }
+        }
+        break;
+      }
     }
   }
 }
