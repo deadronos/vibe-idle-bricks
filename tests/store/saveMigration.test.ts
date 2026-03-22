@@ -147,4 +147,18 @@ describe('Save Migration and Backward Compatibility', () => {
     // TypeScript check prevents access, but at runtime it should not be there (if our migration fix works)
     expect(Object.prototype.hasOwnProperty.call(state.ballCosts, 'fakeBall')).toBe(false)
   })
+
+  it('should ignore invalid ball types in saved balls and keep valid ones', () => {
+    const invalidBallsData = {
+      coins: '100',
+      prestigeLevel: 0,
+      balls: ['basic', 'not-a-real-ball', 'sniper'],
+    }
+
+    const result = useGameStore.getState().importSave(JSON.stringify(invalidBallsData))
+    expect(result).toBe(true)
+
+    const state = useGameStore.getState()
+    expect(state.balls.map((ball) => ball.type)).toEqual(['basic', 'sniper'])
+  })
 })

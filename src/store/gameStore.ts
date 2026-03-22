@@ -215,6 +215,10 @@ interface BrickDamageResult {
 
 const ZERO_DECIMAL = new Decimal(0);
 
+const isValidBallType = (value: unknown): value is BallType => {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(BALL_TYPES, value);
+};
+
 const resolveBrickDamageBatch = (
   bricks: BrickData[],
   operations: BrickDamageOperation[]
@@ -333,8 +337,13 @@ const getLocalStorage = (): StorageLike | undefined => {
  * @returns {Partial<GameStore>} The partial state to merge.
  */
 const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: number) => {
-  // Recreate balls
-  const balls: BallData[] = (saveData.balls || ['basic']).map((type: BallType) => {
+  // Recreate balls, ignoring invalid values from malformed saves.
+  const savedBallTypes = Array.isArray(saveData.balls)
+    ? saveData.balls.filter(isValidBallType)
+    : [];
+  const defaultBallTypes: BallType[] = ['basic'];
+  const ballTypes = savedBallTypes.length > 0 ? savedBallTypes : defaultBallTypes;
+  const balls: BallData[] = ballTypes.map((type) => {
     return createBall(type, canvasWidth, canvasHeight);
   });
 

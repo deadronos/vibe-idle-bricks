@@ -27,6 +27,7 @@ export class GameScene extends Phaser.Scene {
   private unsubscribe: (() => void) | null = null;
   private spatialGrid: SpatialGrid = new SpatialGrid(100);
   private physicsAccumulator: number = 0;
+  private weakestBrick: BrickData | null = null;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -50,6 +51,7 @@ export class GameScene extends Phaser.Scene {
       (state) => state.bricks,
       (bricks) => {
         this.spatialGrid.rebuild(bricks);
+        this.weakestBrick = this.findWeakestBrick(bricks);
       }
     );
 
@@ -189,15 +191,7 @@ export class GameScene extends Phaser.Scene {
     dy: number,
     bricks: BrickData[]
   ): [number, number] {
-    let weakest: BrickData | null = null;
-    let minHealth = new Decimal(Infinity);
-
-    for (const brick of bricks) {
-      if (brick.health.lt(minHealth)) {
-        minHealth = brick.health;
-        weakest = brick;
-      }
-    }
+    const weakest = this.weakestBrick ?? this.findWeakestBrick(bricks);
 
     if (weakest) {
       const targetX = weakest.x + weakest.width / 2;
@@ -216,6 +210,23 @@ export class GameScene extends Phaser.Scene {
     }
 
     return [dx, dy];
+  }
+
+  /**
+   * Finds the weakest brick in a set of bricks.
+   */
+  private findWeakestBrick(bricks: BrickData[]): BrickData | null {
+    let weakest: BrickData | null = null;
+    let minHealth = new Decimal(Infinity);
+
+    for (const brick of bricks) {
+      if (brick.health.lt(minHealth)) {
+        minHealth = brick.health;
+        weakest = brick;
+      }
+    }
+
+    return weakest;
   }
 
   /**
@@ -356,6 +367,8 @@ export class GameScene extends Phaser.Scene {
       this.unsubscribe();
       this.unsubscribe = null;
     }
+
+    this.weakestBrick = null;
 
     this.scale.off('resize', this.handleResize, this);
     this.ballRenderer?.destroy();
