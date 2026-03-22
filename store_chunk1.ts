@@ -57,6 +57,8 @@ interface GameStore {
   pendingOfflineMessage: string | null;
   /** Timestamp of the last save or update, used for offline earnings. */
   timestamp: number;
+  /** Timestamp of the last save or update, used for offline earnings. */
+  timestamp: number;
 
   // Actions
   /**
@@ -259,7 +261,7 @@ const resolveBrickDamageBatch = (
       continue;
     }
 
-    const updatedBrick = { ...brick, health: newHealth, lastHitTime: Date.now() };
+    const updatedBrick = { ...brick, health: newHealth };
     nextBricks.push(updatedBrick);
     results.push({
       id: brick.id,
@@ -366,7 +368,7 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
     upgradeCosts,
     currentTier: saveData.currentTier || 1,
     balls: balls.length > 0 ? balls : [createBall('basic', canvasWidth, canvasHeight)],
-    timestamp: saveData.timestamp || Date.now(),
+    timestamp: saveData.timestamp,
   };
 };
 
@@ -388,9 +390,11 @@ export const useGameStore = create<GameStore>()(
     balls: [],
     bricks: [],
     explosions: [],
-    canvasSize: { width: 800, height: 500 },
+        timestamp: Date.now(),
+        timestamp: Date.now(),
     isPaused: false,
     pendingOfflineMessage: null,
+    timestamp: Date.now(),
     timestamp: Date.now(),
 
     setCanvasSize: (width, height) => {
@@ -489,219 +493,7 @@ export const useGameStore = create<GameStore>()(
         bricks: [],
         explosions: [],
         timestamp: Date.now(),
-      });
+        timestamp: Date.now(),
 
       return true;
     },
-
-    setBricks: (bricks) => set({ bricks }),
-
-    removeBrick: (id) => {
-      const state = get();
-      set({ bricks: state.bricks.filter((b) => b.id !== id) });
-    },
-
-    applyBrickDamageBatch: (operations) => {
-      const state = get();
-      const nextState = resolveBrickDamageBatch(state.bricks, operations);
-      if (nextState.results.length > 0) {
-        set({ bricks: nextState.bricks });
-      }
-      return nextState.results;
-    },
-
-    damageBrick: (id, damage) => {
-      const [result] = get().applyBrickDamageBatch([{ id, damage }]);
-      if (!result) return null;
-
-      return {
-        destroyed: result.destroyed,
-        value: result.value,
-      };
-    },
-
-    addExplosion: (x, y, radius) => {
-      const state = get();
-      set({
-        explosions: [
-          ...state.explosions,
-          { x, y, radius, life: 300, maxLife: 300 },
-        ],
-      });
-    },
-
-    updateExplosions: (deltaTime) => {
-      const state = get();
-      const nextExplosions: Explosion[] = [];
-
-      for (const explosion of state.explosions) {
-        const nextLife = explosion.life - deltaTime;
-        if (nextLife > 0) {
-          nextExplosions.push({ ...explosion, life: nextLife });
-        }
-      }
-
-      set({ explosions: nextExplosions });
-    },
-
-    save: () => {
-      const storage = getLocalStorage();
-      if (!storage) return;
-
-      const state = get();
-      const saveData = {
-        coins: state.coins.toString(),
-        bricksBroken: state.bricksBroken.toString(),
-        totalBricksBroken: state.totalBricksBroken.toString(),
-        prestigeLevel: state.prestigeLevel,
-        upgrades: state.upgrades,
-        ballCosts: Object.fromEntries(
-          Object.entries(state.ballCosts).map(([k, v]) => [k, v.toString()])
-        ),
-        upgradeCosts: Object.fromEntries(
-          Object.entries(state.upgradeCosts).map(([k, v]) => [k, v.toString()])
-        ),
-        currentTier: state.currentTier,
-        balls: state.balls.map((b) => b.type),
-        timestamp: Date.now(),
-      };
-      storage.setItem('idleBricksSave', JSON.stringify(saveData));
-    },
-
-    exportSave: () => {
-      const state = get();
-      const saveData = {
-        coins: state.coins.toString(),
-        bricksBroken: state.bricksBroken.toString(),
-        totalBricksBroken: state.totalBricksBroken.toString(),
-        prestigeLevel: state.prestigeLevel,
-        upgrades: state.upgrades,
-        ballCosts: Object.fromEntries(
-          Object.entries(state.ballCosts).map(([k, v]) => [k, v.toString()])
-        ),
-        upgradeCosts: Object.fromEntries(
-          Object.entries(state.upgradeCosts).map(([k, v]) => [k, v.toString()])
-        ),
-        currentTier: state.currentTier,
-        balls: state.balls.map((b) => b.type),
-        timestamp: Date.now(),
-        version: 1,
-      };
-      return JSON.stringify(saveData);
-    },
-
-    importSave: (data: string) => {
-      try {
-        const saveData = JSON.parse(data);
-        const state = get();
-        const { width, height } = state.canvasSize;
-
-        // Basic validation
-        if (typeof saveData.coins === 'undefined' || typeof saveData.prestigeLevel === 'undefined') {
-          console.error('Invalid save data: missing required fields');
-          return false;
-        }
-
-        const partialState = parseSaveData(saveData, width, height);
-
-        set({
-          ...partialState,
-          bricks: [],
-          explosions: [],
-        });
-
-        return true;
-      } catch (e) {
-        console.error('Failed to import save:', e);
-        return false;
-      }
-    },
-
-    load: () => {
-      const storage = getLocalStorage();
-      if (!storage) return;
-
-      const saveStr = storage.getItem('idleBricksSave');
-      if (!saveStr) return;
-
-      try {
-        const saveData = JSON.parse(saveStr);
-        const state = get();
-        const { width, height } = state.canvasSize;
-
-        const partialState = parseSaveData(saveData, width, height);
-
-        // Remove timestamp from partialState before setting to conform to GameStore if necessary,
-        // but now timestamp IS in GameStore interface.
-        set(partialState as Partial<GameStore>);
-
-        // Calculate offline progress
-        const loadedTimestamp = partialState.timestamp;
-        if (loadedTimestamp) {
-          const offlineTime = Date.now() - loadedTimestamp;
-          const seconds = offlineTime / 1000;
-          const minutes = seconds / 60;
-
-          if (minutes > 1) {
-            const newState = get();
-            const coinsPerSecond =
-              newState.balls.length *
-              (1 + newState.upgrades.coinMult * UPGRADE_MULTIPLIER) *
-              (1 + newState.prestigeLevel * PRESTIGE_BONUS);
-            const offlineCoins = new Decimal(coinsPerSecond * seconds * OFFLINE_EARNINGS_RATE).floor();
-
-            if (offlineCoins.gt(0)) {
-              set({
-                coins: newState.coins.add(offlineCoins),
-                pendingOfflineMessage: `Welcome back! You earned ${offlineCoins.toString()} coins while away.`,
-              });
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Failed to load save:', e);
-      }
-    },
-
-    reset: () => {
-      const storage = getLocalStorage();
-      if (storage) storage.removeItem('idleBricksSave');
-      const state = get();
-      const { width, height } = state.canvasSize;
-
-      set({
-        coins: new Decimal(0),
-        bricksBroken: new Decimal(0),
-        totalBricksBroken: new Decimal(0),
-        prestigeLevel: 0,
-        currentTier: 1,
-        upgrades: { speed: 0, damage: 0, coinMult: 0 },
-        ballCosts: getDefaultBallCosts(),
-        upgradeCosts: getDefaultUpgradeCosts(),
-        balls: [createBall('basic', width, height)],
-        bricks: [],
-        explosions: [],
-        timestamp: Date.now(),
-      });
-    },
-
-    setPaused: (paused) => set({ isPaused: paused }),
-
-    clearOfflineMessage: () => set({ pendingOfflineMessage: null }),
-
-    getDamageMult: () => {
-      const state = get();
-      return 1 + state.upgrades.damage * UPGRADE_MULTIPLIER;
-    },
-
-    getCoinMult: () => {
-      const state = get();
-      return 1 + state.upgrades.coinMult * UPGRADE_MULTIPLIER;
-    },
-
-    getSpeedMult: () => {
-      const state = get();
-      return 1 + state.upgrades.speed * UPGRADE_MULTIPLIER;
-    },
-  }))
-);

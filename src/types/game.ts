@@ -71,6 +71,8 @@ export interface BrickData {
   maxHealth: Decimal;
   /** The coin value awarded when the brick is destroyed. */
   value: Decimal;
+  /** Timestamp of the last time the brick was hit, for visual effects. */
+  lastHitTime?: number;
 }
 
 /**
@@ -231,6 +233,9 @@ export const PRESTIGE_THRESHOLD = PRESTIGE_THRESHOLDS[0];
  * @returns {number} The number of bricks required for the next prestige.
  */
 export const getPrestigeThreshold = (prestigeLevel: number): number => {
-  const index = Math.min(prestigeLevel, PRESTIGE_THRESHOLDS.length - 1);
-  return PRESTIGE_THRESHOLDS[index];
+  if (prestigeLevel < PRESTIGE_THRESHOLDS.length) {
+    return PRESTIGE_THRESHOLDS[prestigeLevel];
+  }
+  const lastThreshold = PRESTIGE_THRESHOLDS[PRESTIGE_THRESHOLDS.length - 1];
+  return Math.floor(lastThreshold * Math.pow(1.5, prestigeLevel - (PRESTIGE_THRESHOLDS.length - 1)));
 };

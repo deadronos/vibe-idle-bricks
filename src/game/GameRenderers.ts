@@ -124,8 +124,10 @@ export class BrickRenderer {
       this.seenAtFrame.set(brick.id, this.frame);
 
       const previousBrick = this.renderedBrickRefs.get(brick.id);
-      if (previousBrick !== brick) {
-        this.drawBrick(brick);
+      const isHitFlash = Date.now() - (brick.lastHitTime || 0) < 50;
+
+      if (previousBrick !== brick || isHitFlash) {
+        this.drawBrick(brick, isHitFlash);
         this.renderedBrickRefs.set(brick.id, brick);
       }
 
@@ -152,24 +154,24 @@ export class BrickRenderer {
     this.renderedBrickRefs.clear();
   }
 
-  private drawBrick(brick: BrickData) {
+  private drawBrick(brick: BrickData, isHitFlash: boolean) {
     const graphics = this.getGraphics(brick.id);
     graphics.clear();
 
-    const fillColor = this.getFillColor(brick.tier);
+    const fillColor = isHitFlash ? 0xffffff : this.getFillColor(brick.tier);
     const borderColor = this.getBorderColor(brick.tier);
     const healthPercent = brick.health.div(brick.maxHealth).toNumber();
 
     graphics.fillStyle(0x000000, 0.3);
     graphics.fillRect(brick.x + 2, brick.y + 2, brick.width, brick.height);
 
-    graphics.fillStyle(fillColor, 1);
+    graphics.fillStyle(fillColor, isHitFlash ? 1 : 1);
     graphics.fillRect(brick.x, brick.y, brick.width, brick.height);
 
     graphics.lineStyle(2, borderColor, 1);
     graphics.strokeRect(brick.x, brick.y, brick.width, brick.height);
 
-    if (healthPercent < 1) {
+    if (healthPercent < 1 && !isHitFlash) {
       graphics.fillStyle(0x000000, 0.5 * (1 - healthPercent));
       graphics.fillRect(brick.x, brick.y, brick.width, brick.height);
     }
