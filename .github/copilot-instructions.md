@@ -83,11 +83,18 @@ Reset triggered at 10,000 bricks broken. Resets: coins, upgrades, balls, tier. K
 **For small/documentation-only tasks** (bug fixes, typos, minor refactors):
 - Implement directly without formal workflow
 - Update `memory/activeContext.md` if context changes
+- If the work uncovers a durable lesson, capture it in the relevant docs or Memory Bank note so future work can reuse it
 
 **For medium/large changes** (new features, architecture changes, multi-file edits):
 - Follow the 6-phase spec-driven workflow in `.github/instructions/spec-driven-workflow-v1.instructions.md`
 - Analyze → Design → Implement → Validate → Reflect → Handoff
 - Store designs in `memory/designs/`, tasks in `memory/tasks/`
+
+## Instruction hygiene
+
+- Before making changes, review related guidance in `AGENTS.md`, `.github/instructions/`, and `docs/` to spot overlapping, stale, or conflicting instructions.
+- If a bug fix, test failure, or investigation produces a reusable pattern or warning, update the most relevant instruction or doc rather than relying on chat history.
+- Keep one source of truth whenever possible; if multiple files cover the same topic, align them so they say the same thing.
 
 ## Memory Bank
 

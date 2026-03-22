@@ -5,9 +5,10 @@ This document provides instructions for AI coding agents working on this project
 > **See also:** [.github/copilot-instructions.md](.github/copilot-instructions.md) for additional project guidance, patterns, and conventions.
 
 ## Important
-Before finishing after making code changes, ensure that:
-- All tests pass (`npm run test`)
-- TypeScript compiles without errors (`npm run build`)
+Before finishing after making code changes, ensure the relevant validation checks pass for the scope of the change:
+
+- All applicable tests pass (`npm run test` or focused test commands)
+- TypeScript compiles without errors (`npm run build` or `npm run typecheck`)
 - Linting passes (`npm run lint`)
 
 ## Project Overview
@@ -32,20 +33,20 @@ Phaser Game Engine (GameScene.ts)
 
 ### Communication Pattern
 
-| Context | How to Access Store |
-|---------|---------------------|
-| React components | `useGameStore((state) => state.property)` with selectors |
-| Phaser game code | `useGameStore.getState()` and `useGameStore.setState()` directly |
+_How to access the store depends on the runtime context:_
+
+- **React components:** use `useGameStore((state) => state.property)` with selectors.
+- **Phaser game code:** use `useGameStore.getState()` and `useGameStore.setState()` directly.
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/store/gameStore.ts` | All game state and actions |
-| `src/game/GameScene.ts` | Phaser physics, rendering, collisions |
-| `src/types/game.ts` | Type definitions, `BALL_TYPES`, constants |
-| `src/utils/helpers.ts` | Pure utility functions |
-| `src/components/` | React UI components |
+The main source files are:
+
+- `src/store/gameStore.ts` — all game state and actions
+- `src/game/GameScene.ts` — Phaser physics, rendering, collisions
+- `src/types/game.ts` — type definitions, `BALL_TYPES`, constants
+- `src/utils/helpers.ts` — pure utility functions
+- `src/components/` — React UI components
 
 ## Critical Constraints
 
@@ -107,6 +108,7 @@ See [.github/instructions/spec-driven-workflow-v1.instructions.md](.github/instr
 
 - Implement directly
 - Update `memory/activeContext.md` if context changes
+- If the change exposes a reusable lesson, add it to the relevant docs or Memory Bank note instead of leaving it only in chat history
 
 ### Medium/Large Changes (new features, architecture)
 
@@ -121,30 +123,36 @@ Follow the 6-phase spec-driven workflow:
 
 Store designs in `memory/designs/`, tasks in `memory/tasks/`.
 
+## Documentation and learning loop
+
+- Before and after meaningful changes, review the relevant guidance in `AGENTS.md`, `.github/copilot-instructions.md`, `.github/instructions/`, and `docs/` to catch drift, duplication, or contradictions.
+- If a bug fix, test failure, or investigation reveals a reusable lesson, capture it in the most relevant Memory Bank file and, when it affects project behavior or workflow, mirror it in the appropriate doc under `docs/` or `.github/`.
+- Prefer updating the authoritative instruction or documentation source over repeating the same guidance in multiple places.
+
 ## Memory Bank
 
 This project uses a structured Memory Bank in `/memory/` for context persistence. See [.github/instructions/memory-bank.instructions.md](.github/instructions/memory-bank.instructions.md) for full documentation.
 
-| File | Purpose |
-|------|---------|
-| `memory/activeContext.md` | Current work focus, recent changes |
-| `memory/progress.md` | What works, what's left |
-| `memory/tasks/_index.md` | Task tracking index |
-| `memory/projectbrief.md` | Core requirements and goals |
-| `memory/techContext.md` | Tech stack and constraints |
-| `memory/systemPatterns.md` | Architecture and patterns |
+Key Memory Bank files:
+
+- `memory/activeContext.md` — current work focus and recent changes
+- `memory/progress.md` — what works and what’s left
+- `memory/tasks/_index.md` — task tracking index
+- `memory/projectbrief.md` — core requirements and goals
+- `memory/techContext.md` — tech stack and constraints
+- `memory/systemPatterns.md` — architecture and patterns
 
 **Read relevant Memory Bank files** at the start of work to recover context.
 
 ## Available Agents
 
-| Agent | Purpose |
-|-------|---------|
-| `Conductor` | Orchestrates Planning → Implementation → Review cycle |
-| `planning-subagent` | Research context and outline plans |
-| `implement-subagent` | Execute delegated implementation tasks |
-| `code-review-subagent` | Review completed implementation |
-| `Plan` | Research and outline multi-step plans |
+The most relevant agents are:
+
+- `Conductor` — orchestrates the planning → implementation → review cycle
+- `planning-subagent` — researches context and outlines plans
+- `implement-subagent` — executes delegated implementation tasks
+- `code-review-subagent` — reviews completed implementation
+- `Plan` — researches and outlines multi-step plans
 
 ## Testing
 

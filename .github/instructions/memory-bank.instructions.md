@@ -1,23 +1,6 @@
 ---
 name: memory-bank
 applyTo: '**'
-tools:
-  [
-    'createFile',
-    'appendFile',
-    'readFile',
-    'deleteFile',
-    'listFiles',
-    'searchFiles',
-    'updateFile',
-    'getFileContent',
-    'getFileMetadata',
-    'thinking',
-    'plan',
-    'memoryBank',
-    'memoryBankUpdate',
-    'taskManagement',
-  ]
 ---
 
 Coding standards, domain knowledge, and preferences that AI should follow.
@@ -155,6 +138,8 @@ Memory Bank updates occur when:
 3. When user requests with **update memory bank** (recommended: review the relevant memory files; review all files only when necessary and with owner approval)
 4. When context needs clarification
 
+When a bug fix, error investigation, or debugging session exposes a reusable lesson, capture it in the most relevant Memory Bank file. If that lesson changes project behavior, conventions, or workflow, mirror the update in the authoritative doc under `docs/` or `.github/` so future agents can benefit from it.
+
 ```mermaid
 flowchart TD
     Start[Update Process]
@@ -205,6 +190,7 @@ flowchart TD
 - Known challenges
 - Evolution of project decisions
 - Tool usage patterns
+- Reusable learnings from bug fixes, failed assumptions, and debugging sessions
 
 The format is flexible - focus on capturing valuable insights that help me work more effectively with you and the project. Think of instructions as a living documents that grows smarter as we work together.
 
