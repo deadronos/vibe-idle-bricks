@@ -201,7 +201,7 @@ export class GameScene extends Phaser.Scene {
       const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
       if (dist > 0) {
-        const steerStrength = 0.03;
+        const steerStrength = 0.06;
         return [
           dx + (deltaX / dist) * steerStrength,
           dy + (deltaY / dist) * steerStrength,
@@ -466,6 +466,14 @@ export class GameScene extends Phaser.Scene {
     if (bounceResult) {
       ball.dx = bounceResult.dx;
       ball.dy = bounceResult.dy;
+    }
+
+    // Ensure velocity magnitude is maintained
+    const nextSpeedSq = ball.dx * ball.dx + ball.dy * ball.dy;
+    if (nextSpeedSq > 0) {
+      const nextSpeed = Math.sqrt(nextSpeedSq);
+      ball.dx = (ball.dx / nextSpeed) * actualSpeed;
+      ball.dy = (ball.dy / nextSpeed) * actualSpeed;
     }
   }
 

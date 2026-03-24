@@ -1072,3 +1072,62 @@ main {
 .shop-panel::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* Upgrade Item with Buy Max */
+.upgrade-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: default !important;
+}
+
+.upgrade-item:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: #4a5568 !important;
+}
+
+.upgrade-item.affordable:hover {
+  border-color: #4ade80 !important;
+}
+
+.upgrade-main {
+  flex: 1;
+}
+
+.upgrade-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.upgrade-actions button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upgrade-actions .buy-btn:not(:disabled) {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-color: #3b82f6;
+}
+
+.upgrade-actions .buy-max-btn:not(:disabled) {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #10b981;
+}
+
+.upgrade-actions button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.upgrade-actions button:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}

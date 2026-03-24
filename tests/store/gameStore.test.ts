@@ -211,6 +211,26 @@ describe('gameStore', () => {
     })
   })
 
+  describe('buyMaxUpgrade', () => {
+    it('should return 0 when not enough coins', () => {
+      const result = useGameStore.getState().buyMaxUpgrade('speed')
+      expect(result).toBe(0)
+      expect(useGameStore.getState().upgrades.speed).toBe(0)
+    })
+
+    it('should purchase as many upgrade levels as possible', () => {
+      useGameStore.setState({ coins: new Decimal(1000) })
+
+      const purchased = useGameStore.getState().buyMaxUpgrade('speed')
+      const state = useGameStore.getState()
+
+      expect(purchased).toBe(6)
+      expect(state.upgrades.speed).toBe(6)
+      expect(state.coins.eq(120)).toBe(true)
+      expect(state.upgradeCosts.speed.eq(234)).toBe(true)
+    })
+  })
+
   describe('prestige', () => {
     it('should not allow prestige below threshold', () => {
       useGameStore.setState({ bricksBroken: new Decimal(9999) })

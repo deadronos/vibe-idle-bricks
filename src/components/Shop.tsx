@@ -45,6 +45,7 @@ export function Shop() {
   const canPrestige = useGameStore((state) => state.canPrestige);
   const buyBall = useGameStore((state) => state.buyBall);
   const buyUpgrade = useGameStore((state) => state.buyUpgrade);
+  const buyMaxUpgrade = useGameStore((state) => state.buyMaxUpgrade);
   const prestige = useGameStore((state) => state.prestige);
 
   const handlePrestige = () => {
@@ -143,6 +144,7 @@ export function Shop() {
               coins={coins}
               level={upgrades.speed}
               onBuy={() => buyUpgrade('speed')}
+              onBuyMax={() => buyMaxUpgrade('speed')}
             />
             <UpgradeButton
               type="damage"
@@ -153,6 +155,7 @@ export function Shop() {
               coins={coins}
               level={upgrades.damage}
               onBuy={() => buyUpgrade('damage')}
+              onBuyMax={() => buyMaxUpgrade('damage')}
             />
             <UpgradeButton
               type="coinMult"
@@ -163,6 +166,7 @@ export function Shop() {
               coins={coins}
               level={upgrades.coinMult}
               onBuy={() => buyUpgrade('coinMult')}
+              onBuyMax={() => buyMaxUpgrade('coinMult')}
             />
           </div>
         </div>
@@ -222,6 +226,8 @@ interface UpgradeButtonProps {
   level: number;
   /** Callback to trigger purchase. */
   onBuy: () => void;
+  /** Callback to trigger "buy max" purchase. */
+  onBuyMax: () => void;
 }
 
 /**
@@ -230,17 +236,23 @@ interface UpgradeButtonProps {
  * @param props - Component props.
  * @returns {JSX.Element} The upgrade button.
  */
-function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBuy }: UpgradeButtonProps) {
+function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBuy, onBuyMax }: UpgradeButtonProps) {
   const canAfford = coins.gte(cost);
 
   return (
-    <button className={`shop-item ${canAfford ? 'affordable' : ''}`} disabled={!canAfford} onClick={onBuy}>
-      <span className="item-name">
-        <Icon size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} aria-hidden="true" />
-        {name} <span className="item-level">Lv.{level}</span>
-      </span>
-      <span className="item-cost">{formatNumber(cost)}</span> coins
-      <div className="item-desc">{description}</div>
-    </button>
+    <div className={`shop-item upgrade-item ${canAfford ? 'affordable' : ''}`}>
+      <div className="upgrade-main">
+        <span className="item-name">
+          <Icon size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} aria-hidden="true" />
+          {name} <span className="item-level">Lv.{level}</span>
+        </span>
+        <span className="item-cost">{formatNumber(cost)}</span> coins
+        <div className="item-desc">{description}</div>
+      </div>
+      <div className="upgrade-actions">
+        <button className="buy-btn" disabled={!canAfford} onClick={onBuy}>Buy</button>
+        <button className="buy-max-btn" disabled={!canAfford} onClick={onBuyMax}>Max</button>
+      </div>
+    </div>
   );
 }
