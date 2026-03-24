@@ -181,6 +181,22 @@ describe('Shop', () => {
 
       expect(useGameStore.getState().upgrades.speed).toBe(1)
     })
+
+    it('should buy as many upgrades as possible when Max is clicked', async () => {
+      const user = userEvent.setup()
+      useGameStore.setState({ coins: new Decimal(1000) })
+      renderShop()
+
+      const upgradesTab = screen.getByRole('tab', { name: /upgrades/i })
+      await user.click(upgradesTab)
+
+      const upgradesPanel = screen.getByRole('tabpanel')
+      const maxButton = within(upgradesPanel).getAllByRole('button', { name: /^max$/i })[0]
+      await user.click(maxButton)
+
+      expect(useGameStore.getState().upgrades.speed).toBe(6)
+      expect(useGameStore.getState().coins.eq(120)).toBe(true)
+    })
   })
 
   describe('prestige', () => {

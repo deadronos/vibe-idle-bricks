@@ -481,15 +481,15 @@ export const useGameStore = create<GameStore>()(
     },
 
     buyMaxUpgrade: (type) => {
-      let state = get();
+      const state = get();
       let cost = state.upgradeCosts[type];
       let purchased = 0;
 
-      if (state.coins.lt(cost)) return 0;
+      if (state.coins.lt(cost) || cost.lte(0)) return 0;
 
       let currentCoins = state.coins;
       let currentUpgradeLevel = state.upgrades[type];
-      let currentUpgradeCosts = { ...state.upgradeCosts };
+      const currentUpgradeCosts = { ...state.upgradeCosts };
 
       while (currentCoins.gte(cost)) {
         currentCoins = currentCoins.sub(cost);
@@ -497,9 +497,6 @@ export const useGameStore = create<GameStore>()(
         cost = cost.mul(1.15).ceil();
         currentUpgradeCosts[type] = cost;
         purchased++;
-
-        // Safety break to prevent infinite loops (should not happen with 1.15 multiplier)
-        if (purchased >= 1000) break;
       }
 
       set({
