@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import Decimal from 'break_infinity.js'
 import { useGameStore } from '../../src/store/gameStore'
-import { BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeThreshold, MAX_TIER } from '../../src/types/game'
+import { BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeThreshold, MAX_TIER, MAX_BALLS, MAX_SPEED_UPGRADE } from '../../src/types/game'
 
 // Mock localStorage
 const createLocalStorageMock = () => {
@@ -643,6 +643,28 @@ describe('gameStore', () => {
       expect(balls.map(b => b.type)).toEqual(['basic', 'heavy', 'sniper'])
     })
 
+    it('should clamp oversized save data to the configured caps', () => {
+      const saveData = {
+        coins: '1000',
+        bricksBroken: '0',
+        totalBricksBroken: '0',
+        prestigeLevel: 0,
+        upgrades: { speed: MAX_SPEED_UPGRADE + 99, damage: 0, coinMult: 0 },
+        ballCosts: {},
+        upgradeCosts: {},
+        currentTier: 1,
+        balls: Array.from({ length: MAX_BALLS + 25 }, () => 'basic' as const),
+        timestamp: Date.now(),
+      }
+      localStorageMock._setStore({ idleBricksSave: JSON.stringify(saveData) })
+
+      useGameStore.getState().load()
+
+      const state = useGameStore.getState()
+      expect(state.upgrades.speed).toBe(MAX_SPEED_UPGRADE)
+      expect(state.balls.length).toBe(MAX_BALLS)
+    })
+
     it('should calculate offline earnings for time > 1 minute', () => {
       const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
       const saveData = {
@@ -821,6 +843,28 @@ describe('gameStore', () => {
       expect(state.currentTier).toBe(4)
       expect(state.balls.length).toBe(2)
       expect(state.balls.map(b => b.type)).toEqual(['basic', 'plasma'])
+    })
+
+    it('should clamp loaded ball count and speed upgrade to their maximums', () => {
+      const oversizedSaveData = {
+        coins: '5000',
+        bricksBroken: '250',
+        totalBricksBroken: '1000',
+        prestigeLevel: 3,
+        upgrades: { speed: MAX_SPEED_UPGRADE + 25, damage: 3, coinMult: 1 },
+        ballCosts: { basic: '15' },
+        upgradeCosts: { speed: '150', damage: '225', coinMult: '300' },
+        currentTier: 4,
+        balls: Array.from({ length: MAX_BALLS + 10 }, () => 'basic' as const),
+        timestamp: Date.now(),
+        version: 1,
+      }
+
+      useGameStore.getState().importSave(JSON.stringify(oversizedSaveData))
+
+      const state = useGameStore.getState()
+      expect(state.upgrades.speed).toBe(MAX_SPEED_UPGRADE)
+      expect(state.balls.length).toBe(MAX_BALLS)
     })
 
     it('should return false for invalid JSON', () => {

@@ -351,7 +351,7 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
     ? saveData.balls.filter(isValidBallType)
     : [];
   const defaultBallTypes: BallType[] = ['basic'];
-  const ballTypes = savedBallTypes.length > 0 ? savedBallTypes : defaultBallTypes;
+  const ballTypes = savedBallTypes.length > 0 ? savedBallTypes.slice(0, MAX_BALLS) : defaultBallTypes;
   const balls: BallData[] = ballTypes.map((type) => {
     return createBall(type, canvasWidth, canvasHeight);
   });
@@ -379,7 +379,13 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
     bricksBroken: new Decimal(saveData.bricksBroken || 0),
     totalBricksBroken: new Decimal(saveData.totalBricksBroken || 0),
     prestigeLevel: saveData.prestigeLevel || 0,
-    upgrades: saveData.upgrades || { speed: 0, damage: 0, coinMult: 0 },
+    upgrades: {
+      ...(saveData.upgrades || { speed: 0, damage: 0, coinMult: 0 }),
+      speed: Math.max(
+        0,
+        Math.min(MAX_SPEED_UPGRADE, Math.floor(Number(saveData.upgrades?.speed ?? 0) || 0))
+      ),
+    },
     ballCosts,
     upgradeCosts,
     currentTier: saveData.currentTier || 1,
