@@ -27,6 +27,10 @@ Memory Bank initialization completed. The project is in a functional MVP state w
   - Updated `App.test.tsx` and `Shop.test.tsx` to match new Lucide icon usage
   - Verified all tests pass with `npm run test:run`
   - Verified typecheck and linting pass
+- Normalized hydrated save data in `gameStore.ts`:
+  - clamp loaded ball counts to `MAX_BALLS`
+  - clamp loaded speed upgrade to `MAX_SPEED_UPGRADE`
+  - added regression tests for both `load()` and `importSave()` paths
 - Implemented TASK004 Visual Polish:
   - Added `lucide-react` icons to UI
   - Integrated "Rajdhani" Google Font
@@ -77,3 +81,4 @@ Potential areas for enhancement:
 - Phaser is intentionally deferred from the initial startup path; the remaining large async engine chunk is justified in `vite.config.ts`
 - Explosive balls may cause performance issues with many simultaneous explosions (mitigated by particle pooling/limits)
 - Mobile touch events not explicitly handled (relies on Phaser defaults)
+- Save hydration must normalize out-of-range values; purchase/UI caps alone are not enough to prevent oversized loaded state

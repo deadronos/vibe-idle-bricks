@@ -239,3 +239,9 @@ export const getPrestigeThreshold = (prestigeLevel: number): number => {
   const lastThreshold = PRESTIGE_THRESHOLDS[PRESTIGE_THRESHOLDS.length - 1];
   return Math.floor(lastThreshold * Math.pow(1.5, prestigeLevel - (PRESTIGE_THRESHOLDS.length - 1)));
 };
+
+/** Maximum number of balls allowed in the game to prevent performance issues. */
+export const MAX_BALLS = 50;
+
+/** Maximum level for the speed upgrade to prevent physics tunneling. */
+export const MAX_SPEED_UPGRADE = 50;

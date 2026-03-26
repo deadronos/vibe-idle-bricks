@@ -28,6 +28,8 @@ export const formatNumber = (num: Decimal | number): string => {
     return decimal.div(1e6).toFixed(2) + 'M';
   } else if (decimal.gte(1e3)) {
     return decimal.div(1e3).toFixed(2) + 'K';
+  } else if (decimal.lt(10) && !decimal.eq(decimal.floor())) {
+    return decimal.toFixed(1);
   }
   return decimal.floor().toString();
 };

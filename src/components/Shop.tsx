@@ -1,6 +1,6 @@
 import { useState, useId } from 'react';
 import { useGameStore } from '../store';
-import { type BallType, BALL_TYPES, PRESTIGE_BONUS, getPrestigeThreshold } from '../types';
+import { type BallType, BALL_TYPES, PRESTIGE_BONUS, getPrestigeThreshold, MAX_BALLS, MAX_SPEED_UPGRADE } from '../types';
 import { formatNumber } from '../utils';
 import { ShoppingCart, Zap, Crosshair, Bomb, Circle, Hexagon, Star, ArrowUpCircle, Coins, TrendingUp } from 'lucide-react';
 import { Modal } from './Modal';
@@ -47,6 +47,8 @@ export function Shop() {
   const buyUpgrade = useGameStore((state) => state.buyUpgrade);
   const buyMaxUpgrade = useGameStore((state) => state.buyMaxUpgrade);
   const prestige = useGameStore((state) => state.prestige);
+  const ballCount = useGameStore((state) => state.balls.length);
+  const isMaxed = ballCount >= MAX_BALLS;
 
   const handlePrestige = () => {
     setPrestigeOpen(true);
@@ -108,7 +110,7 @@ export function Shop() {
             {ballTypes.map((type) => {
               const config = BALL_TYPES[type];
               const cost = ballCosts[type];
-              const canAfford = coins.gte(cost);
+              const canAfford = coins.gte(cost) && !isMaxed;
               const Icon = BallIcons[type];
 
               return (
@@ -122,7 +124,7 @@ export function Shop() {
                     <Icon size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} aria-hidden="true" />
                     {type.charAt(0).toUpperCase() + type.slice(1)} Ball
                   </span>
-                  <span className="item-cost">{formatNumber(cost)}</span> coins
+                  <span className="item-cost">{isMaxed ? 'MAX' : formatNumber(cost)}</span> {isMaxed ? '' : 'coins'}
                   <div className="item-desc">{config.description}</div>
                 </button>
               );
@@ -139,12 +141,13 @@ export function Shop() {
               type="speed"
               name="Speed Boost"
               icon={Zap}
-              description="All balls +10% speed"
+              description={upgrades.speed >= MAX_SPEED_UPGRADE ? "Max Level Reached" : "All balls +10% speed"}
               cost={upgradeCosts.speed}
               coins={coins}
               level={upgrades.speed}
               onBuy={() => buyUpgrade('speed')}
               onBuyMax={() => buyMaxUpgrade('speed')}
+              isMaxed={upgrades.speed >= MAX_SPEED_UPGRADE}
             />
             <UpgradeButton
               type="damage"
@@ -228,16 +231,12 @@ interface UpgradeButtonProps {
   onBuy: () => void;
   /** Callback to trigger "buy max" purchase. */
   onBuyMax: () => void;
+  /** Whether the upgrade is at its maximum level. */
+  isMaxed?: boolean;
 }
 
-/**
- * Reusable button component for purchasing upgrades.
- *
- * @param props - Component props.
- * @returns {JSX.Element} The upgrade button.
- */
-function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBuy, onBuyMax }: UpgradeButtonProps) {
-  const canAfford = coins.gte(cost);
+function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBuy, onBuyMax, isMaxed }: UpgradeButtonProps) {
+  const canAfford = coins.gte(cost) && !isMaxed;
 
   return (
     <div className={`shop-item upgrade-item ${canAfford ? 'affordable' : ''}`}>
@@ -246,7 +245,7 @@ function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBu
           <Icon size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} aria-hidden="true" />
           {name} <span className="item-level">Lv.{level}</span>
         </span>
-        <span className="item-cost">{formatNumber(cost)}</span> coins
+        <span className="item-cost">{isMaxed ? 'MAX' : formatNumber(cost)}</span> {isMaxed ? '' : 'coins'}
         <div className="item-desc">{description}</div>
       </div>
       <div className="upgrade-actions">
