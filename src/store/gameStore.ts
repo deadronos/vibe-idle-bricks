@@ -8,6 +8,8 @@ import {
   OFFLINE_EARNINGS_RATE,
   MAX_TIER,
   getPrestigeThreshold,
+  MAX_BALLS,
+  MAX_SPEED_UPGRADE,
 } from '../types';
 import type {
   BallType,
@@ -440,6 +442,8 @@ export const useGameStore = create<GameStore>()(
 
     buyBall: (type) => {
       const state = get();
+      if (state.balls.length >= MAX_BALLS) return false;
+
       const cost = state.ballCosts[type];
 
       if (state.coins.gte(cost)) {
@@ -461,6 +465,8 @@ export const useGameStore = create<GameStore>()(
 
     buyUpgrade: (type) => {
       const state = get();
+      if (type === 'speed' && state.upgrades.speed >= MAX_SPEED_UPGRADE) return false;
+
       const cost = state.upgradeCosts[type];
 
       if (state.coins.gte(cost)) {
@@ -482,6 +488,8 @@ export const useGameStore = create<GameStore>()(
 
     buyMaxUpgrade: (type) => {
       const state = get();
+      if (type === 'speed' && state.upgrades.speed >= MAX_SPEED_UPGRADE) return 0;
+
       let cost = state.upgradeCosts[type];
       let purchased = 0;
 
@@ -491,7 +499,7 @@ export const useGameStore = create<GameStore>()(
       let currentUpgradeLevel = state.upgrades[type];
       const currentUpgradeCosts = { ...state.upgradeCosts };
 
-      while (currentCoins.gte(cost)) {
+      while (currentCoins.gte(cost) && (type !== 'speed' || currentUpgradeLevel < MAX_SPEED_UPGRADE)) {
         currentCoins = currentCoins.sub(cost);
         currentUpgradeLevel++;
         cost = cost.mul(1.15).ceil();
@@ -645,8 +653,7 @@ export const useGameStore = create<GameStore>()(
 
         // Basic validation
         if (typeof saveData.coins === 'undefined' || typeof saveData.prestigeLevel === 'undefined') {
-          console.error('Invalid save data: missing required fields');
-          return false;
+          throw new Error('Invalid save data: missing required fields');
         }
 
         const partialState = parseSaveData(saveData, width, height);
@@ -707,7 +714,7 @@ export const useGameStore = create<GameStore>()(
             }
 
             // 0.05 is an empirical constant to balance offline earnings
-            const cps = totalBallPower.mul(coinMult).mul(prestigeBonus).mul(0.05);
+            const cps = totalBallPower.mul(coinMult).mul(prestigeBonus).mul(0.05).mul(newState.currentTier);
             const offlineCoins = cps.mul(seconds).mul(OFFLINE_EARNINGS_RATE).floor();
 
             if (offlineCoins.gt(0)) {
