@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { BrickData, Explosion } from '../types';
-import { getTierColor } from '../utils';
+import { getTierColor, getParsedColor } from '../utils';
 
 interface FloatingTextEntry {
   life: number;
@@ -15,7 +15,6 @@ export class GameEffects {
   private explosionGraphics!: Phaser.GameObjects.Graphics;
   private readonly activeFloatingTexts: FloatingTextEntry[] = [];
   private readonly floatingTextPool: Phaser.GameObjects.Text[] = [];
-  private readonly tierColorCache = new Map<number, number>();
   private readonly scene: Phaser.Scene;
 
   constructor(scene: Phaser.Scene) {
@@ -151,13 +150,6 @@ export class GameEffects {
   }
 
   private getTierColorNumber(tier: number) {
-    const cached = this.tierColorCache.get(tier);
-    if (typeof cached === 'number') {
-      return cached;
-    }
-
-    const color = Phaser.Display.Color.HexStringToColor(getTierColor(tier)).color;
-    this.tierColorCache.set(tier, color);
-    return color;
+    return getParsedColor(getTierColor(tier));
   }
 }

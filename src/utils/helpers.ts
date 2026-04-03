@@ -1,6 +1,7 @@
 import Decimal from 'break_infinity.js';
 import { BALL_TYPES } from '../types';
 import type { BallType, BallData } from '../types';
+import Phaser from 'phaser';
 
 /**
  * Generates a unique 9-character string ID.
@@ -57,6 +58,27 @@ export const adjustBrightness = (hex: string, percent: number): string => {
  * @param tier - The tier level of the brick (1-based).
  * @returns {string} The hex color code for the tier.
  */
+
+
+/**
+ * Global cache for parsed hex colors to avoid repetitive HexStringToColor calls.
+ */
+const hexColorCache = new Map<string, number>();
+
+/**
+ * Parses a hex color string into a Phaser color number and caches the result.
+ * @param hex - The hex color code (e.g., "#ff0000").
+ * @returns {number} The parsed color number.
+ */
+export const getParsedColor = (hex: string): number => {
+  let color = hexColorCache.get(hex);
+  if (color === undefined) {
+    color = Phaser.Display.Color.HexStringToColor(hex).color;
+    hexColorCache.set(hex, color);
+  }
+  return color;
+};
+
 export const getTierColor = (tier: number): string => {
   const colors = [
     '#4ade80', // Green - Tier 1
