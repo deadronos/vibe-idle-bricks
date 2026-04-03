@@ -2,23 +2,62 @@ import Phaser from 'phaser';
 import { BALL_TYPES } from '../types';
 import type { BallData, BallType, BrickData } from '../types';
 import { adjustBrightness, getTierColor } from '../utils';
+import { getParsedColor } from './color';
 
 const TRAIL_BALL_TYPES: ReadonlySet<BallType> = new Set(['sniper', 'plasma']);
 
 /**
- * Renders active balls using persistent Phaser Graphics instances.
+ * Base renderer class that manages common logic for allocating and pruning Phaser Graphics objects.
  */
-export class BallRenderer {
-  private readonly graphicsById = new Map<string, Phaser.GameObjects.Graphics>();
-  private readonly seenAtFrame = new Map<string, number>();
-  private readonly colorCache = new Map<BallType, number>();
-  private frame = 0;
-  private readonly scene: Phaser.Scene;
+abstract class BaseRenderer<T> {
+  protected readonly graphicsById = new Map<string, Phaser.GameObjects.Graphics>();
+  protected readonly seenAtFrame = new Map<string, number>();
+  protected frame = 0;
+  protected readonly scene: Phaser.Scene;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
 
+  abstract render(items: T[]): void;
+
+  destroy() {
+    for (const graphics of this.graphicsById.values()) {
+      graphics.destroy();
+    }
+    this.graphicsById.clear();
+    this.seenAtFrame.clear();
+  }
+
+  protected getGraphics(id: string) {
+    let graphics = this.graphicsById.get(id);
+    if (!graphics) {
+      graphics = this.scene.add.graphics();
+      this.graphicsById.set(id, graphics);
+    }
+    return graphics;
+  }
+
+  protected pruneUnusedGraphics() {
+    for (const [id, graphics] of this.graphicsById) {
+      if (this.seenAtFrame.get(id) !== this.frame) {
+        graphics.destroy();
+        this.graphicsById.delete(id);
+        this.seenAtFrame.delete(id);
+        this.onPruned(id);
+      }
+    }
+  }
+
+  protected onPruned(id: string) {
+    void id;
+  }
+}
+
+/**
+ * Renders active balls using persistent Phaser Graphics instances.
+ */
+export class BallRenderer extends BaseRenderer<BallData> {
   /**
    * Renders all active balls for the current frame.
    */
@@ -54,65 +93,17 @@ export class BallRenderer {
     this.pruneUnusedGraphics();
   }
 
-  /**
-   * Destroys all allocated graphics.
-   */
-  destroy() {
-    for (const graphics of this.graphicsById.values()) {
-      graphics.destroy();
-    }
-
-    this.graphicsById.clear();
-    this.seenAtFrame.clear();
-  }
-
-  private getGraphics(id: string) {
-    let graphics = this.graphicsById.get(id);
-    if (!graphics) {
-      graphics = this.scene.add.graphics();
-      this.graphicsById.set(id, graphics);
-    }
-    return graphics;
-  }
-
   private getBallColor(ballType: BallType) {
-    const cached = this.colorCache.get(ballType);
-    if (typeof cached === 'number') {
-      return cached;
-    }
-
-    const color = Phaser.Display.Color.HexStringToColor(BALL_TYPES[ballType].color).color;
-    this.colorCache.set(ballType, color);
-    return color;
-  }
-
-  private pruneUnusedGraphics() {
-    for (const [id, graphics] of this.graphicsById) {
-      if (this.seenAtFrame.get(id) !== this.frame) {
-        graphics.destroy();
-        this.graphicsById.delete(id);
-        this.seenAtFrame.delete(id);
-      }
-    }
+    return getParsedColor(BALL_TYPES[ballType].color);
   }
 }
 
 /**
  * Renders bricks and redraws only when a brick instance changes.
  */
-export class BrickRenderer {
-  private readonly graphicsById = new Map<string, Phaser.GameObjects.Graphics>();
+export class BrickRenderer extends BaseRenderer<BrickData> {
   private readonly textById = new Map<string, Phaser.GameObjects.Text>();
-  private readonly seenAtFrame = new Map<string, number>();
   private readonly renderedBrickRefs = new Map<string, BrickData>();
-  private readonly tierFillCache = new Map<number, number>();
-  private readonly tierBorderCache = new Map<number, number>();
-  private frame = 0;
-  private readonly scene: Phaser.Scene;
-
-  constructor(scene: Phaser.Scene) {
-    this.scene = scene;
-  }
 
   /**
    * Renders all active bricks.
@@ -141,16 +132,11 @@ export class BrickRenderer {
    * Destroys all allocated graphics and texts.
    */
   destroy() {
-    for (const graphics of this.graphicsById.values()) {
-      graphics.destroy();
-    }
+    super.destroy();
     for (const text of this.textById.values()) {
       text.destroy();
     }
-
-    this.graphicsById.clear();
     this.textById.clear();
-    this.seenAtFrame.clear();
     this.renderedBrickRefs.clear();
   }
 
@@ -207,53 +193,20 @@ export class BrickRenderer {
     text.setText(brick.tier.toString());
   }
 
-  private getGraphics(id: string) {
-    let graphics = this.graphicsById.get(id);
-    if (!graphics) {
-      graphics = this.scene.add.graphics();
-      this.graphicsById.set(id, graphics);
-    }
-    return graphics;
-  }
-
   private getFillColor(tier: number) {
-    const cached = this.tierFillCache.get(tier);
-    if (typeof cached === 'number') {
-      return cached;
-    }
-
-    const color = Phaser.Display.Color.HexStringToColor(getTierColor(tier)).color;
-    this.tierFillCache.set(tier, color);
-    return color;
+    return getParsedColor(getTierColor(tier));
   }
 
   private getBorderColor(tier: number) {
-    const cached = this.tierBorderCache.get(tier);
-    if (typeof cached === 'number') {
-      return cached;
-    }
-
-    const color = Phaser.Display.Color.HexStringToColor(
-      adjustBrightness(getTierColor(tier), -30)
-    ).color;
-    this.tierBorderCache.set(tier, color);
-    return color;
+    return getParsedColor(adjustBrightness(getTierColor(tier), -30));
   }
 
-  private pruneUnusedGraphics() {
-    for (const [id, graphics] of this.graphicsById) {
-      if (this.seenAtFrame.get(id) !== this.frame) {
-        graphics.destroy();
-        this.graphicsById.delete(id);
-        this.seenAtFrame.delete(id);
-        this.renderedBrickRefs.delete(id);
-
-        const text = this.textById.get(id);
-        if (text) {
-          text.destroy();
-          this.textById.delete(id);
-        }
-      }
+  protected onPruned(id: string) {
+    this.renderedBrickRefs.delete(id);
+    const text = this.textById.get(id);
+    if (text) {
+      text.destroy();
+      this.textById.delete(id);
     }
   }
 }

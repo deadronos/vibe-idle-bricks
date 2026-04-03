@@ -50,13 +50,6 @@ export const adjustBrightness = (hex: string, percent: number): string => {
   return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
 };
 
-/**
- * Returns the color associated with a specific brick tier.
- * Colors cycle or clamp based on the tier index.
- *
- * @param tier - The tier level of the brick (1-based).
- * @returns {string} The hex color code for the tier.
- */
 export const getTierColor = (tier: number): string => {
   const colors = [
     '#4ade80', // Green - Tier 1
