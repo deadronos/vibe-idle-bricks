@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { BALL_TYPES } from '../types';
 import type { BallData, BallType, BrickData } from '../types';
-import { adjustBrightness, getTierColor, getParsedColor } from '../utils';
+import { adjustBrightness, getTierColor } from '../utils';
+import { getParsedColor } from './color';
 
 const TRAIL_BALL_TYPES: ReadonlySet<BallType> = new Set(['sniper', 'plasma']);
 
@@ -48,7 +49,9 @@ abstract class BaseRenderer<T> {
     }
   }
 
-  protected onPruned(_id: string) {}
+  protected onPruned(id: string) {
+    void id;
+  }
 }
 
 /**

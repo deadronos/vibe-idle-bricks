@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { BrickData, Explosion } from '../types';
-import { getTierColor, getParsedColor } from '../utils';
+import { getTierColor } from '../utils';
+import { getParsedColor } from './color';
 
 interface FloatingTextEntry {
   life: number;
