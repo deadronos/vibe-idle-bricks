@@ -8,9 +8,16 @@ import { BrickManager } from './BrickManager';
 import { GameEffects } from './GameEffects';
 import { BallRenderer, BrickRenderer } from './GameRenderers';
 import { SpatialGrid } from './SpatialGrid';
-
-const BALL_RADIUS = 8;
-const FIXED_STEP = 8; // ms
+import {
+  BALL_RADIUS,
+  FIXED_STEP,
+  MIN_BRICKS_ON_SCREEN,
+  EXPLOSION_DAMAGE_MULTIPLIER,
+  EXPLOSION_HIT_PARTICLE_COUNT,
+  BALL_HIT_PARTICLE_COUNT,
+  CLICK_DAMAGE_BASE,
+  CLICK_PARTICLE_COUNT,
+} from './constants';
 
 type BallConfig = (typeof BALL_TYPES)[keyof typeof BALL_TYPES];
 
@@ -131,7 +138,7 @@ export class GameScene extends Phaser.Scene {
     useGameStore.getState().updateExplosions(delta);
 
     const stateAfterSimulation = useGameStore.getState();
-    if (stateAfterSimulation.bricks.length < 20) {
+    if (stateAfterSimulation.bricks.length < MIN_BRICKS_ON_SCREEN) {
       const newBricks = this.brickManager.addBricksToFillScreen(
         stateAfterSimulation.bricks,
         stateAfterSimulation.currentTier
@@ -261,7 +268,7 @@ export class GameScene extends Phaser.Scene {
         }
 
         if (result.destroyed) {
-          this.handleBrickDestroyed(brick, coinMult, 10, true);
+          this.handleBrickDestroyed(brick, coinMult, BALL_HIT_PARTICLE_COUNT, true);
         }
       }
 
@@ -313,7 +320,7 @@ export class GameScene extends Phaser.Scene {
    */
   explode(x: number, y: number, radius: number, damage: Decimal, coinMult: number) {
     const store = useGameStore.getState();
-    const explosionDamage = damage.mul(0.5);
+    const explosionDamage = damage.mul(EXPLOSION_DAMAGE_MULTIPLIER);
     const candidateBricks = this.spatialGrid.queryBounds(
       x - radius,
       y - radius,
@@ -331,7 +338,7 @@ export class GameScene extends Phaser.Scene {
 
     for (const result of results) {
       if (result.destroyed) {
-        this.handleBrickDestroyed(result.brick, coinMult, 8, false);
+        this.handleBrickDestroyed(result.brick, coinMult, EXPLOSION_HIT_PARTICLE_COUNT, false);
       }
     }
 
@@ -486,13 +493,13 @@ export class GameScene extends Phaser.Scene {
       if (x >= brick.x && x <= brick.x + brick.width && y >= brick.y && y <= brick.y + brick.height) {
         const damageMult = store.getDamageMult();
         const coinMult = store.getCoinMult();
-        const clickDamage = new Decimal(damageMult).mul(0.5); // 0.5 base damage scaled by upgrades
+        const clickDamage = new Decimal(damageMult).mul(CLICK_DAMAGE_BASE);
 
         const result = store.damageBrick(brick.id, clickDamage);
         if (result) {
           this.showFloatingText(x, y, `-${formatNumber(clickDamage)}`, '#ffcc00');
           if (result.destroyed) {
-            this.handleBrickDestroyed(brick, coinMult, 5, true);
+            this.handleBrickDestroyed(brick, coinMult, CLICK_PARTICLE_COUNT, true);
           }
         }
         break;
