@@ -245,3 +245,20 @@ export const MAX_BALLS = 50;
 
 /** Maximum level for the speed upgrade to prevent physics tunneling. */
 export const MAX_SPEED_UPGRADE = 50;
+
+/** Maximum prestige level (no upper limit on bonuses, but caps progression). */
+export const MAX_PRESTIGE_LEVEL = 100;
+
+/** Cost scaling multiplier when purchasing balls or upgrades. */
+export const COST_MULTIPLIER = 1.15;
+
+/**
+ * Calculates brick health and value based on tier.
+ * Health scales linearly with tier.
+ * Value scales with tier^1.2 for slight acceleration.
+ */
+export const calculateBrickStats = (tier: number): { maxHealth: Decimal; value: Decimal } => {
+  const maxHealth = new Decimal(tier * 3);
+  const value = new Decimal(Math.floor(Math.pow(tier, 1.2)));
+  return { maxHealth, value };
+};

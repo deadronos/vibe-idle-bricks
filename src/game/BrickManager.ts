@@ -1,15 +1,18 @@
 import Phaser from 'phaser';
-import Decimal from 'break_infinity.js';
 import type { BrickData } from '../types';
+import { calculateBrickStats } from '../types';
 import { generateId } from '../utils';
+import {
+  BRICK_WIDTH,
+  BRICK_HEIGHT,
+  BRICK_PADDING,
+  MAX_ROWS_FILL_FACTOR,
+} from './constants';
 
 /**
  * Manages brick generation and screen-space placement.
  */
 export class BrickManager {
-  private readonly brickWidth = 60;
-  private readonly brickHeight = 25;
-  private readonly padding = 5;
   private readonly scene: Phaser.Scene;
 
   constructor(scene: Phaser.Scene) {
@@ -23,7 +26,7 @@ export class BrickManager {
   private get offsetLeft() {
     return Math.max(
       20,
-      (this.scene.cameras.main.width % (this.brickWidth + this.padding)) / 2
+      (this.scene.cameras.main.width % (BRICK_WIDTH + BRICK_PADDING)) / 2
     );
   }
 
@@ -33,19 +36,18 @@ export class BrickManager {
   private createBrick(x: number, y: number, baseTier: number): BrickData {
     const tierVariation = Math.floor(Math.random() * 3) - 1;
     const tier = Math.max(1, baseTier + tierVariation);
-    const maxHealth = new Decimal(tier * 3);
-    const brickValue = Math.floor(Math.pow(tier, 1.2));
+    const { maxHealth, value } = calculateBrickStats(tier);
 
     return {
       id: generateId(),
       x,
       y,
-      width: this.brickWidth,
-      height: this.brickHeight,
+      width: BRICK_WIDTH,
+      height: BRICK_HEIGHT,
       tier,
       health: maxHealth,
       maxHealth,
-      value: new Decimal(brickValue),
+      value,
     };
   }
 
@@ -56,7 +58,7 @@ export class BrickManager {
     const { width } = this.scene.cameras.main;
     const bricks: BrickData[] = [];
     const cols = Math.floor(
-      (width - this.offsetLeft * 2) / (this.brickWidth + this.padding)
+      (width - this.offsetLeft * 2) / (BRICK_WIDTH + BRICK_PADDING)
     );
     const rows = Math.ceil(count / cols);
 
@@ -64,8 +66,8 @@ export class BrickManager {
 
     for (let row = 0; row < rows && created < count; row++) {
       for (let col = 0; col < cols && created < count; col++) {
-        const x = this.offsetLeft + col * (this.brickWidth + this.padding);
-        const y = this.offsetTop + row * (this.brickHeight + this.padding);
+        const x = this.offsetLeft + col * (BRICK_WIDTH + BRICK_PADDING);
+        const y = this.offsetTop + row * (BRICK_HEIGHT + BRICK_PADDING);
 
         bricks.push(this.createBrick(x, y, baseTier));
         created++;
@@ -81,10 +83,10 @@ export class BrickManager {
   addBricksToFillScreen(currentBricks: BrickData[], baseTier: number): BrickData[] {
     const { width, height } = this.scene.cameras.main;
     const cols = Math.floor(
-      (width - this.offsetLeft * 2) / (this.brickWidth + this.padding)
+      (width - this.offsetLeft * 2) / (BRICK_WIDTH + BRICK_PADDING)
     );
     const maxRows = Math.floor(
-      (height * 0.5 - this.offsetTop) / (this.brickHeight + this.padding)
+      (height * MAX_ROWS_FILL_FACTOR - this.offsetTop) / (BRICK_HEIGHT + BRICK_PADDING)
     );
     const maxBricks = cols * maxRows;
 
@@ -96,10 +98,10 @@ export class BrickManager {
     const occupied = new Set<string>();
     for (const brick of currentBricks) {
       const col = Math.round(
-        (brick.x - this.offsetLeft) / (this.brickWidth + this.padding)
+        (brick.x - this.offsetLeft) / (BRICK_WIDTH + BRICK_PADDING)
       );
       const row = Math.round(
-        (brick.y - this.offsetTop) / (this.brickHeight + this.padding)
+        (brick.y - this.offsetTop) / (BRICK_HEIGHT + BRICK_PADDING)
       );
       occupied.add(`${row},${col}`);
     }
@@ -109,8 +111,8 @@ export class BrickManager {
     for (let row = 0; row < maxRows && newBricks.length < bricksToAdd; row++) {
       for (let col = 0; col < cols && newBricks.length < bricksToAdd; col++) {
         if (!occupied.has(`${row},${col}`)) {
-          const x = this.offsetLeft + col * (this.brickWidth + this.padding);
-          const y = this.offsetTop + row * (this.brickHeight + this.padding);
+          const x = this.offsetLeft + col * (BRICK_WIDTH + BRICK_PADDING);
+          const y = this.offsetTop + row * (BRICK_HEIGHT + BRICK_PADDING);
 
           newBricks.push(this.createBrick(x, y, baseTier));
         }

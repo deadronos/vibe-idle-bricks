@@ -4,6 +4,7 @@
 
 ### Core Gameplay ✅
 
+- `GameScene` now uses the shared `BallPhysics` helper for movement, targeting, and collisions
 - Game loop hot paths optimized with bounded explosion queries, batched brick damage, and extracted render/effect helpers
 - Ball physics with wall bouncing
 - Brick collision detection and damage
@@ -27,6 +28,7 @@
 - Auto-save every 30 seconds
 - localStorage save/load
 - Offline earnings calculation
+- Save hydration now clamps all upgrade fields and safely defaults malformed values
 
 ### UI ✅
 

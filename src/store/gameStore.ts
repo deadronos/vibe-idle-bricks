@@ -5,11 +5,12 @@ import {
   BALL_TYPES,
   UPGRADE_MULTIPLIER,
   PRESTIGE_BONUS,
-  OFFLINE_EARNINGS_RATE,
   MAX_TIER,
   getPrestigeThreshold,
   MAX_BALLS,
   MAX_SPEED_UPGRADE,
+  MAX_PRESTIGE_LEVEL,
+  COST_MULTIPLIER,
 } from '../types';
 import type {
   BallType,
@@ -19,7 +20,8 @@ import type {
   Explosion,
   SaveData,
 } from '../types';
-import { createBall, formatNumber } from '../utils/helpers';
+import { createBall } from '../utils/helpers';
+import { calculateOfflineEarnings } from './earnings';
 
 /**
  * Interface defining the entire state and actions of the game store.
@@ -224,8 +226,72 @@ interface BrickDamageResult {
 
 const ZERO_DECIMAL = new Decimal(0);
 
+const parseDecimal = (value: unknown, fallback: Decimal = ZERO_DECIMAL): Decimal => {
+  try {
+    return new Decimal(value as string | number);
+  } catch {
+    return new Decimal(fallback);
+  }
+};
+
+const parseInteger = (value: unknown, fallback = 0, max?: number): number => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return fallback;
+  }
+
+  const normalizedValue = Math.max(fallback, Math.floor(numericValue));
+
+  if (typeof max === 'number') {
+    return Math.min(max, normalizedValue);
+  }
+
+  return normalizedValue;
+};
+
 const isValidBallType = (value: unknown): value is BallType => {
   return typeof value === 'string' && Object.prototype.hasOwnProperty.call(BALL_TYPES, value);
+};
+
+type SaveDataOptions = {
+  includeVersion: boolean;
+};
+
+interface SaveDataBuilderState {
+  coins: Decimal;
+  bricksBroken: Decimal;
+  totalBricksBroken: Decimal;
+  prestigeLevel: number;
+  upgrades: Upgrades;
+  ballCosts: Record<BallType, Decimal>;
+  upgradeCosts: Record<keyof Upgrades, Decimal>;
+  currentTier: number;
+  balls: BallData[];
+}
+
+const buildSaveData = (state: SaveDataBuilderState, options: SaveDataOptions): SaveData => {
+  const base: SaveData = {
+    coins: state.coins.toString(),
+    bricksBroken: state.bricksBroken.toString(),
+    totalBricksBroken: state.totalBricksBroken.toString(),
+    prestigeLevel: state.prestigeLevel,
+    upgrades: state.upgrades,
+    ballCosts: Object.fromEntries(
+      Object.entries(state.ballCosts).map(([k, v]) => [k, v.toString()])
+    ),
+    upgradeCosts: Object.fromEntries(
+      Object.entries(state.upgradeCosts).map(([k, v]) => [k, v.toString()])
+    ),
+    currentTier: state.currentTier,
+    balls: state.balls.map((b) => b.type),
+    timestamp: Date.now(),
+  };
+
+  if (options.includeVersion) {
+    return { ...base, version: 1 };
+  }
+  return base;
 };
 
 const resolveBrickDamageBatch = (
@@ -360,7 +426,8 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
   if (saveData.ballCosts) {
     for (const [key, value] of Object.entries(saveData.ballCosts)) {
       if (Object.prototype.hasOwnProperty.call(ballCosts, key)) {
-        ballCosts[key as BallType] = new Decimal(value as string);
+        const ballType = key as BallType;
+        ballCosts[ballType] = parseDecimal(value, ballCosts[ballType]);
       }
     }
   }
@@ -369,26 +436,27 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
   if (saveData.upgradeCosts) {
     for (const [key, value] of Object.entries(saveData.upgradeCosts)) {
       if (Object.prototype.hasOwnProperty.call(upgradeCosts, key)) {
-        upgradeCosts[key as keyof Upgrades] = new Decimal(value as string);
+        const upgradeKey = key as keyof Upgrades;
+        upgradeCosts[upgradeKey] = parseDecimal(value, upgradeCosts[upgradeKey]);
       }
     }
   }
 
+  const savedUpgrades = saveData.upgrades ?? { speed: 0, damage: 0, coinMult: 0 };
+
   return {
-    coins: new Decimal(saveData.coins || 0),
-    bricksBroken: new Decimal(saveData.bricksBroken || 0),
-    totalBricksBroken: new Decimal(saveData.totalBricksBroken || 0),
-    prestigeLevel: saveData.prestigeLevel || 0,
+    coins: parseDecimal(saveData.coins),
+    bricksBroken: parseDecimal(saveData.bricksBroken),
+    totalBricksBroken: parseDecimal(saveData.totalBricksBroken),
+    prestigeLevel: parseInteger(saveData.prestigeLevel),
     upgrades: {
-      ...(saveData.upgrades || { speed: 0, damage: 0, coinMult: 0 }),
-      speed: Math.max(
-        0,
-        Math.min(MAX_SPEED_UPGRADE, Math.floor(Number(saveData.upgrades?.speed ?? 0) || 0))
-      ),
+      speed: parseInteger(savedUpgrades.speed, 0, MAX_SPEED_UPGRADE),
+      damage: parseInteger(savedUpgrades.damage),
+      coinMult: parseInteger(savedUpgrades.coinMult),
     },
     ballCosts,
     upgradeCosts,
-    currentTier: saveData.currentTier || 1,
+    currentTier: parseInteger(saveData.currentTier, 1),
     balls: balls.length > 0 ? balls : [createBall('basic', canvasWidth, canvasHeight)],
     timestamp: saveData.timestamp || Date.now(),
   };
@@ -461,7 +529,7 @@ export const useGameStore = create<GameStore>()(
           balls: [...state.balls, newBall],
           ballCosts: {
             ...state.ballCosts,
-            [type]: cost.mul(1.15).ceil(),
+            [type]: cost.mul(COST_MULTIPLIER).ceil(),
           },
         });
         return true;
@@ -484,7 +552,7 @@ export const useGameStore = create<GameStore>()(
           },
           upgradeCosts: {
             ...state.upgradeCosts,
-            [type]: cost.mul(1.15).ceil(),
+            [type]: cost.mul(COST_MULTIPLIER).ceil(),
           },
         });
         return true;
@@ -508,7 +576,7 @@ export const useGameStore = create<GameStore>()(
       while (currentCoins.gte(cost) && (type !== 'speed' || currentUpgradeLevel < MAX_SPEED_UPGRADE)) {
         currentCoins = currentCoins.sub(cost);
         currentUpgradeLevel++;
-        cost = cost.mul(1.15).ceil();
+        cost = cost.mul(COST_MULTIPLIER).ceil();
         currentUpgradeCosts[type] = cost;
         purchased++;
       }
@@ -534,6 +602,7 @@ export const useGameStore = create<GameStore>()(
     prestige: () => {
       const state = get();
       if (!get().canPrestige()) return false;
+      if (state.prestigeLevel >= MAX_PRESTIGE_LEVEL) return false;
 
       const { width, height } = state.canvasSize;
 
@@ -610,44 +679,13 @@ export const useGameStore = create<GameStore>()(
       if (!storage) return;
 
       const state = get();
-      const saveData = {
-        coins: state.coins.toString(),
-        bricksBroken: state.bricksBroken.toString(),
-        totalBricksBroken: state.totalBricksBroken.toString(),
-        prestigeLevel: state.prestigeLevel,
-        upgrades: state.upgrades,
-        ballCosts: Object.fromEntries(
-          Object.entries(state.ballCosts).map(([k, v]) => [k, v.toString()])
-        ),
-        upgradeCosts: Object.fromEntries(
-          Object.entries(state.upgradeCosts).map(([k, v]) => [k, v.toString()])
-        ),
-        currentTier: state.currentTier,
-        balls: state.balls.map((b) => b.type),
-        timestamp: Date.now(),
-      };
+      const saveData = buildSaveData(state, { includeVersion: false });
       storage.setItem('idleBricksSave', JSON.stringify(saveData));
     },
 
     exportSave: () => {
       const state = get();
-      const saveData = {
-        coins: state.coins.toString(),
-        bricksBroken: state.bricksBroken.toString(),
-        totalBricksBroken: state.totalBricksBroken.toString(),
-        prestigeLevel: state.prestigeLevel,
-        upgrades: state.upgrades,
-        ballCosts: Object.fromEntries(
-          Object.entries(state.ballCosts).map(([k, v]) => [k, v.toString()])
-        ),
-        upgradeCosts: Object.fromEntries(
-          Object.entries(state.upgradeCosts).map(([k, v]) => [k, v.toString()])
-        ),
-        currentTier: state.currentTier,
-        balls: state.balls.map((b) => b.type),
-        timestamp: Date.now(),
-        version: 1,
-      };
+      const saveData = buildSaveData(state, { includeVersion: true });
       return JSON.stringify(saveData);
     },
 
@@ -707,26 +745,21 @@ export const useGameStore = create<GameStore>()(
             const speedMult = newState.getSpeedMult();
             const damageMult = newState.getDamageMult();
             const coinMult = newState.getCoinMult();
-            const prestigeBonus = 1 + newState.prestigeLevel * PRESTIGE_BONUS;
 
-            let totalBallPower = new Decimal(0);
-            for (const ball of newState.balls) {
-              const config = BALL_TYPES[ball.type];
-              let power = new Decimal(config.damage).mul(damageMult).mul(config.speed).mul(speedMult);
-              if (config.explosive) power = power.mul(1.5);
-              if (config.pierce) power = power.mul(1.3);
-              if (config.targeting) power = power.mul(1.2);
-              totalBallPower = totalBallPower.add(power);
-            }
-
-            // 0.05 is an empirical constant to balance offline earnings
-            const cps = totalBallPower.mul(coinMult).mul(prestigeBonus).mul(0.05).mul(newState.currentTier);
-            const offlineCoins = cps.mul(seconds).mul(OFFLINE_EARNINGS_RATE).floor();
+            const { coins: offlineCoins, message } = calculateOfflineEarnings(
+              newState.balls,
+              speedMult,
+              damageMult,
+              coinMult,
+              newState.prestigeLevel,
+              newState.currentTier,
+              seconds
+            );
 
             if (offlineCoins.gt(0)) {
               set({
                 coins: newState.coins.add(offlineCoins),
-                pendingOfflineMessage: `Welcome back! You earned ${formatNumber(offlineCoins)} coins while away.`,
+                pendingOfflineMessage: message,
               });
             }
           }
