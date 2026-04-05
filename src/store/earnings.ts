@@ -1,6 +1,7 @@
 import Decimal from 'break_infinity.js';
 import { BALL_TYPES, PRESTIGE_BONUS, OFFLINE_EARNINGS_RATE } from '../types';
 import { OFFLINE_EARNINGS_CONSTANT } from '../game/constants';
+import { formatNumber } from '../utils';
 import type { BallData } from '../types';
 
 export interface OfflineEarningsResult {
@@ -17,6 +18,7 @@ export const calculateOfflineEarnings = (
   currentTier: number,
   offlineSeconds: number
 ): OfflineEarningsResult => {
+  const safeOfflineSeconds = Math.max(0, offlineSeconds);
   const prestigeBonus = 1 + prestigeLevel * PRESTIGE_BONUS;
 
   let totalBallPower = new Decimal(0);
@@ -30,7 +32,7 @@ export const calculateOfflineEarnings = (
   }
 
   const cps = totalBallPower.mul(coinMult).mul(prestigeBonus).mul(OFFLINE_EARNINGS_CONSTANT).mul(currentTier);
-  const offlineCoins = cps.mul(offlineSeconds).mul(OFFLINE_EARNINGS_RATE).floor();
+  const offlineCoins = cps.mul(safeOfflineSeconds).mul(OFFLINE_EARNINGS_RATE).floor();
 
   if (offlineCoins.lte(0)) {
     return { coins: new Decimal(0), message: null };
@@ -38,6 +40,6 @@ export const calculateOfflineEarnings = (
 
   return {
     coins: offlineCoins,
-    message: `Welcome back! You earned ${offlineCoins.toString()} coins while away.`,
+    message: `Welcome back! You earned ${formatNumber(offlineCoins)} coins while away.`,
   };
 };

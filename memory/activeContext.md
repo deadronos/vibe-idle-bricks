@@ -6,6 +6,13 @@ Memory Bank initialization completed. The project is in a functional MVP state w
 
 ## Recent Changes
 
+- Completed branch review follow-up fixes:
+  - hardened save hydration so partial/invalid upgrade fields default safely
+  - removed duplicate tuning constants from `src/game/constants.ts`
+  - formatted/clamped offline earnings before showing the welcome-back toast
+  - wired `GameScene` to the shared `BallPhysics` helper and restored pointer handling
+  - added regression tests for malformed upgrades and offline earnings edge cases
+
 - Addressed issue #28 by optimizing startup bundle loading:
   - lazy-loaded `PhaserGame` behind a React `Suspense` boundary in `App.tsx`
   - added a polished loading-state UI in `App.css` for deferred engine boot

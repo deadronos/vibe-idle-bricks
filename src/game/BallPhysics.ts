@@ -105,10 +105,12 @@ export class BallPhysics {
     const normalizedY = deltaY / (brick.height / 2);
 
     if (Math.abs(normalizedX) > Math.abs(normalizedY)) {
-      return { dx: Math.abs(ball.dx) * Math.sign(deltaX), dy: ball.dy };
+      const bounceDirection = Math.sign(deltaX) || Math.sign(ball.dx) || 1;
+      return { dx: Math.abs(ball.dx) * bounceDirection, dy: ball.dy };
     }
 
-    return { dx: ball.dx, dy: Math.abs(ball.dy) * Math.sign(deltaY) };
+    const bounceDirection = Math.sign(deltaY) || Math.sign(ball.dy) || 1;
+    return { dx: ball.dx, dy: Math.abs(ball.dy) * bounceDirection };
   }
 
   ballCollidesWithBrick(ball: BallData, brick: BrickData): boolean {
@@ -127,34 +129,4 @@ export class BallPhysics {
     return deltaX * deltaX + deltaY * deltaY < radius * radius;
   }
 
-  constrainToBounds(
-    x: number,
-    y: number,
-    dx: number,
-    dy: number
-  ): { x: number; y: number; dx: number; dy: number } {
-    let newX = x;
-    let newY = y;
-    let newDx = dx;
-    let newDy = dy;
-
-    if (newX - BALL_RADIUS < 0) {
-      newX = BALL_RADIUS;
-      newDx = Math.abs(newDx);
-    }
-    if (newX + BALL_RADIUS > this.width) {
-      newX = this.width - BALL_RADIUS;
-      newDx = -Math.abs(newDx);
-    }
-    if (newY - BALL_RADIUS < 0) {
-      newY = BALL_RADIUS;
-      newDy = Math.abs(newDy);
-    }
-    if (newY + BALL_RADIUS > this.height) {
-      newY = this.height - BALL_RADIUS;
-      newDy = -Math.abs(newDy);
-    }
-
-    return { x: newX, y: newY, dx: newDx, dy: newDy };
-  }
 }

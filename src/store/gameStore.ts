@@ -226,6 +226,30 @@ interface BrickDamageResult {
 
 const ZERO_DECIMAL = new Decimal(0);
 
+const parseDecimal = (value: unknown, fallback: Decimal = ZERO_DECIMAL): Decimal => {
+  try {
+    return new Decimal(value as string | number);
+  } catch {
+    return new Decimal(fallback);
+  }
+};
+
+const parseInteger = (value: unknown, fallback = 0, max?: number): number => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return fallback;
+  }
+
+  const normalizedValue = Math.max(fallback, Math.floor(numericValue));
+
+  if (typeof max === 'number') {
+    return Math.min(max, normalizedValue);
+  }
+
+  return normalizedValue;
+};
+
 const isValidBallType = (value: unknown): value is BallType => {
   return typeof value === 'string' && Object.prototype.hasOwnProperty.call(BALL_TYPES, value);
 };
@@ -402,7 +426,8 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
   if (saveData.ballCosts) {
     for (const [key, value] of Object.entries(saveData.ballCosts)) {
       if (Object.prototype.hasOwnProperty.call(ballCosts, key)) {
-        ballCosts[key as BallType] = new Decimal(value as string);
+        const ballType = key as BallType;
+        ballCosts[ballType] = parseDecimal(value, ballCosts[ballType]);
       }
     }
   }
@@ -411,26 +436,27 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
   if (saveData.upgradeCosts) {
     for (const [key, value] of Object.entries(saveData.upgradeCosts)) {
       if (Object.prototype.hasOwnProperty.call(upgradeCosts, key)) {
-        upgradeCosts[key as keyof Upgrades] = new Decimal(value as string);
+        const upgradeKey = key as keyof Upgrades;
+        upgradeCosts[upgradeKey] = parseDecimal(value, upgradeCosts[upgradeKey]);
       }
     }
   }
 
+  const savedUpgrades = saveData.upgrades ?? { speed: 0, damage: 0, coinMult: 0 };
+
   return {
-    coins: new Decimal(saveData.coins || 0),
-    bricksBroken: new Decimal(saveData.bricksBroken || 0),
-    totalBricksBroken: new Decimal(saveData.totalBricksBroken || 0),
-    prestigeLevel: saveData.prestigeLevel || 0,
+    coins: parseDecimal(saveData.coins),
+    bricksBroken: parseDecimal(saveData.bricksBroken),
+    totalBricksBroken: parseDecimal(saveData.totalBricksBroken),
+    prestigeLevel: parseInteger(saveData.prestigeLevel),
     upgrades: {
-      ...(saveData.upgrades || { speed: 0, damage: 0, coinMult: 0 }),
-      speed: Math.max(
-        0,
-        Math.min(MAX_SPEED_UPGRADE, Math.floor(Number(saveData.upgrades?.speed ?? 0) || 0))
-      ),
+      speed: parseInteger(savedUpgrades.speed, 0, MAX_SPEED_UPGRADE),
+      damage: parseInteger(savedUpgrades.damage),
+      coinMult: parseInteger(savedUpgrades.coinMult),
     },
     ballCosts,
     upgradeCosts,
-    currentTier: saveData.currentTier || 1,
+    currentTier: parseInteger(saveData.currentTier, 1),
     balls: balls.length > 0 ? balls : [createBall('basic', canvasWidth, canvasHeight)],
     timestamp: saveData.timestamp || Date.now(),
   };

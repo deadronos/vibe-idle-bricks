@@ -913,6 +913,19 @@ describe('gameStore', () => {
       expect(state.upgrades).toEqual({ speed: 0, damage: 0, coinMult: 0 })
     })
 
+    it('should default missing or invalid upgrade fields when importing save data', () => {
+      const saveData = {
+        coins: '100',
+        prestigeLevel: 0,
+        upgrades: { speed: 2, damage: 'oops' },
+        balls: ['basic'],
+      }
+
+      useGameStore.getState().importSave(JSON.stringify(saveData))
+
+      expect(useGameStore.getState().upgrades).toEqual({ speed: 2, damage: 0, coinMult: 0 })
+    })
+
     it('should create default ball if balls array is empty', () => {
       const saveData = {
         coins: '100',

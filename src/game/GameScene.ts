@@ -4,6 +4,7 @@ import { useGameStore } from '../store';
 import { BALL_TYPES } from '../types';
 import type { BallData, BrickData } from '../types';
 import { formatNumber } from '../utils';
+import { BallPhysics } from './BallPhysics';
 import { BrickManager } from './BrickManager';
 import { GameEffects } from './GameEffects';
 import { BallRenderer, BrickRenderer } from './GameRenderers';
@@ -27,6 +28,7 @@ type BallConfig = (typeof BALL_TYPES)[keyof typeof BALL_TYPES];
  */
 export class GameScene extends Phaser.Scene {
   private backgroundGraphics!: Phaser.GameObjects.Graphics;
+  private ballPhysics!: BallPhysics;
   private brickManager!: BrickManager;
   private ballRenderer!: BallRenderer;
   private brickRenderer!: BrickRenderer;
@@ -47,6 +49,7 @@ export class GameScene extends Phaser.Scene {
   create() {
     this.backgroundGraphics = this.add.graphics();
     this.drawBackground();
+    this.ballPhysics = new BallPhysics(this.cameras.main.width, this.cameras.main.height);
 
     this.brickManager = new BrickManager(this);
     this.ballRenderer = new BallRenderer(this);
@@ -58,7 +61,7 @@ export class GameScene extends Phaser.Scene {
       (state) => state.bricks,
       (bricks) => {
         this.spatialGrid.rebuild(bricks);
-        this.weakestBrick = this.findWeakestBrick(bricks);
+        this.weakestBrick = this.ballPhysics.findWeakestBrick(bricks);
       }
     );
 
@@ -83,11 +86,13 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+
   /**
    * Handles the window resize event to update canvas size in the store.
    */
   handleResize(gameSize: Phaser.Structs.Size) {
     const { width, height } = gameSize;
+    this.ballPhysics = new BallPhysics(width, height);
     useGameStore.getState().setCanvasSize(width, height);
     this.drawBackground();
   }
@@ -176,64 +181,16 @@ export class GameScene extends Phaser.Scene {
    */
   updateBalls(step: number) {
     const store = useGameStore.getState();
-    const { width, height } = this.cameras.main;
     const speedMult = store.getSpeedMult();
     const damageMult = store.getDamageMult();
     const coinMult = store.getCoinMult();
     const updatedBalls = store.balls.slice();
 
     for (const ball of updatedBalls) {
-      this.simulateBall(ball, step, speedMult, damageMult, coinMult, width, height);
+      this.simulateBall(ball, step, speedMult, damageMult, coinMult);
     }
 
     useGameStore.setState({ balls: updatedBalls });
-  }
-
-  /**
-   * Calculates a steering vector for a ball to target the weakest brick.
-   */
-  seekWeakestBrick(
-    ball: BallData,
-    dx: number,
-    dy: number,
-    bricks: BrickData[]
-  ): [number, number] {
-    const weakest = this.weakestBrick ?? this.findWeakestBrick(bricks);
-
-    if (weakest) {
-      const targetX = weakest.x + weakest.width / 2;
-      const targetY = weakest.y + weakest.height / 2;
-      const deltaX = targetX - ball.x;
-      const deltaY = targetY - ball.y;
-      const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-      if (dist > 0) {
-        const steerStrength = 0.06;
-        return [
-          dx + (deltaX / dist) * steerStrength,
-          dy + (deltaY / dist) * steerStrength,
-        ];
-      }
-    }
-
-    return [dx, dy];
-  }
-
-  /**
-   * Finds the weakest brick in a set of bricks.
-   */
-  private findWeakestBrick(bricks: BrickData[]): BrickData | null {
-    let weakest: BrickData | null = null;
-    let minHealth = new Decimal(Infinity);
-
-    for (const brick of bricks) {
-      if (brick.health.lt(minHealth)) {
-        minHealth = brick.health;
-        weakest = brick;
-      }
-    }
-
-    return weakest;
   }
 
   /**
@@ -249,9 +206,10 @@ export class GameScene extends Phaser.Scene {
     const store = useGameStore.getState();
     const actualDamage = new Decimal(config.damage).mul(damageMult);
     const potentialBricks = this.spatialGrid.query(ball, BALL_RADIUS);
+    const physics = this.ballPhysics;
 
     for (const brick of potentialBricks) {
-      if (!this.ballCollidesWithBrick(ball, brick)) {
+      if (!physics.ballCollidesWithBrick(ball, brick)) {
         continue;
       }
 
@@ -278,41 +236,11 @@ export class GameScene extends Phaser.Scene {
       }
 
       if (!config.pierce) {
-        return this.calculateBounce(ball, brick);
+        return physics.calculateBounce(ball, brick);
       }
     }
 
     return null;
-  }
-
-  /**
-   * Determines if a ball overlaps with a brick.
-   */
-  ballCollidesWithBrick(ball: BallData, brick: BrickData): boolean {
-    const closestX = Math.max(brick.x, Math.min(ball.x, brick.x + brick.width));
-    const closestY = Math.max(brick.y, Math.min(ball.y, brick.y + brick.height));
-    const distX = ball.x - closestX;
-    const distY = ball.y - closestY;
-    return distX * distX + distY * distY < BALL_RADIUS * BALL_RADIUS;
-  }
-
-  /**
-   * Calculates the bounce direction when a ball hits a brick.
-   */
-  calculateBounce(ball: BallData, brick: BrickData): { dx: number; dy: number } {
-    const brickCenterX = brick.x + brick.width / 2;
-    const brickCenterY = brick.y + brick.height / 2;
-    const deltaX = ball.x - brickCenterX;
-    const deltaY = ball.y - brickCenterY;
-
-    const normalizedX = deltaX / (brick.width / 2);
-    const normalizedY = deltaY / (brick.height / 2);
-
-    if (Math.abs(normalizedX) > Math.abs(normalizedY)) {
-      return { dx: Math.abs(ball.dx) * Math.sign(deltaX), dy: ball.dy };
-    }
-
-    return { dx: ball.dx, dy: Math.abs(ball.dy) * Math.sign(deltaY) };
   }
 
   /**
@@ -327,7 +255,7 @@ export class GameScene extends Phaser.Scene {
       x + radius,
       y + radius
     );
-    const impactedBricks = candidateBricks.filter((brick) => this.isBrickWithinRadius(x, y, radius, brick));
+    const impactedBricks = candidateBricks.filter((brick) => this.ballPhysics.isBrickWithinRadius(x, y, radius, brick));
 
     const results = store.applyBrickDamageBatch(
       impactedBricks.map((brick) => ({
@@ -407,23 +335,14 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private isBrickWithinRadius(x: number, y: number, radius: number, brick: BrickData) {
-    const brickCenterX = brick.x + brick.width / 2;
-    const brickCenterY = brick.y + brick.height / 2;
-    const deltaX = x - brickCenterX;
-    const deltaY = y - brickCenterY;
-    return deltaX * deltaX + deltaY * deltaY < radius * radius;
-  }
-
   private simulateBall(
     ball: BallData,
     step: number,
     speedMult: number,
     damageMult: number,
-    coinMult: number,
-    width: number,
-    height: number
+    coinMult: number
   ) {
+    const physics = this.ballPhysics;
     const config = BALL_TYPES[ball.type];
     const actualSpeed = config.speed * speedMult;
     const currentSpeedSquared = ball.dx * ball.dx + ball.dy * ball.dy;
@@ -440,34 +359,19 @@ export class GameScene extends Phaser.Scene {
     if (config.targeting) {
       const bricks = useGameStore.getState().bricks;
       if (bricks.length > 0) {
-        [dx, dy] = this.seekWeakestBrick(ball, dx, dy, bricks);
+        const target = this.weakestBrick ?? physics.findWeakestBrick(bricks);
+        [dx, dy] = physics.seekTarget(ball, dx, dy, target);
       }
     }
 
-    let x = ball.x + dx * (step / 16);
-    let y = ball.y + dy * (step / 16);
-
-    if (x - BALL_RADIUS < 0) {
-      x = BALL_RADIUS;
-      dx = Math.abs(dx);
-    }
-    if (x + BALL_RADIUS > width) {
-      x = width - BALL_RADIUS;
-      dx = -Math.abs(dx);
-    }
-    if (y - BALL_RADIUS < 0) {
-      y = BALL_RADIUS;
-      dy = Math.abs(dy);
-    }
-    if (y + BALL_RADIUS > height) {
-      y = height - BALL_RADIUS;
-      dy = -Math.abs(dy);
-    }
-
-    ball.x = x;
-    ball.y = y;
     ball.dx = dx;
     ball.dy = dy;
+
+    const movedBall = physics.applyBallMovement(ball, step);
+    ball.x = movedBall.x;
+    ball.y = movedBall.y;
+    ball.dx = movedBall.dx;
+    ball.dy = movedBall.dy;
 
     const bounceResult = this.checkBrickCollisions(ball, damageMult, coinMult, config);
     if (bounceResult) {
@@ -475,13 +379,9 @@ export class GameScene extends Phaser.Scene {
       ball.dy = bounceResult.dy;
     }
 
-    // Ensure velocity magnitude is maintained
-    const nextSpeedSq = ball.dx * ball.dx + ball.dy * ball.dy;
-    if (nextSpeedSq > 0) {
-      const nextSpeed = Math.sqrt(nextSpeedSq);
-      ball.dx = (ball.dx / nextSpeed) * actualSpeed;
-      ball.dy = (ball.dy / nextSpeed) * actualSpeed;
-    }
+    const normalizedVelocity = physics.normalizeVelocity(ball.dx, ball.dy, actualSpeed);
+    ball.dx = normalizedVelocity.dx;
+    ball.dy = normalizedVelocity.dy;
   }
 
   private handleBrickClick(pointer: Phaser.Input.Pointer) {
