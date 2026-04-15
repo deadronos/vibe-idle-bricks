@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { BALL_TYPES } from '../types';
 import type { BallData, BallType, BrickData } from '../types';
 import { adjustBrightness, getTierColor } from '../utils';

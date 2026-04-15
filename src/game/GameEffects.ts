@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import type { BrickData, Explosion } from '../types';
 import { getTierColor } from '../utils';
 import { getParsedColor } from './color';

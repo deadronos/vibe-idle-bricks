@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import Decimal from 'break_infinity.js';
 import { useGameStore } from '../store';
 import { BALL_TYPES } from '../types';
