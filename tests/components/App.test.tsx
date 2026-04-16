@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import App from '../../src/App'
 import Decimal from 'break_infinity.js'
 import { useGameStore } from '../../src/store/gameStore'
@@ -54,24 +54,24 @@ describe('App', () => {
     resetStore()
   })
 
-  it('should render the game title', () => {
-    render(<App />)
+  it('should render the game title', async () => {
+    await act(async () => { render(<App />) })
     expect(screen.getByRole('heading', { name: /idle bricks/i })).toBeInTheDocument()
   })
 
-  it('should render stats component', () => {
-    render(<App />)
+  it('should render stats component', async () => {
+    await act(async () => { render(<App />) })
     expect(screen.getByText('Coins')).toBeInTheDocument()
     expect(screen.getByText('Bricks Broken')).toBeInTheDocument()
   })
 
-  it('should render shop component', () => {
-    render(<App />)
+  it('should render shop component', async () => {
+    await act(async () => { render(<App />) })
     expect(screen.getByRole('heading', { name: /shop/i })).toBeInTheDocument()
   })
 
-  it('should render footer component', () => {
-    render(<App />)
+  it('should render footer component', async () => {
+    await act(async () => { render(<App />) })
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument()
     // Use getAllByRole since there are multiple elements with 'reset' (Reset button and "Reset for permanent bonuses")
     const resetButtons = screen.getAllByRole('button', { name: /reset/i })
@@ -79,7 +79,7 @@ describe('App', () => {
   })
 
   it('should render game area with mocked Phaser', async () => {
-    render(<App />)
+    await act(async () => { render(<App />) })
     expect(await screen.findByTestId('phaser-game')).toBeInTheDocument()
   })
 })
