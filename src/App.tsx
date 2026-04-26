@@ -1,4 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import { Component } from 'react';
 import { Footer } from './components/Footer';
 import { Shop } from './components/Shop';
 import { Stats } from './components/Stats';
@@ -13,6 +15,48 @@ const LazyPhaserGame = lazy(async () => {
     default: module.PhaserGame,
   };
 });
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class PhaserErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  render(): ReactNode {
+    if (this.state.hasError) {
+      return (
+        <div
+          className="game-canvas game-canvas-error"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="game-loading-card">
+            <h2 className="game-loading-title">Game Failed to Load</h2>
+            <p className="game-loading-copy">
+              {this.state.error?.message ?? 'An unexpected error occurred.'}
+            </p>
+            <button
+              className="buy-btn"
+              onClick={() => this.setState({ hasError: false, error: null })}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function GameLoadingFallback() {
   return (
@@ -66,9 +110,11 @@ function GameApp() {
 
       <main>
         <div className="game-area">
-          <Suspense fallback={<GameLoadingFallback />}>
-            <LazyPhaserGame />
-          </Suspense>
+          <PhaserErrorBoundary>
+            <Suspense fallback={<GameLoadingFallback />}>
+              <LazyPhaserGame />
+            </Suspense>
+          </PhaserErrorBoundary>
         </div>
         <Shop />
       </main>

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BALL_TYPES } from '../types';
+import { HIT_FLASH_DURATION_MS } from './constants';
 import type { BallData, BallType, BrickData } from '../types';
 import { adjustBrightness, getTierColor } from '../utils';
 import { getParsedColor } from './color';
@@ -104,10 +105,13 @@ export class BallRenderer extends BaseRenderer<BallData> {
 export class BrickRenderer extends BaseRenderer<BrickData> {
   private readonly textById = new Map<string, Phaser.GameObjects.Text>();
   private readonly renderedBrickRefs = new Map<string, BrickData>();
+  private readonly clock: Phaser.Time.Clock;
 
-  /**
-   * Renders all active bricks.
-   */
+  constructor(scene: Phaser.Scene, clock: Phaser.Time.Clock) {
+    super(scene);
+    this.clock = clock;
+  }
+
   render(bricks: BrickData[]) {
     this.frame++;
 
@@ -115,7 +119,7 @@ export class BrickRenderer extends BaseRenderer<BrickData> {
       this.seenAtFrame.set(brick.id, this.frame);
 
       const previousBrick = this.renderedBrickRefs.get(brick.id);
-      const isHitFlash = Date.now() - (brick.lastHitTime || 0) < 50;
+      const isHitFlash = this.clock.now - (brick.lastHitTime || 0) < HIT_FLASH_DURATION_MS;
 
       if (previousBrick !== brick || isHitFlash) {
         this.drawBrick(brick, isHitFlash);

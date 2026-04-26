@@ -508,7 +508,7 @@ export const useGameStore = create<GameStore>()(
       });
 
       // Check if we need to increase tier
-      const newTier = Math.min(MAX_TIER, 1 + Math.floor(state.bricksBroken.add(1).toNumber() / 100));
+      const newTier = Math.min(MAX_TIER, 1 + state.bricksBroken.add(1).div(100).floor().toNumber());
       if (newTier > state.currentTier) {
         set({ currentTier: newTier });
       }
