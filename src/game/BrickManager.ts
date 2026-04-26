@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import type { BrickData } from '../types';
 import { calculateBrickStats } from '../types';
 import { generateId } from '../utils';

@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 
 /**
  * Global cache for parsed hex colors to avoid repetitive HexStringToColor calls.

@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { BALL_TYPES } from '../types';
 import { HIT_FLASH_DURATION_MS } from './constants';
 import type { BallData, BallType, BrickData } from '../types';
