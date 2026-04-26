@@ -33,10 +33,10 @@ export class GameScene extends Phaser.Scene {
   private ballRenderer!: BallRenderer;
   private brickRenderer!: BrickRenderer;
   private effects!: GameEffects;
-  private unsubscribe: (() => void) | null = null;
   private spatialGrid: SpatialGrid = new SpatialGrid(100);
   private physicsAccumulator: number = 0;
   private weakestBrick: BrickData | null = null;
+  private resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -53,17 +53,12 @@ export class GameScene extends Phaser.Scene {
 
     this.brickManager = new BrickManager(this);
     this.ballRenderer = new BallRenderer(this);
-    this.brickRenderer = new BrickRenderer(this);
+    this.brickRenderer = new BrickRenderer(this, this.time);
     this.effects = new GameEffects(this);
     this.effects.initialize();
 
-    this.unsubscribe = useGameStore.subscribe(
-      (state) => state.bricks,
-      (bricks) => {
-        this.spatialGrid.rebuild(bricks);
-        this.weakestBrick = this.ballPhysics.findWeakestBrick(bricks);
-      }
-    );
+    // Note: we rebuild the spatial grid once per frame in update() rather than
+    // on every bricks state change, so we don't need to subscribe to brick changes.
 
     const store = useGameStore.getState();
     store.setCanvasSize(this.cameras.main.width, this.cameras.main.height);
@@ -91,10 +86,17 @@ export class GameScene extends Phaser.Scene {
    * Handles the window resize event to update canvas size in the store.
    */
   handleResize(gameSize: Phaser.Structs.Size) {
-    const { width, height } = gameSize;
-    this.ballPhysics = new BallPhysics(width, height);
-    useGameStore.getState().setCanvasSize(width, height);
-    this.drawBackground();
+    // Debounce resize to avoid recreating BallPhysics and redrawing on every pixel of drag.
+    if (this.resizeTimer !== null) {
+      clearTimeout(this.resizeTimer);
+    }
+    this.resizeTimer = setTimeout(() => {
+      this.resizeTimer = null;
+      const { width, height } = gameSize;
+      this.ballPhysics = new BallPhysics(width, height);
+      useGameStore.getState().setCanvasSize(width, height);
+      this.drawBackground();
+    }, 100);
   }
 
   /**
@@ -153,6 +155,11 @@ export class GameScene extends Phaser.Scene {
         stateAfterSimulation.setBricks([...stateAfterSimulation.bricks, ...newBricks]);
       }
     }
+
+    // Rebuild spatial grid and update targeting once per frame — after all brick mutations
+    // are settled — rather than on every individual bricks state change.
+    this.spatialGrid.rebuild(stateAfterSimulation.bricks);
+    this.weakestBrick = this.ballPhysics.findWeakestBrick(stateAfterSimulation.bricks);
 
     const renderState = useGameStore.getState();
     this.renderBalls(renderState.balls);
@@ -298,9 +305,9 @@ export class GameScene extends Phaser.Scene {
    * Cleanup when the scene is shut down.
    */
   shutdown() {
-    if (this.unsubscribe) {
-      this.unsubscribe();
-      this.unsubscribe = null;
+    if (this.resizeTimer !== null) {
+      clearTimeout(this.resizeTimer);
+      this.resizeTimer = null;
     }
 
     this.weakestBrick = null;

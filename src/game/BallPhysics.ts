@@ -46,7 +46,9 @@ export class BallPhysics {
   normalizeVelocity(dx: number, dy: number, speed: number): { dx: number; dy: number } {
     const speedSq = dx * dx + dy * dy;
     if (speedSq === 0) {
-      return { dx, dy };
+      // Preserve the original zero vector so the ball stays stationary.
+      // Return unchanged — caller should handle re-initialization if needed.
+      return { dx: 0, dy: 0 };
     }
     const currentSpeed = Math.sqrt(speedSq);
     return {
