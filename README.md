@@ -3,7 +3,7 @@
 An idle/incremental breakout-style game where balls autonomously smash through bricks while you upgrade and expand your arsenal. Built with React, Phaser, and Zustand.
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
-![Phaser](https://img.shields.io/badge/Phaser-3-blue)
+![Phaser](https://img.shields.io/badge/Phaser-4-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
