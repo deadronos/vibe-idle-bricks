@@ -2,7 +2,7 @@
 
 ## In Progress
 
-_No tasks currently in progress._
+- [TASK008] Dependency Upgrade & Error Fix-up - Bumping 19 outdated packages and addressing audit advisory on a new branch
 
 ## Pending
 
@@ -24,4 +24,4 @@ _No abandoned tasks._
 
 ---
 
-**Last Updated**: 2026-04-05
+**Last Updated**: 2026-06-11
