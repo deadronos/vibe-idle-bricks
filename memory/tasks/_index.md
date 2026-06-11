@@ -2,7 +2,7 @@
 
 ## In Progress
 
-_No tasks currently in progress._
+- [TASK009] Suggestion Set - 5 candidates proposed, awaiting user selection (`feat/suggestion-set`)
 
 ## Pending
 
