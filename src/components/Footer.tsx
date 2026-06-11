@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useGameStore } from '../store';
-import { Save, Upload, Download, RotateCcw } from 'lucide-react';
+import { Save, Upload, Download, RotateCcw, Settings as SettingsIcon, Trophy } from 'lucide-react';
 import { Modal } from './Modal';
 import { useToast } from './Toast';
+import { SettingsDrawer } from './SettingsDrawer';
+import { AchievementsModal } from './AchievementsModal';
 
 /**
  * Footer component containing save management controls.
@@ -26,6 +28,12 @@ export function Footer() {
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Settings drawer state
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Achievements modal state
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
 
   const handleSave = () => {
     save();
@@ -95,6 +103,23 @@ export function Footer() {
         <button className="btn btn-reset" onClick={handleReset}>
           <RotateCcw size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} aria-hidden="true" /> Reset
         </button>
+        <button
+          className="btn btn-settings"
+          onClick={() => setSettingsOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={settingsOpen}
+        >
+          <SettingsIcon size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} aria-hidden="true" /> Settings
+        </button>
+        <button
+          className="btn btn-achievements"
+          onClick={() => setAchievementsOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={achievementsOpen}
+          data-testid="open-achievements"
+        >
+          <Trophy size={16} className="inline-block mr-2" style={{ verticalAlign: 'text-bottom' }} aria-hidden="true" /> Achievements
+        </button>
         <span className="auto-save-status">Auto-saves every 30s</span>
       </footer>
 
@@ -139,6 +164,15 @@ export function Footer() {
           aria-label="Save data"
         />
       </Modal>
+
+      {/* User preferences drawer */}
+      <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      {/* Achievements gallery */}
+      <AchievementsModal
+        open={achievementsOpen}
+        onClose={() => setAchievementsOpen(false)}
+      />
     </>
   );
 }

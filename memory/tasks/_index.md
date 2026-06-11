@@ -2,7 +2,7 @@
 
 ## In Progress
 
-_No tasks currently in progress._
+_No tasks in progress._
 
 ## Pending
 
@@ -10,6 +10,7 @@ _No pending tasks._
 
 ## Completed
 
+- [TASK009] Suggestion Set - Completed on 2026-06-11. All three PRs (PR1 pause, PR2 sound+settings, PR3 mobile+achievements) shipped on PR #46 (`feat/suggestion-set`). 304/304 tests pass.
 - [TASK008] Dependency Upgrade & Error Fix-up - Completed on 2026-06-11 (PR #45)
 - [TASK007] Branch Review Fixes - Completed on 2026-04-05
 - [TASK006] Startup Bundle Optimization - Completed on 2026-03-07

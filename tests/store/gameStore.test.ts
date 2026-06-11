@@ -275,14 +275,18 @@ describe('gameStore', () => {
       expect(useGameStore.getState().prestigeLevel).toBe(1)
     })
 
-    it('should accumulate total bricks broken', () => {
-      useGameStore.setState({ 
+    it('should preserve total bricks broken across prestige', () => {
+      // totalBricksBroken is the lifetime total, updated per-brick by
+      // incrementBricksBroken. Prestige does NOT add the per-prestige
+      // bricksBroken to it; it only resets the per-prestige counter.
+      useGameStore.setState({
         bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
         totalBricksBroken: new Decimal(5000),
-        canvasSize: { width: 800, height: 500 }
+        canvasSize: { width: 800, height: 500 },
       })
       useGameStore.getState().prestige()
-      expect(useGameStore.getState().totalBricksBroken.eq(15000)).toBe(true)
+      expect(useGameStore.getState().totalBricksBroken.eq(5000)).toBe(true)
+      expect(useGameStore.getState().bricksBroken.eq(0)).toBe(true)
     })
 
     it('should scale prestige threshold with prestige level', () => {

@@ -142,6 +142,7 @@ export interface SaveData {
   upgradeCosts?: Record<string, string>;
   currentTier?: number;
   balls?: BallType[];
+  unlockedAchievements?: Record<string, number>;
   timestamp?: number;
   version?: number;
 }

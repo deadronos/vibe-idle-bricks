@@ -1,7 +1,8 @@
 import * as Phaser from 'phaser';
 import type { BrickData, Explosion } from '../types';
-import { getTierColor } from '../utils';
+import { getAccessibleTierColor, type ColorblindMode } from '../utils';
 import { getParsedColor } from './color';
+import { useSettingsStore } from '../store/settingsStore';
 
 interface FloatingTextEntry {
   life: number;
@@ -81,8 +82,12 @@ export class GameEffects {
 
   /**
    * Emits particles for a destroyed brick.
+   *
+   * When the user has reduced-motion enabled the particle burst is suppressed
+   * entirely so the playfield stays visually calm.
    */
   emitBrickBreakParticles(brick: BrickData, count: number) {
+    if (useSettingsStore.getState().reducedMotion) return;
     const color = this.getTierColorNumber(brick.tier);
     this.particleEmitter.setPosition(brick.x + brick.width / 2, brick.y + brick.height / 2);
     this.particleEmitter.setParticleTint(color);
@@ -109,8 +114,11 @@ export class GameEffects {
 
   /**
    * Applies the configured explosion screen shake.
+   *
+   * No-op when reduced-motion is enabled so the game remains calm.
    */
   shakeExplosion() {
+    if (useSettingsStore.getState().reducedMotion) return;
     this.scene.cameras.main.shake(100, 0.005);
   }
 
@@ -151,6 +159,7 @@ export class GameEffects {
   }
 
   private getTierColorNumber(tier: number) {
-    return getParsedColor(getTierColor(tier));
+    const mode: ColorblindMode = useSettingsStore.getState().colorblindMode;
+    return getParsedColor(getAccessibleTierColor(tier, mode));
   }
 }

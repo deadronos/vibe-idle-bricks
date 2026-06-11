@@ -1,10 +1,15 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { Component } from 'react';
 import { Footer } from './components/Footer';
+import { PauseButton } from './components/PauseButton';
+import { PauseIndicator } from './components/PauseIndicator';
+import { PauseOverlay } from './components/PauseOverlay';
 import { Shop } from './components/Shop';
 import { Stats } from './components/Stats';
 import { ToastProvider, useToast } from './components/Toast';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useAchievementToasts } from './hooks/useAchievementToasts';
 import { useGameStore } from './store';
 import './App.css';
 
@@ -87,7 +92,25 @@ function GameApp() {
   const load = useGameStore((state) => state.load);
   const pendingOfflineMessage = useGameStore((state) => state.pendingOfflineMessage);
   const clearOfflineMessage = useGameStore((state) => state.clearOfflineMessage);
+  const setPaused = useGameStore((state) => state.setPaused);
   const { showToast } = useToast();
+
+  const handlePauseToggle = useCallback(() => {
+    setPaused(!useGameStore.getState().isPaused);
+  }, [setPaused]);
+
+  const handleResume = useCallback(() => {
+    if (useGameStore.getState().isPaused) {
+      setPaused(false);
+    }
+  }, [setPaused]);
+
+  useKeyboardShortcuts({
+    onPauseToggle: handlePauseToggle,
+    onResume: handleResume,
+  });
+
+  useAchievementToasts();
 
   useEffect(() => {
     load();
@@ -105,6 +128,9 @@ function GameApp() {
     <div className="game-container">
       <header>
         <h1>🧱 Idle Bricks</h1>
+        <div className="header-actions">
+          <PauseButton />
+        </div>
         <Stats />
       </header>
 
@@ -115,11 +141,13 @@ function GameApp() {
               <LazyPhaserGame />
             </Suspense>
           </PhaserErrorBoundary>
+          <PauseOverlay />
         </div>
         <Shop />
       </main>
 
       <Footer />
+      <PauseIndicator />
     </div>
   );
 }
