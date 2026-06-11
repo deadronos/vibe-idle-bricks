@@ -2,11 +2,38 @@
 
 ## Current Work Focus
 
-TASK009 (Suggestion Set) is in progress on branch `feat/suggestion-set`. PR1
-(pause) and PR2 (sound + settings + accessibility) are stacked on PR #46;
-PR3 (mobile/touch + achievements) is next.
+TASK009 (Suggestion Set) is **complete**. All three PRs shipped on PR #46
+(`feat/suggestion-set`):
+
+- PR1 (`8f05ebd`): pause control
+- PR2 (`11c9f5b`): sound + settings + accessibility
+- PR3 (`59106f6`): mobile polish + achievement system
+
+No in-flight work. The branch is ready to merge once PR #46 is approved.
 
 ## Recent Changes
+
+- Shipped PR3 (`59106f6`) on PR #46: mobile touch polish + achievement system
+  - index.html: viewport meta tightened (`viewport-fit=cover`)
+  - App.css: `touch-action: manipulation` on interactive elements, `none` on
+    game canvas, `env(safe-area-inset-*)` on `.game-container`
+  - types/achievements.ts: 18 milestone achievements with pure condition
+    predicates (first_brick, hundred/thousand/ten_thousand_bricks,
+    first/three_prestiges, first_purchase, buy_*, tier_5/10/20, first_upgrade,
+    max_speed, max_damage)
+  - store/gameStore.ts: `unlockedAchievements` (persisted) +
+    `pendingAchievementUnlocks` (in-memory queue) wired into
+    incrementBricksBroken, buyBall, buyUpgrade, buyMaxUpgrade, prestige
+  - components/AchievementsModal.tsx: gallery with summary, locked/unlocked
+    cards, recent-first sort
+  - components/Footer.tsx: Achievements button (Trophy icon, amber gradient)
+  - hooks/useAchievementToasts.ts: subscribes to pending queue, fires success
+    toasts, drains queue
+  - **Bug fix**: `incrementBricksBroken` now updates `totalBricksBroken` per
+    brick. Previously it was only updated at prestige, so `first_brick` and
+    similar achievements could never fire. `prestige()` no longer double-counts.
+  - 34 new tests (16 type, 10 store, 8 component, 2 mobile); 304/304 total
+  - All four gates green: typecheck ✓, lint ✓, test ✓, build ✓
 
 - Shipped PR1 + PR2 stacked on PR #46:
   - PR1 (`8f05ebd`): pause control — header button, keyboard

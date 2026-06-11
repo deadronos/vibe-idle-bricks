@@ -43,12 +43,12 @@
 
 - [x] Sound effects (Shipped in PR2, commit `11c9f5b`)
 - [x] Pause functionality (Shipped in PR1, commit `8f05ebd`)
-- [ ] Mobile-friendly touch controls (PR3, pending)
+- [x] Mobile-friendly touch controls (Shipped in PR3, commit `59106f6`)
 
 ### Medium Priority
 
-- [ ] Achievements system (PR3, pending)
-- [ ] Statistics/history screen (PR3, pending)
+- [x] Achievements system (Shipped in PR3, commit `59106f6` — 18 achievements, gallery modal, toasts, persisted in save)
+- [ ] Statistics/history screen (Deferred; not in PR3)
 - [ ] More ball types
 - [ ] Special brick types (bonus coins, power-ups)
 - [x] Visual particle effects (Completed in TASK004)
@@ -67,7 +67,7 @@
 **Version**: 1.0.0  
 **State**: Playable and functional
 
-### Latest Toolchain (post TASK008)
+### Latest Toolchain (post TASK009)
 
 - React 19.2.7 / React-DOM 19.2.7
 - Phaser 4.1.0 (lazy-loaded)
@@ -75,8 +75,21 @@
 - TypeScript 6.0.3 (strict, `erasableSyntaxOnly`)
 - ESLint 10.4.1 + typescript-eslint 8.61.0
 - jsdom 29.1.1
+- **Test count**: 304 passing across 24 files (was 268 before PR3)
 
 ## Known Issues
+
+- `incrementBricksBroken` now updates `totalBricksBroken` per-brick; prestige no longer
+  double-counts. Achievement conditions reference `totalBricksBroken` as a lifetime
+  total, so this fix is required for `first_brick`, `hundred_bricks`, etc. to ever
+  fire. Old saves migrated transparently (the per-brick update simply adds to the
+  persisted value).
+
+## PR3 Highlights (commit `59106f6`)
+
+- **Mobile polish**: viewport meta tightened (`viewport-fit=cover`), `touch-action: manipulation` on interactive elements, `touch-action: none` on game canvas, `env(safe-area-inset-*)` on `.game-container`.
+- **Achievement system**: 18 milestone achievements (first_brick, hundred_bricks, thousand_bricks, ten_thousand_bricks, first_prestige, three_prestiges, first_purchase, buy_fast, buy_heavy, buy_plasma, buy_explosive, buy_sniper, tier_5/10/20, first_upgrade, max_speed, max_damage) with gallery modal, success toasts, and per-save persistence.
+- **State pattern**: `unlockedAchievements: Record<string, number>` (id → unlock ms) and `pendingAchievementUnlocks: string[]` in-memory queue drained by `useAchievementToasts` hook.
 
 1. **Mobile**: No explicit touch event handling
 2. **Edge Case**: Very high ball counts may cause frame drops
