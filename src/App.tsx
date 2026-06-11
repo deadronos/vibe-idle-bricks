@@ -9,6 +9,7 @@ import { Shop } from './components/Shop';
 import { Stats } from './components/Stats';
 import { ToastProvider, useToast } from './components/Toast';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useAchievementToasts } from './hooks/useAchievementToasts';
 import { useGameStore } from './store';
 import './App.css';
 
@@ -108,6 +109,8 @@ function GameApp() {
     onPauseToggle: handlePauseToggle,
     onResume: handleResume,
   });
+
+  useAchievementToasts();
 
   useEffect(() => {
     load();

@@ -688,14 +688,17 @@ main {
   .btn {
     min-height: 44px;
     padding: 10px 16px;
+    touch-action: manipulation;
   }
 
   .shop-item {
     min-height: 44px;
+    touch-action: manipulation;
   }
 
   .shop-tab-btn {
     min-height: 40px;
+    touch-action: manipulation;
   }
 
   .footer {
@@ -1341,3 +1344,129 @@ main {
   color: #94a3b8;
   font-size: 0.8rem;
 }
+
+/* ─── Touch / mobile polish ─────────────────────────────────────────────────
+ * Apply `touch-action: manipulation` to interactive elements so the browser
+ * skips the 300 ms double-tap delay and doesn't intercept gestures as a
+ * pinch-zoom. The `.game-canvas` uses `touch-action: none` so Phaser owns
+ * pointer input without browser interference.
+ * Scoped to all button/clickable surfaces across the app.
+ */
+.btn,
+.shop-item,
+.shop-tab-btn,
+.buy-btn,
+.buy-max-btn,
+.modal-btn,
+.toast-close,
+.stat {
+  touch-action: manipulation;
+}
+
+.game-canvas {
+  touch-action: none;
+}
+
+/* Safe-area inset for notched phones (e.g. iPhone X+). Only kicks in when
+ * the viewport-fit=cover meta tag is set, so older browsers ignore it. */
+.game-container {
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+}
+
+/* ─── Achievements footer button + modal content ───────────────────────────
+ * Match the existing indigo Settings button for visual consistency, then
+ * style the modal's gallery: a summary header and a scrollable list of
+ * cards (locked vs unlocked). Unlocked cards highlight; locked cards grey.
+ */
+.btn-achievements {
+  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+}
+
+.btn-achievements:hover {
+  box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+}
+
+.achievements-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.achievements-summary-count {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+.achievements-summary-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.achievements-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.achievement-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.15s ease;
+}
+
+.achievement-item.is-unlocked {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.achievement-item.is-locked {
+  opacity: 0.55;
+  filter: saturate(0.4);
+}
+
+.achievement-icon {
+  font-size: 1.5rem;
+  width: 2rem;
+  text-align: center;
+}
+
+.achievement-name {
+  font-weight: 600;
+  color: #f8fafc;
+  font-size: 0.95rem;
+}
+
+.achievement-description {
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  margin-top: 2px;
+}
+
+.achievement-unlock-date {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.achievement-locked-label {
+  font-size: 1rem;
+  opacity: 0.6;
+}
+

@@ -11,3 +11,4 @@ export { PauseButton } from './PauseButton';
 export { PauseIndicator } from './PauseIndicator';
 export { PauseOverlay } from './PauseOverlay';
 export { SettingsDrawer } from './SettingsDrawer';
+export { AchievementsModal } from './AchievementsModal';

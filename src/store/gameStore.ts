@@ -19,7 +19,13 @@ import type {
   Upgrades,
   Explosion,
   SaveData,
+  UnlockedAchievements,
 } from '../types';
+import {
+  evaluateAchievements,
+  getEmptyUnlocks,
+  type AchievementGameState,
+} from '../types/achievements';
 import { createBall } from '../utils/helpers';
 import { calculateOfflineEarnings } from './earnings';
 import { playSound } from '../utils/audio';
@@ -60,6 +66,15 @@ interface GameStore {
    * Cleared after the UI reads it.
    */
   pendingOfflineMessage: string | null;
+  /** Map of achievement id → unlock timestamp (ms). Persisted in the save. */
+  unlockedAchievements: UnlockedAchievements;
+  /**
+   * Queue of achievement ids that have just been unlocked but not yet shown
+   * to the player. The UI drains this queue (showing toasts + modal flashes)
+   * and calls `drainPendingAchievementUnlocks()` to clear it. Kept separate
+   * from `unlockedAchievements` so toasts survive HMR and re-renders.
+   */
+  pendingAchievementUnlocks: string[];
   /** Timestamp of the last save or update, used for offline earnings. */
   timestamp: number;
 
@@ -195,6 +210,21 @@ interface GameStore {
   setPaused: (paused: boolean) => void;
 
   /**
+   * Re-evaluates all achievement conditions against the current state and
+   * queues up toasts for any newly-unlocked achievements. Idempotent — calling
+   * this repeatedly is safe and only unlocks once per achievement.
+   * @returns {string[]} The ids of any newly-unlocked achievements.
+   */
+  checkAchievements: () => string[];
+
+  /**
+   * Removes the achievement unlock queue after the UI has shown toasts. The
+   * achievements remain unlocked in `unlockedAchievements`; this only clears
+   * the transient notification queue.
+   */
+  drainPendingAchievementUnlocks: () => void;
+
+  /**
    * Calculates the current global damage multiplier.
    * @returns {number} The damage multiplier.
    */
@@ -269,6 +299,7 @@ interface SaveDataBuilderState {
   upgradeCosts: Record<keyof Upgrades, Decimal>;
   currentTier: number;
   balls: BallData[];
+  unlockedAchievements: UnlockedAchievements;
 }
 
 const buildSaveData = (state: SaveDataBuilderState, options: SaveDataOptions): SaveData => {
@@ -286,6 +317,7 @@ const buildSaveData = (state: SaveDataBuilderState, options: SaveDataOptions): S
     ),
     currentTier: state.currentTier,
     balls: state.balls.map((b) => b.type),
+    unlockedAchievements: state.unlockedAchievements,
     timestamp: Date.now(),
   };
 
@@ -445,6 +477,17 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
 
   const savedUpgrades = saveData.upgrades ?? { speed: 0, damage: 0, coinMult: 0 };
 
+  // Validate the unlocked-achievements map. Older saves will not have this
+  // field, in which case we start with an empty map.
+  const unlockedAchievements: UnlockedAchievements = {};
+  if (saveData.unlockedAchievements && typeof saveData.unlockedAchievements === 'object') {
+    for (const [id, ts] of Object.entries(saveData.unlockedAchievements)) {
+      if (typeof id === 'string' && Number.isFinite(ts)) {
+        unlockedAchievements[id] = Number(ts);
+      }
+    }
+  }
+
   return {
     coins: parseDecimal(saveData.coins),
     bricksBroken: parseDecimal(saveData.bricksBroken),
@@ -459,6 +502,7 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
     upgradeCosts,
     currentTier: parseInteger(saveData.currentTier, 1),
     balls: balls.length > 0 ? balls : [createBall('basic', canvasWidth, canvasHeight)],
+    unlockedAchievements,
     timestamp: saveData.timestamp || Date.now(),
   };
 };
@@ -484,6 +528,8 @@ export const useGameStore = create<GameStore>()(
     canvasSize: { width: 800, height: 500 },
     isPaused: false,
     pendingOfflineMessage: null,
+    unlockedAchievements: getEmptyUnlocks(),
+    pendingAchievementUnlocks: [],
     timestamp: Date.now(),
 
     setCanvasSize: (width, height) => {
@@ -511,6 +557,7 @@ export const useGameStore = create<GameStore>()(
       const state = get();
       set({
         bricksBroken: state.bricksBroken.add(1),
+        totalBricksBroken: state.totalBricksBroken.add(1),
       });
 
       // Check if we need to increase tier
@@ -518,6 +565,8 @@ export const useGameStore = create<GameStore>()(
       if (newTier > state.currentTier) {
         set({ currentTier: newTier });
       }
+
+      get().checkAchievements();
     },
 
     buyBall: (type) => {
@@ -539,6 +588,7 @@ export const useGameStore = create<GameStore>()(
           },
         });
         playSound('purchase');
+        get().checkAchievements();
         return true;
       }
       return false;
@@ -563,6 +613,7 @@ export const useGameStore = create<GameStore>()(
           },
         });
         playSound('purchase');
+        get().checkAchievements();
         return true;
       }
       return false;
@@ -598,6 +649,9 @@ export const useGameStore = create<GameStore>()(
         upgradeCosts: currentUpgradeCosts,
       });
 
+      if (purchased > 0) {
+        get().checkAchievements();
+      }
       return purchased;
     },
 
@@ -615,7 +669,6 @@ export const useGameStore = create<GameStore>()(
       const { width, height } = state.canvasSize;
 
       set({
-        totalBricksBroken: state.totalBricksBroken.add(state.bricksBroken),
         prestigeLevel: state.prestigeLevel + 1,
         coins: new Decimal(0),
         bricksBroken: new Decimal(0),
@@ -630,6 +683,7 @@ export const useGameStore = create<GameStore>()(
       });
 
       playSound('prestige');
+      get().checkAchievements();
       return true;
     },
 
@@ -721,6 +775,9 @@ export const useGameStore = create<GameStore>()(
           ...partialState,
           bricks: [],
           explosions: [],
+          // Importing replaces the in-memory state entirely, so we discard
+          // any queued toasts from the previous run.
+          pendingAchievementUnlocks: [],
         });
 
         return true;
@@ -746,7 +803,12 @@ export const useGameStore = create<GameStore>()(
 
         // Remove timestamp from partialState before setting to conform to GameStore if necessary,
         // but now timestamp IS in GameStore interface.
-        set(partialState as Partial<GameStore>);
+        set({
+          ...(partialState as Partial<GameStore>),
+          // Loading a save replaces the in-memory state; clear any queued
+          // toasts so we don't replay the previous session's unlocks.
+          pendingAchievementUnlocks: [],
+        });
 
         // Calculate offline progress
         const loadedTimestamp = partialState.timestamp;
@@ -802,6 +864,8 @@ export const useGameStore = create<GameStore>()(
         balls: [createBall('basic', width, height)],
         bricks: [],
         explosions: [],
+        unlockedAchievements: getEmptyUnlocks(),
+        pendingAchievementUnlocks: [],
         timestamp: Date.now(),
       });
     },
@@ -809,6 +873,47 @@ export const useGameStore = create<GameStore>()(
     setPaused: (paused) => set({ isPaused: paused }),
 
     clearOfflineMessage: () => set({ pendingOfflineMessage: null }),
+
+    checkAchievements: () => {
+      const state = get();
+      const achievementState: AchievementGameState = {
+        totalBricksBroken: state.totalBricksBroken,
+        bricksBroken: state.bricksBroken,
+        coins: state.coins,
+        prestigeLevel: state.prestigeLevel,
+        currentTier: state.currentTier,
+        balls: state.balls,
+        upgrades: state.upgrades,
+      };
+
+      const newlyUnlocked = evaluateAchievements(
+        achievementState,
+        state.unlockedAchievements,
+      );
+
+      if (newlyUnlocked.length === 0) return [];
+
+      const unlockedAt = Date.now();
+      const nextUnlocked = { ...state.unlockedAchievements };
+      for (const id of newlyUnlocked) {
+        nextUnlocked[id] = unlockedAt;
+      }
+
+      set({
+        unlockedAchievements: nextUnlocked,
+        pendingAchievementUnlocks: [
+          ...state.pendingAchievementUnlocks,
+          ...newlyUnlocked,
+        ],
+      });
+
+      return newlyUnlocked;
+    },
+
+    drainPendingAchievementUnlocks: () => {
+      if (get().pendingAchievementUnlocks.length === 0) return;
+      set({ pendingAchievementUnlocks: [] });
+    },
 
     getDamageMult: () => {
       const state = get();
