@@ -7,3 +7,6 @@ export { Shop } from './Shop';
 export { Footer } from './Footer';
 export { Modal } from './Modal';
 export { ToastProvider, useToast } from './Toast';
+export { PauseButton } from './PauseButton';
+export { PauseIndicator } from './PauseIndicator';
+export { PauseOverlay } from './PauseOverlay';
