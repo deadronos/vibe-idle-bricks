@@ -2,10 +2,20 @@
 
 ## Current Work Focus
 
-Memory Bank initialization completed. The project is in a functional MVP state with core gameplay working.
+TASK009 (Suggestion Set) is in progress on branch `feat/suggestion-set`. PR1
+(pause) and PR2 (sound + settings + accessibility) are stacked on PR #46;
+PR3 (mobile/touch + achievements) is next.
 
 ## Recent Changes
 
+- Shipped PR1 + PR2 stacked on PR #46:
+  - PR1 (`8f05ebd`): pause control — header button, keyboard
+    shortcuts (Space/P/Esc), `aria-live` indicator, overlay. 13
+    new tests.
+  - PR2 (`11c9f5b`): Web Audio SFX (5 procedural cues), persistent
+    settings store, SettingsDrawer in footer, colorblind-friendly
+    tier colors, reduced-motion gating for particles/shake. 21 new
+    tests; 268/268 total.
 - Completed TASK008 dependency upgrade & error fix-up (PR #45):
   - bumped 19 packages within their existing `^` semver ranges (lucide-react, phaser, react/react-dom, zustand, vite, vitest, typescript, eslint, etc.)
   - `npm audit fix` cleared the moderate `brace-expansion` advisory; audit is now clean
@@ -71,12 +81,18 @@ The game is fully playable with:
 
 ## Next Steps
 
-Potential areas for enhancement:
+TASK009 PR3 (mobile + achievements):
 
-1. **Sound Effects**: Add audio feedback for hits, purchases, etc.
-2. **New Features**: Achievements, statistics screen, more ball types
-3. **Mobile Optimization**: Touch controls, UI scaling
-4. **Accessibility**: Pause button, keyboard controls, colorblind modes
+1. Tighten viewport meta tag in `index.html`.
+2. Add `touch-action: manipulation` and 44px min size on
+   `.buy-btn`/`.tab-btn`/`.game-canvas`.
+3. Vitest test mounting `<Shop>` at 360px and asserting no
+   horizontal overflow.
+4. Add `src/types/achievements.ts` with achievement definitions.
+5. Add `achievements: Record<string, boolean>` and stats selector to
+   the game store; wire unlock events to toasts.
+6. Add a stats route/modal showing unlocked vs locked achievements.
+7. Validate, commit, push, open PR.
 
 ## Active Decisions
 
@@ -92,5 +108,7 @@ Potential areas for enhancement:
 - `GameScene.ts` is now an orchestrator; rendering/effects/brick generation live in dedicated helpers under `src/game/`
 - Phaser is intentionally deferred from the initial startup path; the remaining large async engine chunk is justified in `vite.config.ts`
 - Explosive balls may cause performance issues with many simultaneous explosions (mitigated by particle pooling/limits)
-- Mobile touch events not explicitly handled (relies on Phaser defaults)
+- Mobile touch events not explicitly handled (relies on Phaser defaults; PR3 will tighten)
 - Save hydration must normalize out-of-range values; purchase/UI caps alone are not enough to prevent oversized loaded state
+- Settings are persisted under `idleBricksSettings` (separate from the game save) so `reset()` does not wipe user preferences
+- Audio module is a `globalThis` singleton so HMR / dynamic imports / test module duplication share state

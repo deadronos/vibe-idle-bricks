@@ -2,7 +2,7 @@
 
 ## In Progress
 
-- [TASK009] Suggestion Set - 5 candidates proposed, awaiting user selection (`feat/suggestion-set`)
+- [TASK009] Suggestion Set - PR1 (pause) + PR2 (sound+settings) shipped on PR #46; PR3 (mobile + achievements) pending (`feat/suggestion-set`)
 
 ## Pending
 

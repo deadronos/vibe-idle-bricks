@@ -41,25 +41,25 @@
 
 ### High Priority
 
-- [ ] Sound effects
-- [ ] Pause functionality (button exists in concept but not fully implemented)
-- [ ] Mobile-friendly touch controls
+- [x] Sound effects (Shipped in PR2, commit `11c9f5b`)
+- [x] Pause functionality (Shipped in PR1, commit `8f05ebd`)
+- [ ] Mobile-friendly touch controls (PR3, pending)
 
 ### Medium Priority
 
-- [ ] Achievements system
-- [ ] Statistics/history screen
+- [ ] Achievements system (PR3, pending)
+- [ ] Statistics/history screen (PR3, pending)
 - [ ] More ball types
 - [ ] Special brick types (bonus coins, power-ups)
 - [x] Visual particle effects (Completed in TASK004)
+- [x] Settings menu (Shipped in PR2)
+- [x] Colorblind mode (Shipped in PR2)
 
 ### Low Priority
 
 - [ ] Leaderboards
 - [ ] Cloud save
 - [ ] Multiple save slots
-- [ ] Settings menu
-- [ ] Colorblind mode
 
 ## Current Status
 
