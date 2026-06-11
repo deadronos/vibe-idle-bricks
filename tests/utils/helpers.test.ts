@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import Decimal from 'break_infinity.js'
-import { generateId, formatNumber, adjustBrightness, getTierColor } from '../../src/utils/helpers'
+import { generateId, formatNumber, adjustBrightness, getTierColor, getAccessibleTierColor } from '../../src/utils/helpers'
 
 describe('generateId', () => {
   it('should generate a string ID', () => {
@@ -154,5 +154,29 @@ describe('getTierColor', () => {
     for (let tier = 1; tier <= 15; tier++) {
       expect(getTierColor(tier)).toMatch(/^#[0-9a-f]{6}$/i)
     }
+  })
+})
+
+describe('getAccessibleTierColor', () => {
+  it('passes through the base color when mode is off', () => {
+    expect(getAccessibleTierColor(1, 'off')).toBe(getTierColor(1))
+    expect(getAccessibleTierColor(5, 'off')).toBe(getTierColor(5))
+  })
+
+  it('returns a valid hex color in every mode', () => {
+    const modes = ['off', 'protanopia', 'deuteranopia', 'tritanopia'] as const
+    for (const mode of modes) {
+      for (let tier = 1; tier <= 10; tier++) {
+        expect(getAccessibleTierColor(tier, mode)).toMatch(/^#[0-9a-f]{6}$/i)
+      }
+    }
+  })
+
+  it('changes the result when a colorblind mode is selected', () => {
+    const base = getTierColor(4) // Orange-red
+    const protan = getAccessibleTierColor(4, 'protanopia')
+    const deutan = getAccessibleTierColor(4, 'deuteranopia')
+    expect(protan).not.toBe(base)
+    expect(deutan).not.toBe(base)
   })
 })

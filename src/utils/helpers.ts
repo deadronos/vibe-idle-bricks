@@ -66,6 +66,53 @@ export const getTierColor = (tier: number): string => {
   return colors[Math.min(tier - 1, colors.length - 1)];
 };
 
+export type ColorblindMode = 'off' | 'protanopia' | 'deuteranopia' | 'tritanopia';
+
+/**
+ * Approximate sRGB-channel remap coefficients for common color vision
+ * deficiencies. These are *not* perceptually accurate simulations — they are
+ * cheap remaps that preserve contrast ordering across tiers for players who
+ * have difficulty distinguishing red/orange/green hues.
+ *
+ * Values are loosely based on the Machado/Vienot-Brettler matrices
+ * (severity ≈ 0.6) converted to integer sRGB channel coefficients.
+ */
+const COLORBLIND_REMAPS: Record<Exclude<ColorblindMode, 'off'>, { r: [number, number, number]; g: [number, number, number]; b: [number, number, number] }> = {
+  protanopia: {
+    r: [0.567, 0.433, 0.0],
+    g: [0.558, 0.442, 0.0],
+    b: [0.0, 0.242, 0.758],
+  },
+  deuteranopia: {
+    r: [0.625, 0.375, 0.0],
+    g: [0.7, 0.3, 0.0],
+    b: [0.0, 0.3, 0.7],
+  },
+  tritanopia: {
+    r: [0.95, 0.05, 0.0],
+    g: [0.0, 0.433, 0.567],
+    b: [0.0, 0.475, 0.525],
+  },
+};
+
+/**
+ * Returns the brick color for `tier` adjusted for the active colorblind
+ * palette. When `mode` is `'off'` the original tier color is returned.
+ */
+export const getAccessibleTierColor = (tier: number, mode: ColorblindMode): string => {
+  if (mode === 'off') return getTierColor(tier);
+  const remap = COLORBLIND_REMAPS[mode];
+  const hex = getTierColor(tier).replace('#', '');
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  const to255 = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
+  const rOut = to255(remap.r[0] * r + remap.r[1] * g + remap.r[2] * b);
+  const gOut = to255(remap.g[0] * r + remap.g[1] * g + remap.g[2] * b);
+  const bOut = to255(remap.b[0] * r + remap.b[1] * g + remap.b[2] * b);
+  return '#' + [rOut, gOut, bOut].map((v) => v.toString(16).padStart(2, '0')).join('');
+};
+
 /**
  * Creates a new ball of the specified type with random position and velocity.
  * @param type - The type of ball to create.

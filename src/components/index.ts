@@ -10,3 +10,4 @@ export { ToastProvider, useToast } from './Toast';
 export { PauseButton } from './PauseButton';
 export { PauseIndicator } from './PauseIndicator';
 export { PauseOverlay } from './PauseOverlay';
+export { SettingsDrawer } from './SettingsDrawer';

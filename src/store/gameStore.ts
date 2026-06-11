@@ -22,6 +22,7 @@ import type {
 } from '../types';
 import { createBall } from '../utils/helpers';
 import { calculateOfflineEarnings } from './earnings';
+import { playSound } from '../utils/audio';
 
 /**
  * Interface defining the entire state and actions of the game store.
@@ -499,6 +500,11 @@ export const useGameStore = create<GameStore>()(
       const prestigeBonus = 1 + state.prestigeLevel * PRESTIGE_BONUS;
       const newCoins = state.coins.add(amount.mul(prestigeBonus));
       set({ coins: newCoins });
+      // Only play the "coin" sound for small, non-coin-spam additions
+      // (bricks award 1–10 coins, prestige awards large sums, etc.)
+      if (amount.gt(0) && amount.lt(1000)) {
+        playSound('coin');
+      }
     },
 
     incrementBricksBroken: () => {
@@ -532,6 +538,7 @@ export const useGameStore = create<GameStore>()(
             [type]: cost.mul(COST_MULTIPLIER).ceil(),
           },
         });
+        playSound('purchase');
         return true;
       }
       return false;
@@ -555,6 +562,7 @@ export const useGameStore = create<GameStore>()(
             [type]: cost.mul(COST_MULTIPLIER).ceil(),
           },
         });
+        playSound('purchase');
         return true;
       }
       return false;
@@ -621,6 +629,7 @@ export const useGameStore = create<GameStore>()(
         timestamp: Date.now(),
       });
 
+      playSound('prestige');
       return true;
     },
 
@@ -643,6 +652,12 @@ export const useGameStore = create<GameStore>()(
     damageBrick: (id, damage) => {
       const [result] = get().applyBrickDamageBatch([{ id, damage }]);
       if (!result) return null;
+
+      // Play a hit sound on every successful contact and a shatter on destroy.
+      playSound('ballBounce');
+      if (result.destroyed) {
+        playSound('brickBreak');
+      }
 
       return {
         destroyed: result.destroyed,

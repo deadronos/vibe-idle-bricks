@@ -2,8 +2,9 @@ import * as Phaser from 'phaser';
 import { BALL_TYPES } from '../types';
 import { HIT_FLASH_DURATION_MS } from './constants';
 import type { BallData, BallType, BrickData } from '../types';
-import { adjustBrightness, getTierColor } from '../utils';
+import { adjustBrightness, getAccessibleTierColor, type ColorblindMode } from '../utils';
 import { getParsedColor } from './color';
+import { useSettingsStore } from '../store/settingsStore';
 
 const TRAIL_BALL_TYPES: ReadonlySet<BallType> = new Set(['sniper', 'plasma']);
 
@@ -198,11 +199,13 @@ export class BrickRenderer extends BaseRenderer<BrickData> {
   }
 
   private getFillColor(tier: number) {
-    return getParsedColor(getTierColor(tier));
+    const mode: ColorblindMode = useSettingsStore.getState().colorblindMode;
+    return getParsedColor(getAccessibleTierColor(tier, mode));
   }
 
   private getBorderColor(tier: number) {
-    return getParsedColor(adjustBrightness(getTierColor(tier), -30));
+    const mode: ColorblindMode = useSettingsStore.getState().colorblindMode;
+    return getParsedColor(adjustBrightness(getAccessibleTierColor(tier, mode), -30));
   }
 
   protected onPruned(id: string) {
