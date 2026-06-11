@@ -67,6 +67,15 @@
 **Version**: 1.0.0  
 **State**: Playable and functional
 
+### Latest Toolchain (post TASK008)
+
+- React 19.2.7 / React-DOM 19.2.7
+- Phaser 4.1.0 (lazy-loaded)
+- Vite 8.0.16 + Vitest 4.1.8
+- TypeScript 6.0.3 (strict, `erasableSyntaxOnly`)
+- ESLint 10.4.1 + typescript-eslint 8.61.0
+- jsdom 29.1.1
+
 ## Known Issues
 
 1. **Mobile**: No explicit touch event handling

@@ -6,6 +6,11 @@ Memory Bank initialization completed. The project is in a functional MVP state w
 
 ## Recent Changes
 
+- Completed TASK008 dependency upgrade & error fix-up (PR #45):
+  - bumped 19 packages within their existing `^` semver ranges (lucide-react, phaser, react/react-dom, zustand, vite, vitest, typescript, eslint, etc.)
+  - `npm audit fix` cleared the moderate `brace-expansion` advisory; audit is now clean
+  - validation re-run after upgrade: typecheck ✓, lint ✓, 234/234 tests ✓, `vite build` ✓ in 682 ms with identical chunk layout to `main`
+  - no application code changes were required
 - Completed branch review follow-up fixes:
   - hardened save hydration so partial/invalid upgrade fields default safely
   - removed duplicate tuning constants from `src/game/constants.ts`

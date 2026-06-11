@@ -1,6 +1,6 @@
 # TASK008 - Dependency Upgrade & Error Fix-up
 
-**Status:** In Progress
+**Status:** Completed
 **Added:** 2026-06-11
 **Updated:** 2026-06-11
 
@@ -31,7 +31,7 @@ Confidence Score: **High** (existing baseline is green; changes are minor/patch 
 
 ## Progress Tracking
 
-**Overall Status:** In Progress - 70%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
@@ -42,8 +42,8 @@ Confidence Score: **High** (existing baseline is green; changes are minor/patch 
 |1.3|Refresh lockfile|Complete|2026-06-11|63 packages changed, 1 added, 1 removed; lockfile regenerated.|
 |1.4|Apply audit fix|Complete|2026-06-11|Moderate `brace-expansion` advisory cleared (0 vulnerabilities remaining).|
 |1.5|Typecheck / lint / test / build green|Complete|2026-06-11|typecheck ✓, lint ✓, 234/234 tests ✓, `vite build` ✓ (682ms, identical chunk layout).|
-|1.6|Commit and push|Not Started|2026-06-11||
-|1.7|Open PR|Not Started|2026-06-11||
+|1.6|Commit and push|Complete|2026-06-11|Commit `aca2454` pushed to `origin/chore/upgrade-dependencies`.|
+|1.7|Open PR|Complete|2026-06-11|PR #45 opened at <https://github.com/deadronos/vibe-idle-bricks/pull/45>|
 
 ## Progress Log
 
