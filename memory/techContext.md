@@ -6,17 +6,19 @@
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| React | 19.2.0 | UI components and state presentation |
-| TypeScript | 5.9.3 | Type safety and developer experience |
-| Vite | 7.2.4 | Build tool and dev server |
-| Phaser | 3.90.0 | 2D game engine for canvas rendering |
-| Zustand | 5.0.8 | State management with subscription support |
+| React | 19.3.0 | UI components and state presentation |
+| TypeScript | 6.0.3 | Type safety and developer experience |
+| Vite | 8.3.1 | Build tool and dev server |
+| Phaser | 4.2.1 | 2D game engine for canvas rendering |
+| Zustand | 5.0.15 | State management with subscription support |
 | break_infinity.js | 2.2.0 | Arbitrary precision numbers for idle game math |
 
 ### Development Tools
 
-- ESLint 9.39.1 with TypeScript and React plugins
-- Node.js (requires v18+)
+- ESLint 10.11.0 with TypeScript and React plugins
+- Vitest 5.0.2 for unit testing
+- Node.js (requires v22.22.2+, or v24.15.0+, or v26+)
+- TypeScript is held at 6.x because `typescript-eslint` does not yet support TypeScript 7
 
 ## Project Structure
 

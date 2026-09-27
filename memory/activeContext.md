@@ -2,16 +2,22 @@
 
 ## Current Work Focus
 
-TASK009 (Suggestion Set) is **complete**. All three PRs shipped on PR #46
-(`feat/suggestion-set`):
+TASK010 (Latest Dependency Upgrade) is **in flight** on branch
+`chore/deps-upgrade-latest`. All runtime and dev dependencies were bumped to
+their latest releases; TypeScript is held at 6.0.3 because `typescript-eslint`
+does not yet support TypeScript 7. No application code changes were needed and
+all validation gates are green. Awaiting PR review.
 
-- PR1 (`8f05ebd`): pause control
-- PR2 (`11c9f5b`): sound + settings + accessibility
-- PR3 (`59106f6`): mobile polish + achievement system
-
-No in-flight work. The branch is ready to merge once PR #46 is approved.
+TASK009 (Suggestion Set) is **complete** and merged to `main` (merge `20505e0`).
 
 ## Recent Changes
+
+- Completed TASK010 dependency upgrade to latest (branch `chore/deps-upgrade-latest`):
+  - bumped all runtime and dev dependencies to their latest releases: react/react-dom 19.3.0, phaser 4.2.1, zustand 5.0.15, lucide-react 1.48.0, vite 8.3.1, vitest/@vitest/* 5.0.2, eslint 10.11.0, jsdom 30.1.1, @testing-library/jest-dom 7.0.1, @types/node 26.6.3, typescript-eslint 8.70.1
+  - TypeScript intentionally held at 6.0.3 (latest 6.x): `typescript-eslint@8.70.1` peer range is `>=4.8.4 <6.1.0`, so TypeScript 7 is not yet supported upstream
+  - `npm audit fix` cleared 4 transitive advisories (browserslist, @babel/core, @humanfs/node, baseline-browser-mapping); audit is clean (0 vulnerabilities)
+  - no application code changes were required
+  - validation re-run after upgrade: typecheck ✓, lint ✓, 304/304 tests ✓, `vite build` ✓
 
 - Shipped PR3 (`59106f6`) on PR #46: mobile touch polish + achievement system
   - index.html: viewport meta tightened (`viewport-fit=cover`)
@@ -127,8 +133,8 @@ TASK009 PR3 (mobile + achievements):
 | -------- | ------ | ----- |
 | State management | Resolved | Zustand with selectors |
 | Large numbers | Resolved | break_infinity.js Decimal |
-| Game engine | Resolved | Phaser 3 |
-| Build tool | Resolved | Vite 7 |
+| Game engine | Resolved | Phaser 4 |
+| Build tool | Resolved | Vite 8 |
 
 ## Known Considerations
 
