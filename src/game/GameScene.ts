@@ -12,6 +12,8 @@ import { SpatialGrid } from './SpatialGrid';
 import {
   BALL_RADIUS,
   FIXED_STEP,
+  clampAccumulator,
+  clampFrameDelta,
   MIN_BRICKS_ON_SCREEN,
   EXPLOSION_DAMAGE_MULTIPLIER,
   EXPLOSION_HIT_PARTICLE_COUNT,
@@ -140,13 +142,15 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    this.physicsAccumulator += delta;
+    const frameDelta = clampFrameDelta(delta);
+    this.physicsAccumulator = clampAccumulator(this.physicsAccumulator, frameDelta);
     while (this.physicsAccumulator >= FIXED_STEP) {
       this.updateBalls(FIXED_STEP);
       this.physicsAccumulator -= FIXED_STEP;
     }
 
-    useGameStore.getState().updateExplosions(delta);
+    // Keep visuals on the same clock as the clamped simulation.
+    useGameStore.getState().updateExplosions(frameDelta);
 
     const stateAfterSimulation = useGameStore.getState();
     if (stateAfterSimulation.bricks.length < MIN_BRICKS_ON_SCREEN) {
@@ -169,7 +173,7 @@ export class GameScene extends Phaser.Scene {
     this.renderBalls(renderState.balls);
     this.renderBricks(renderState.bricks);
     this.renderExplosions();
-    this.updateFloatingTexts(delta);
+    this.updateFloatingTexts(frameDelta);
   }
 
   /**
