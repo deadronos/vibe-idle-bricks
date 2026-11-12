@@ -81,8 +81,18 @@ describe('Stats', () => {
     })
     render(<Stats />)
     
-    expect(screen.getByText('3')).toBeInTheDocument()
+    expect(screen.getByText('3 / 50')).toBeInTheDocument()
     expect(screen.getByText('Balls')).toBeInTheDocument()
+  })
+
+  it('should estimate coins per second and show the ball cap', () => {
+    useGameStore.setState({
+      balls: [{ id: '1', type: 'basic', x: 0, y: 0, dx: 1, dy: -1 }],
+    })
+    render(<Stats />)
+
+    expect(screen.getByText('≈ 1/s')).toBeInTheDocument()
+    expect(screen.getByText('1 / 50')).toBeInTheDocument()
   })
 
   it('should display next prestige threshold', () => {

@@ -88,6 +88,28 @@ describe('Shop', () => {
       expect(screen.getByText(/coins ×1 → ×1\.1/i)).toBeInTheDocument()
     })
 
+    it('should preview the Max purchase and the shortfall', async () => {
+      useGameStore.setState({ coins: new Decimal(1000) })
+      renderShop()
+      const user = userEvent.setup()
+      await user.click(screen.getByRole('tab', { name: /upgrades/i }))
+
+      expect(screen.getByText(/max \+11 → lv\.11/i)).toBeInTheDocument()
+      expect(screen.queryByText(/need 50 more/i)).not.toBeInTheDocument()
+    })
+
+    it('should show how many coins and how long until an upgrade is affordable', async () => {
+      useGameStore.setState({
+        coins: new Decimal(0),
+        balls: [{ id: '1', type: 'basic', x: 0, y: 0, dx: 1, dy: -1 }],
+      })
+      renderShop()
+      const user = userEvent.setup()
+      await user.click(screen.getByRole('tab', { name: /upgrades/i }))
+
+      expect(screen.getByText(/need 50 more coins \(~50s\)/i)).toBeInTheDocument()
+    })
+
     it('should render upgrade buttons', async () => {
       renderShop()
       // open upgrades tab to show upgrade items

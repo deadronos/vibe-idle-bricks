@@ -1,6 +1,6 @@
 import { useGameStore } from '../store';
 import { formatMultiplier, formatNumber } from '../utils';
-import { PRESTIGE_THRESHOLD, getPrestigeMultiplier } from '../types';
+import { MAX_BALLS, PRESTIGE_THRESHOLD, getPrestigeMultiplier } from '../types';
 import { Coins, BrickWall, Layers, Circle, TrendingUp } from 'lucide-react';
 
 /**
@@ -17,6 +17,8 @@ export function Stats() {
   const ballCount = useGameStore((state) => state.balls.length);
   const prestigeLevel = useGameStore((state) => state.prestigeLevel);
   const prestigeMult = getPrestigeMultiplier(prestigeLevel);
+  // Not selected directly: ball types change with ballCount, which is selected.
+  const incomePerSecond = useGameStore.getState().getIncomePerSecond();
 
   return (
     <div className="stats">
@@ -24,6 +26,7 @@ export function Stats() {
         <Coins className="stat-icon" size={24} />
         <span className="stat-value">{formatNumber(coins)}</span>
         <label>Coins</label>
+        <span className="stat-rate">≈ {formatNumber(incomePerSecond)}/s</span>
       </div>
       <div className="stat stat-bricks">
         <BrickWall className="stat-icon" size={24} />
@@ -37,7 +40,7 @@ export function Stats() {
       </div>
       <div className="stat stat-balls">
         <Circle className="stat-icon" size={24} />
-        <span className="stat-value">{ballCount}</span>
+        <span className="stat-value">{ballCount} / {MAX_BALLS}</span>
         <label>Balls</label>
       </div>
       <div className="stat stat-prestige-target">

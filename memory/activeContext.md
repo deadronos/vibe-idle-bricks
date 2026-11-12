@@ -2,16 +2,25 @@
 
 ## Current Work Focus
 
-Issue #59 (PR #96, `visuals/floating-text`) is **in flight**: coin popups are
-gold with a `¢` suffix, damage is near-white, popups are capped at 8 (coins
-evict the oldest damage) and jitter slightly so same-brick hits stay readable.
-#56 (HiDPI) is blocked on Phaser 4: no game-level `resolution` and the manual
-backing-store workaround is broken upstream.
+Issue #68 (branch `ux/income-stats`) is **in flight**: the coins stat shows a
+nominal `≈ n/s` estimate, balls show `n / 50`, upgrade rows preview the Max
+purchase (`Max +11 → Lv.11 · 962 coins`) and disabled rows say how many coins
+and roughly how long until affordable. #56 (HiDPI) is blocked on Phaser 4: no
+game-level `resolution` and the manual backing-store workaround is broken
+upstream.
 
 TASK009 (Suggestion Set) is **complete** and merged to `main` (merge `20505e0`).
 
 ## Recent Changes
 
+- Shipped #59 (PR #96): floating popups take `'damage' | 'coin'`, coins are
+  gold with `¢`, damage near-white, `MAX_ACTIVE_FLOATING_TEXTS = 8` with coin
+  eviction and jitter; killing hits no longer stack a damage popup under the
+  coin popup.
+- Working on #68: `calculateHitRate`/`calculateIncomePerSecond` in
+  `src/store/earnings.ts` (shared with offline earnings), store
+  `getIncomePerSecond()`, `planMaxUpgrade()` shared by the Max button and its
+  shop preview, ball cap and time-to-afford hints.
 - Shipped #59: `GameEffects.showFloatingText` takes `'damage' | 'coin'`,
   colours by kind, `MAX_ACTIVE_FLOATING_TEXTS = 8`, coin popups replace the
   oldest damage popup at the cap, and positions get ±6/±4 px jitter.

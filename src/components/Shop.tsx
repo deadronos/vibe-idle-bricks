@@ -1,5 +1,5 @@
 import { useState, useId } from 'react';
-import { useGameStore } from '../store';
+import { planMaxUpgrade, useGameStore } from '../store';
 import { type BallType, BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeMultiplier, MAX_BALLS, MAX_SPEED_UPGRADE, MAX_PRESTIGE_LEVEL, UPGRADE_MULTIPLIER } from '../types';
 import { formatMultiplier, formatNumber } from '../utils';
 import { ShoppingCart, Zap, Crosshair, Bomb, Circle, Hexagon, Star, ArrowUpCircle, Coins, TrendingUp } from 'lucide-react';
@@ -25,6 +25,14 @@ const effectText = (level: number, maxed = false): string => {
   const current = formatMultiplier(1 + level * UPGRADE_MULTIPLIER);
   if (maxed) return `Max: ×${current}`;
   return `×${current} → ×${formatMultiplier(1 + (level + 1) * UPGRADE_MULTIPLIER)}`;
+};
+
+/** Short estimate for "time until affordable"; empty when income is zero. */
+const formatEta = (seconds: number): string => {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '';
+  if (seconds < 60) return `~${Math.ceil(seconds)}s`;
+  if (seconds < 3600) return `~${Math.ceil(seconds / 60)}m`;
+  return `~${(seconds / 3600).toFixed(1)}h`;
 };
 
 const TABS = [
@@ -83,6 +91,7 @@ export function Shop() {
   };
 
   const prestigeMult = getPrestigeMultiplier(prestigeLevel);
+  const incomePerSecond = useGameStore.getState().getIncomePerSecond();
   const nextPrestigeMult = getPrestigeMultiplier(prestigeLevel + 1);
   const canDoPrestige = canPrestige();
   const isMaxPrestige = prestigeLevel >= MAX_PRESTIGE_LEVEL;
@@ -153,6 +162,7 @@ export function Shop() {
               cost={upgradeCosts.speed}
               coins={coins}
               level={upgrades.speed}
+              incomePerSecond={incomePerSecond}
               onBuy={() => buyUpgrade('speed')}
               onBuyMax={() => buyMaxUpgrade('speed')}
               isMaxed={upgrades.speed >= MAX_SPEED_UPGRADE}
@@ -165,6 +175,7 @@ export function Shop() {
               cost={upgradeCosts.damage}
               coins={coins}
               level={upgrades.damage}
+              incomePerSecond={incomePerSecond}
               onBuy={() => buyUpgrade('damage')}
               onBuyMax={() => buyMaxUpgrade('damage')}
             />
@@ -176,6 +187,7 @@ export function Shop() {
               cost={upgradeCosts.coinMult}
               coins={coins}
               level={upgrades.coinMult}
+              incomePerSecond={incomePerSecond}
               onBuy={() => buyUpgrade('coinMult')}
               onBuyMax={() => buyMaxUpgrade('coinMult')}
             />
@@ -247,6 +259,8 @@ interface UpgradeButtonProps {
   coins: import('break_infinity.js').default;
   /** Current level of the upgrade. */
   level: number;
+  /** Nominal coins per second, used for the time-to-afford hint. */
+  incomePerSecond: import('break_infinity.js').default;
   /** Callback to trigger purchase. */
   onBuy: () => void;
   /** Callback to trigger "buy max" purchase. */
@@ -255,8 +269,15 @@ interface UpgradeButtonProps {
   isMaxed?: boolean;
 }
 
-function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBuy, onBuyMax, isMaxed }: UpgradeButtonProps) {
+function UpgradeButton({ type, name, icon: Icon, description, cost, coins, level, incomePerSecond, onBuy, onBuyMax, isMaxed }: UpgradeButtonProps) {
   const canAfford = coins.gte(cost) && !isMaxed;
+  const plan = planMaxUpgrade(type, level, cost, coins);
+  const maxPreview = isMaxed
+    ? null
+    : plan.levels > 0
+      ? `Max +${plan.levels} → Lv.${level + plan.levels} · ${formatNumber(plan.totalCost)} coins`
+      : `Need ${formatNumber(cost.sub(coins))} more coins` +
+        (incomePerSecond.gt(0) ? ` (${formatEta(cost.sub(coins).div(incomePerSecond).toNumber())})` : '');
 
   return (
     <div className={`shop-item upgrade-item ${canAfford ? 'affordable' : ''}`}>
@@ -267,6 +288,7 @@ function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBu
         </span>
         <span className="item-cost">{isMaxed ? 'MAX' : formatNumber(cost)}</span> {isMaxed ? '' : 'coins'}
         <div className="item-desc">{description}</div>
+        {maxPreview && <div className="item-desc upgrade-preview">{maxPreview}</div>}
       </div>
       <div className="upgrade-actions">
         <button className="buy-btn" disabled={!canAfford} onClick={onBuy}>Buy</button>
