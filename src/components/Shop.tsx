@@ -187,7 +187,7 @@ export function Shop() {
         <div className="shop-section" role="tabpanel" id={`${shopId}-panel-prestige`} aria-labelledby={`${shopId}-tab-prestige`}>
           <h3>Prestige</h3>
           <button
-            className={`shop-item prestige-btn ${canDoPrestige ? 'affordable' : ''}`}
+            className={`shop-item prestige-btn ${canDoPrestige && !isMaxPrestige ? 'affordable' : ''}`}
             disabled={!canDoPrestige || isMaxPrestige}
             onClick={handlePrestige}
           >

@@ -7,7 +7,7 @@ vi.mock('phaser', () => ({
 
 import { describe, it, expect } from 'vitest';
 import { BrickManager } from '../../src/game/BrickManager';
-import { BRICK_WIDTH, BRICK_HEIGHT, BRICK_PADDING } from '../../src/game/constants';
+import { BRICK_WIDTH, BRICK_HEIGHT, BRICK_PADDING, MAX_ROWS_FILL_FACTOR } from '../../src/game/constants';
 
 function createMockScene(width: number, height: number) {
   return {
@@ -68,7 +68,8 @@ describe('BrickManager', () => {
     it('returns empty array when screen is already full', () => {
       const manager = new BrickManager(createMockScene(200, 200));
       const cols = Math.floor((200 - 40) / (BRICK_WIDTH + BRICK_PADDING));
-      const maxRows = Math.floor((200 * 0.5 - 20) / (BRICK_HEIGHT + BRICK_PADDING));
+      const offsetTop = Math.max(20, 200 * 0.2);
+      const maxRows = Math.floor((200 * MAX_ROWS_FILL_FACTOR - offsetTop) / (BRICK_HEIGHT + BRICK_PADDING));
       const fullBricks = manager.generateBricks(cols * maxRows, 1);
 
       const added = manager.addBricksToFillScreen(fullBricks, 1);

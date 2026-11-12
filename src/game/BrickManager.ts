@@ -20,8 +20,15 @@ export class BrickManager {
   }
 
   private get offsetTop() {
-    // Centres the field between the top edge and the launch zone.
+    // Leaves the top edge and launch zone visually clear.
     return Math.max(20, this.scene.cameras.main.height * 0.2);
+  }
+
+  /** Rows that fit between offsetTop and the bottom fill limit. */
+  private get maxRows() {
+    const { height } = this.scene.cameras.main;
+    const fillHeight = height * MAX_ROWS_FILL_FACTOR;
+    return Math.max(1, Math.floor((fillHeight - this.offsetTop) / (BRICK_HEIGHT + BRICK_PADDING)));
   }
 
   private get offsetLeft() {
@@ -61,7 +68,7 @@ export class BrickManager {
     const cols = Math.floor(
       (width - this.offsetLeft * 2) / (BRICK_WIDTH + BRICK_PADDING)
     );
-    const rows = Math.ceil(count / cols);
+    const rows = Math.min(Math.ceil(count / cols), this.maxRows);
 
     let created = 0;
 
@@ -82,13 +89,11 @@ export class BrickManager {
    * Adds new bricks to fill available space on the screen.
    */
   addBricksToFillScreen(currentBricks: BrickData[], baseTier: number): BrickData[] {
-    const { width, height } = this.scene.cameras.main;
+    const { width } = this.scene.cameras.main;
     const cols = Math.floor(
       (width - this.offsetLeft * 2) / (BRICK_WIDTH + BRICK_PADDING)
     );
-    const maxRows = Math.floor(
-      (height * MAX_ROWS_FILL_FACTOR - this.offsetTop) / (BRICK_HEIGHT + BRICK_PADDING)
-    );
+    const maxRows = this.maxRows;
     const maxBricks = cols * maxRows;
 
     const bricksToAdd = Math.min(maxBricks - currentBricks.length, cols);

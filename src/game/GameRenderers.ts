@@ -226,8 +226,9 @@ export class BrickRenderer extends BaseRenderer<BrickData> {
       return;
     }
 
+    const color = isHitFlash ? '#0f172a' : this.getTextColor(brick.tier);
     text.setText(brick.tier.toString());
-    text.setColor(isHitFlash ? '#0f172a' : this.getTextColor(brick.tier));
+    if (text.style.color !== color) text.setColor(color);
   }
 
   private getTextColor(tier: number) {

@@ -16,15 +16,9 @@ TASK009 (Suggestion Set) is **complete** and merged to `main` (merge `20505e0`).
   `drawBackground()` adds a floor strip, launch-zone band and side walls;
   `BrickManager.offsetTop` is 20% of height; prestige shows
   `current / threshold bricks this run` and disables at `MAX_PRESTIGE_LEVEL`.
-- Shipped reliability PR #94 (merged `b857249`): catch-up clamp
-  `FIXED_STEP * MAX_CATCH_UP_STEPS = 5`, 24h `MAX_OFFLINE_SECONDS` cap and
-  `over 24h (max)` toast. 338 tests.
-
-- Shipped reliability batch PR #94: `clampAccumulator` in
-  `src/game/constants.ts` (max `FIXED_STEP * 5` per frame), `MAX_OFFLINE_SECONDS
-  = 24h` in `src/store/earnings.ts`, welcome-back message now reads
-  `... coins over 24h.`; new `tests/game/constants.test.ts`, cap and duration
-  tests in `tests/store/earnings.test.ts`; 336 tests green.
+- Shipped reliability PR #94 (merged `b857249`): `clampAccumulator` caps a
+  stalled frame at `FIXED_STEP * 5`, `MAX_OFFLINE_SECONDS = 24h` caps idle
+  income, and the toast reports `over 24h (max)`. 338 tests.
 - Shipped PR #93 (merged `d337e7e`): upgrades start at 50/75/100, grow ×1.10
   (balls stay ×1.15), new games start with 35 coins, upgrade rows show their
   total effect (`×1 → ×1.1`, `Max: ×6`); costs are rebuilt from the parsed

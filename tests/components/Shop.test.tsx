@@ -5,7 +5,7 @@ import Decimal from 'break_infinity.js'
 import { Shop } from '../../src/components/Shop'
 import { ToastProvider } from '../../src/components/Toast'
 import { useGameStore } from '../../src/store/gameStore'
-import { BALL_TYPES, PRESTIGE_THRESHOLD } from '../../src/types/game'
+import { BALL_TYPES, MAX_PRESTIGE_LEVEL, PRESTIGE_THRESHOLD } from '../../src/types/game'
 
 /** Renders Shop inside the required ToastProvider. */
 const renderShop = () =>
@@ -257,7 +257,7 @@ describe('Shop', () => {
     it('should disable prestige at max level even with enough bricks', async () => {
       useGameStore.setState({
         bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
-        prestigeLevel: 100,
+        prestigeLevel: MAX_PRESTIGE_LEVEL,
       })
       renderShop()
       const user = userEvent.setup()
