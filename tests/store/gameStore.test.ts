@@ -691,6 +691,33 @@ describe('gameStore', () => {
       expect(useGameStore.getState().coins.gt(1000)).toBe(true)
     })
 
+    it('should not re-apply offline earnings when load runs twice', () => {
+      const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
+      const saveData = {
+        coins: '1000',
+        bricksBroken: '100',
+        totalBricksBroken: '0',
+        prestigeLevel: 0,
+        upgrades: { speed: 0, damage: 0, coinMult: 2 },
+        ballCosts: {},
+        upgradeCosts: {},
+        currentTier: 1,
+        balls: ['basic', 'basic', 'basic'],
+        timestamp: fiveMinutesAgo,
+      }
+      localStorageMock._setStore({ idleBricksSave: JSON.stringify(saveData) })
+
+      useGameStore.getState().load()
+      const coinsAfterFirstLoad = useGameStore.getState().coins
+      expect(coinsAfterFirstLoad.gt(1000)).toBe(true)
+
+      useGameStore.getState().load()
+
+      expect(useGameStore.getState().coins.eq(coinsAfterFirstLoad)).toBe(true)
+      const persisted = JSON.parse(localStorageMock.getItem('idleBricksSave') as string)
+      expect(persisted.timestamp).toBeGreaterThan(fiveMinutesAgo)
+    })
+
     it('should handle corrupted save data gracefully', () => {
       localStorageMock._setStore({ idleBricksSave: 'not valid json {{{' })
       

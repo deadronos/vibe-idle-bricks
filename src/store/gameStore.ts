@@ -841,6 +841,10 @@ export const useGameStore = create<GameStore>()(
             }
           }
         }
+
+        // Persist immediately so a repeated load (StrictMode, second owner)
+        // cannot re-apply the same offline earnings.
+        get().save();
       } catch (e) {
         console.error('Failed to load save:', e);
       }

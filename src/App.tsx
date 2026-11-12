@@ -84,6 +84,10 @@ function GameLoadingFallback() {
   );
 }
 
+// Module-level guard: StrictMode remounts effects in dev and the Phaser scene
+// must not load the save a second time.
+let hasLoadedSave = false;
+
 /**
  * Inner app wrapper that runs the load-on-mount effect and shows an offline
  * earnings toast, now that it has access to the ToastProvider context.
@@ -113,8 +117,10 @@ function GameApp() {
   useAchievementToasts();
 
   useEffect(() => {
+    if (hasLoadedSave) return;
+    hasLoadedSave = true;
     load();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [load]);
 
   // Surface the offline-earnings message as a toast once it is set by load().
   useEffect(() => {
