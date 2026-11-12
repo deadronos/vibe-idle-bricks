@@ -7,6 +7,8 @@ import {
   BRICK_HEIGHT,
   BRICK_PADDING,
   MAX_ROWS_FILL_FACTOR,
+  ARENA_FLOOR_HEIGHT,
+  getSpawnZoneHeight,
 } from './constants';
 
 /**
@@ -20,7 +22,32 @@ export class BrickManager {
   }
 
   private get offsetTop() {
-    return Math.max(20, this.scene.cameras.main.height * 0.1);
+    // Leaves the top edge and launch zone visually clear.
+    return Math.max(20, this.scene.cameras.main.height * 0.2);
+  }
+
+  /** Lowest brick row stays above the floor and launch zone. */
+  private get fillBottom() {
+    const { height } = this.scene.cameras.main;
+    const spawnTop = height - ARENA_FLOOR_HEIGHT - getSpawnZoneHeight(height);
+    return Math.min(height * MAX_ROWS_FILL_FACTOR, spawnTop);
+  }
+
+  /** Rows that fit between offsetTop and the bottom fill limit. */
+  private get maxRows() {
+    return Math.max(
+      0,
+      Math.floor((this.fillBottom - this.offsetTop) / (BRICK_HEIGHT + BRICK_PADDING))
+    );
+  }
+
+  /** Maximum bricks the current viewport can hold. */
+  getCapacity(): number {
+    const { width } = this.scene.cameras.main;
+    const cols = Math.floor(
+      (width - this.offsetLeft * 2) / (BRICK_WIDTH + BRICK_PADDING)
+    );
+    return Math.max(0, cols * this.maxRows);
   }
 
   private get offsetLeft() {
@@ -60,7 +87,7 @@ export class BrickManager {
     const cols = Math.floor(
       (width - this.offsetLeft * 2) / (BRICK_WIDTH + BRICK_PADDING)
     );
-    const rows = Math.ceil(count / cols);
+    const rows = Math.min(Math.ceil(count / cols), this.maxRows);
 
     let created = 0;
 
@@ -81,13 +108,11 @@ export class BrickManager {
    * Adds new bricks to fill available space on the screen.
    */
   addBricksToFillScreen(currentBricks: BrickData[], baseTier: number): BrickData[] {
-    const { width, height } = this.scene.cameras.main;
+    const { width } = this.scene.cameras.main;
     const cols = Math.floor(
       (width - this.offsetLeft * 2) / (BRICK_WIDTH + BRICK_PADDING)
     );
-    const maxRows = Math.floor(
-      (height * MAX_ROWS_FILL_FACTOR - this.offsetTop) / (BRICK_HEIGHT + BRICK_PADDING)
-    );
+    const maxRows = this.maxRows;
     const maxBricks = cols * maxRows;
 
     const bricksToAdd = Math.min(maxBricks - currentBricks.length, cols);

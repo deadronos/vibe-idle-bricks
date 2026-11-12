@@ -2,19 +2,23 @@
 
 ## Current Work Focus
 
-PR #94 (fix/accumulator-offline-cap) is **in flight**: clamped the Phaser
-fixed-step accumulator to 5 catch-up steps per frame (#75) and capped offline
-earnings at 24 hours with the credited duration in the toast (#77).
+PR #95 (visuals/brick-health-board) is **in flight**: brick HP bars and
+contrast-correct tier numbers (#58), an arena floor plus launch zone so the
+lower canvas reads as play space (#57), and a disabled max-level prestige
+button with run progress (#69).
 
 TASK009 (Suggestion Set) is **complete** and merged to `main` (merge `20505e0`).
 
 ## Recent Changes
 
-- Shipped reliability batch PR #94: `clampAccumulator` in
-  `src/game/constants.ts` (max `FIXED_STEP * 5` per frame), `MAX_OFFLINE_SECONDS
-  = 24h` in `src/store/earnings.ts`, welcome-back message now reads
-  `... coins over 24h.`; new `tests/game/constants.test.ts`, cap and duration
-  tests in `tests/store/earnings.test.ts`; 336 tests green.
+- Shipped visuals batch PR #95: `getContrastTextColor()` picks near-black or
+  white from WCAG luminance; damaged bricks draw a green/yellow/red HP bar;
+  `drawBackground()` adds a floor strip, launch-zone band and side walls;
+  `BrickManager.offsetTop` is 20% of height; prestige shows
+  `current / threshold bricks this run` and disables at `MAX_PRESTIGE_LEVEL`.
+- Shipped reliability PR #94 (merged `b857249`): `clampAccumulator` caps a
+  stalled frame at `FIXED_STEP * 5`, `MAX_OFFLINE_SECONDS = 24h` caps idle
+  income, and the toast reports `over 24h (max)`. 338 tests.
 - Shipped PR #93 (merged `d337e7e`): upgrades start at 50/75/100, grow ×1.10
   (balls stay ×1.15), new games start with 35 coins, upgrade rows show their
   total effect (`×1 → ×1.1`, `Max: ×6`); costs are rebuilt from the parsed

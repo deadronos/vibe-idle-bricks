@@ -60,6 +60,25 @@ export const adjustBrightness = (hex: string, percent: number): string => {
   return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
 };
 
+/**
+ * Returns near-black or white, whichever reads better on `hex`.
+ *
+ * Uses WCAG relative luminance; the 0.179 cut-off is where both choices have
+ * equal contrast.
+ */
+export const getContrastTextColor = (hex: string): string => {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const linear = (value: number) => {
+    const channel = value / 255;
+    return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+  };
+  const luminance =
+    0.2126 * linear((num >> 16) & 0xff) +
+    0.7152 * linear((num >> 8) & 0xff) +
+    0.0722 * linear(num & 0xff);
+  return luminance > 0.179 ? '#0f172a' : '#ffffff';
+};
+
 export const getTierColor = (tier: number): string => {
   const colors = [
     '#4ade80', // Green - Tier 1

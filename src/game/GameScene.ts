@@ -12,6 +12,8 @@ import { SpatialGrid } from './SpatialGrid';
 import {
   BALL_RADIUS,
   FIXED_STEP,
+  ARENA_FLOOR_HEIGHT,
+  getSpawnZoneHeight,
   clampAccumulator,
   clampFrameDelta,
   MIN_BRICKS_ON_SCREEN,
@@ -130,6 +132,31 @@ export class GameScene extends Phaser.Scene {
       this.backgroundGraphics.lineTo(width, y);
       this.backgroundGraphics.strokePath();
     }
+
+    // Frame the arena so the lower half reads as play space, not empty canvas.
+    const floorY = height - ARENA_FLOOR_HEIGHT;
+    this.backgroundGraphics.fillStyle(0x1e293b, 0.9);
+    this.backgroundGraphics.fillRect(0, floorY, width, ARENA_FLOOR_HEIGHT);
+    this.backgroundGraphics.lineStyle(2, 0x38bdf8, 0.45);
+    this.backgroundGraphics.lineBetween(0, floorY, width, floorY);
+
+    this.backgroundGraphics.lineStyle(2, 0x38bdf8, 0.12);
+    this.backgroundGraphics.lineBetween(1, 0, 1, floorY);
+    this.backgroundGraphics.lineBetween(width - 1, 0, width - 1, floorY);
+
+    // Launch zone: gives the otherwise empty lower half a purpose.
+    const spawnZoneHeight = getSpawnZoneHeight(height);
+    const spawnY = floorY - spawnZoneHeight;
+    this.backgroundGraphics.fillStyle(0x38bdf8, 0.06);
+    this.backgroundGraphics.fillRect(0, spawnY, width, spawnZoneHeight);
+    this.backgroundGraphics.lineStyle(1, 0x38bdf8, 0.25);
+    for (let x = 8; x < width; x += 20) {
+      this.backgroundGraphics.lineBetween(x, spawnY, Math.min(x + 12, width), spawnY);
+    }
+    this.backgroundGraphics.lineStyle(2, 0x38bdf8, 0.2);
+    for (let i = 1; i <= 3; i++) {
+      this.backgroundGraphics.strokeCircle((width * i) / 4, spawnY + spawnZoneHeight / 2, 7);
+    }
   }
 
   /**
@@ -153,7 +180,8 @@ export class GameScene extends Phaser.Scene {
     useGameStore.getState().updateExplosions(frameDelta);
 
     const stateAfterSimulation = useGameStore.getState();
-    if (stateAfterSimulation.bricks.length < MIN_BRICKS_ON_SCREEN) {
+    const refillTarget = Math.min(MIN_BRICKS_ON_SCREEN, this.brickManager.getCapacity());
+    if (stateAfterSimulation.bricks.length < refillTarget) {
       const newBricks = this.brickManager.addBricksToFillScreen(
         stateAfterSimulation.bricks,
         stateAfterSimulation.currentTier

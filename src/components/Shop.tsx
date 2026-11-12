@@ -1,6 +1,6 @@
 import { useState, useId } from 'react';
 import { useGameStore } from '../store';
-import { type BallType, BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeMultiplier, MAX_BALLS, MAX_SPEED_UPGRADE, UPGRADE_MULTIPLIER } from '../types';
+import { type BallType, BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeMultiplier, MAX_BALLS, MAX_SPEED_UPGRADE, MAX_PRESTIGE_LEVEL, UPGRADE_MULTIPLIER } from '../types';
 import { formatMultiplier, formatNumber } from '../utils';
 import { ShoppingCart, Zap, Crosshair, Bomb, Circle, Hexagon, Star, ArrowUpCircle, Coins, TrendingUp } from 'lucide-react';
 import { Modal } from './Modal';
@@ -85,6 +85,7 @@ export function Shop() {
   const prestigeMult = getPrestigeMultiplier(prestigeLevel);
   const nextPrestigeMult = getPrestigeMultiplier(prestigeLevel + 1);
   const canDoPrestige = canPrestige();
+  const isMaxPrestige = prestigeLevel >= MAX_PRESTIGE_LEVEL;
   const bricksNeeded = Math.max(0, PRESTIGE_THRESHOLD - bricksBroken.toNumber());
 
   return (
@@ -186,17 +187,24 @@ export function Shop() {
         <div className="shop-section" role="tabpanel" id={`${shopId}-panel-prestige`} aria-labelledby={`${shopId}-tab-prestige`}>
           <h3>Prestige</h3>
           <button
-            className={`shop-item prestige-btn ${canDoPrestige ? 'affordable' : ''}`}
-            disabled={!canDoPrestige}
+            className={`shop-item prestige-btn ${canDoPrestige && !isMaxPrestige ? 'affordable' : ''}`}
+            disabled={!canDoPrestige || isMaxPrestige}
             onClick={handlePrestige}
           >
             <span className="item-name"><TrendingUp size={16} className="inline-block mr-2" aria-hidden="true" /> Prestige</span>
             <span className="item-desc">Reset for permanent bonuses</span>
             <span className="item-desc">
-              {canDoPrestige
-                ? `Next: ×${formatMultiplier(nextPrestigeMult)} damage & coins (Current: ×${formatMultiplier(prestigeMult)})`
-                : `Break ${formatNumber(bricksNeeded)} more bricks`}
+              {isMaxPrestige
+                ? `Max level — ×${formatMultiplier(prestigeMult)} damage & coins`
+                : canDoPrestige
+                  ? `Next: ×${formatMultiplier(nextPrestigeMult)} damage & coins (Current: ×${formatMultiplier(prestigeMult)})`
+                  : `Break ${formatNumber(bricksNeeded)} more bricks`}
             </span>
+            {!isMaxPrestige && (
+              <span className="item-desc">
+                {formatNumber(bricksBroken)} / {formatNumber(PRESTIGE_THRESHOLD)} bricks this run
+              </span>
+            )}
           </button>
         </div>
       )}

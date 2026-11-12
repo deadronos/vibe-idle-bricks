@@ -2,7 +2,12 @@ import * as Phaser from 'phaser';
 import { BALL_TYPES } from '../types';
 import { HIT_FLASH_DURATION_MS } from './constants';
 import type { BallData, BallType, BrickData } from '../types';
-import { adjustBrightness, getAccessibleTierColor, type ColorblindMode } from '../utils';
+import {
+  adjustBrightness,
+  getAccessibleTierColor,
+  getContrastTextColor,
+  type ColorblindMode,
+} from '../utils';
 import { getParsedColor } from './color';
 import { useSettingsStore } from '../store/settingsStore';
 
@@ -142,7 +147,7 @@ export class BrickRenderer extends BaseRenderer<BrickData> {
         this.flashingBrickIds.delete(brick.id);
       }
 
-      this.syncBrickText(brick);
+      this.syncBrickText(brick, isHitFlash);
     }
 
     this.pruneUnusedGraphics();
@@ -179,12 +184,22 @@ export class BrickRenderer extends BaseRenderer<BrickData> {
     graphics.strokeRect(brick.x, brick.y, brick.width, brick.height);
 
     if (healthPercent < 1 && !isHitFlash) {
-      graphics.fillStyle(0x000000, 0.5 * (1 - healthPercent));
+      graphics.fillStyle(0x000000, 0.4 * (1 - healthPercent));
       graphics.fillRect(brick.x, brick.y, brick.width, brick.height);
+
+      // A thin bar reads better than dimming alone when a brick has many hits.
+      const barX = brick.x + 3;
+      const barY = brick.y + brick.height - 5;
+      const barWidth = brick.width - 6;
+      const barColor = healthPercent > 0.5 ? 0x4ade80 : healthPercent > 0.25 ? 0xfacc15 : 0xef4444;
+      graphics.fillStyle(0x000000, 0.55);
+      graphics.fillRect(barX, barY, barWidth, 3);
+      graphics.fillStyle(barColor, 1);
+      graphics.fillRect(barX, barY, Math.max(1, barWidth * healthPercent), 3);
     }
   }
 
-  private syncBrickText(brick: BrickData) {
+  private syncBrickText(brick: BrickData, isHitFlash: boolean) {
     if (brick.tier <= 1) {
       const text = this.textById.get(brick.id);
       if (text) {
@@ -203,7 +218,7 @@ export class BrickRenderer extends BaseRenderer<BrickData> {
         {
           fontSize: '12px',
           fontStyle: 'bold',
-          color: '#ffffff',
+          color: isHitFlash ? '#0f172a' : this.getTextColor(brick.tier),
         }
       );
       text.setOrigin(0.5);
@@ -211,7 +226,14 @@ export class BrickRenderer extends BaseRenderer<BrickData> {
       return;
     }
 
+    const color = isHitFlash ? '#0f172a' : this.getTextColor(brick.tier);
     text.setText(brick.tier.toString());
+    if (text.style.color !== color) text.setColor(color);
+  }
+
+  private getTextColor(tier: number) {
+    const mode: ColorblindMode = useSettingsStore.getState().colorblindMode;
+    return getContrastTextColor(getAccessibleTierColor(tier, mode));
   }
 
   private getFillColor(tier: number) {
