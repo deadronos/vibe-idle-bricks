@@ -57,8 +57,10 @@ export const calculateOfflineEarnings = (
     return { coins: new Decimal(0), message: null };
   }
 
+  const capped = offlineSeconds > MAX_OFFLINE_SECONDS ? ' (max)' : '';
+
   return {
     coins: offlineCoins,
-    message: `Welcome back! You earned ${formatNumber(offlineCoins)} coins over ${formatElapsed(safeOfflineSeconds)}.`,
+    message: `Welcome back! You earned ${formatNumber(offlineCoins)} coins over ${formatElapsed(safeOfflineSeconds)}${capped}.`,
   };
 };

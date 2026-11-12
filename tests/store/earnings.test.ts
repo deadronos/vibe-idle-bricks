@@ -35,7 +35,7 @@ describe('calculateOfflineEarnings', () => {
     const afterCap = calculateOfflineEarnings(...args, MAX_OFFLINE_SECONDS * 10)
 
     expect(afterCap.coins.eq(atCap.coins)).toBe(true)
-    expect(afterCap.message).toContain('24h')
+    expect(afterCap.message).toContain('24h (max)')
   })
 
   it('should state the credited duration in the welcome-back message', () => {
@@ -50,6 +50,15 @@ describe('calculateOfflineEarnings', () => {
     )
 
     expect(result.message).toContain('over 2h 5m')
+  })
+
+  it('should format short and whole-hour absences', () => {
+    const args: [BallData[], number, number, number, number, number] = [
+      [createBall('basic')], 1, 1, 1, 0, 1,
+    ]
+
+    expect(calculateOfflineEarnings(...args, 90).message).toContain('over 1m')
+    expect(calculateOfflineEarnings(...args, 3 * 3600).message).toContain('over 3h')
   })
 
   it('should count prestige damage and coins while bricks take multiple hits', () => {

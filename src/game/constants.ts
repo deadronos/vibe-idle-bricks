@@ -9,6 +9,10 @@ export const FIXED_STEP = 8;
 export const MAX_CATCH_UP_STEPS = 5;
 export const BALL_RADIUS = 8;
 
+/** Frame time a single frame may simulate, even after a long stall. */
+export const clampFrameDelta = (delta: number): number =>
+  Math.min(delta, FIXED_STEP * MAX_CATCH_UP_STEPS);
+
 /** Adds frame time to the fixed-step accumulator without hoarding stalled time. */
 export const clampAccumulator = (accumulator: number, delta: number): number =>
   Math.min(accumulator + delta, FIXED_STEP * MAX_CATCH_UP_STEPS);
