@@ -2,15 +2,31 @@
 
 ## Current Work Focus
 
-TASK010 (Latest Dependency Upgrade) is **in flight** on branch
-`chore/deps-upgrade-latest`. All runtime and dev dependencies were bumped to
-their latest releases; TypeScript is held at 6.0.3 because `typescript-eslint`
-does not yet support TypeScript 7. No application code changes were needed and
-all validation gates are green. Awaiting PR review.
+PR #94 (fix/accumulator-offline-cap) is **in flight**: clamped the Phaser
+fixed-step accumulator to 5 catch-up steps per frame (#75) and capped offline
+earnings at 24 hours with the credited duration in the toast (#77).
 
 TASK009 (Suggestion Set) is **complete** and merged to `main` (merge `20505e0`).
 
 ## Recent Changes
+
+- Shipped reliability batch PR #94: `clampAccumulator` in
+  `src/game/constants.ts` (max `FIXED_STEP * 5` per frame), `MAX_OFFLINE_SECONDS
+  = 24h` in `src/store/earnings.ts`, welcome-back message now reads
+  `... coins over 24h.`; new `tests/game/constants.test.ts`, cap and duration
+  tests in `tests/store/earnings.test.ts`; 336 tests green.
+- Shipped PR #93 (merged `d337e7e`): upgrades start at 50/75/100, grow ×1.10
+  (balls stay ×1.15), new games start with 35 coins, upgrade rows show their
+  total effect (`×1 → ×1.1`, `Max: ×6`); costs are rebuilt from the parsed
+  level on load and one `calculateUpgradeCost` serves buying and loading.
+  Design: `memory/designs/DESIGN008-upgrade-curves-and-early-pacing.md`.
+- Shipped PR #92 (merged `0ce6e88`, release v0.0.11): brick value
+  `floor(tier^1.6)`, health `3*(1+0.25*(tier-1))`, prestige ×1.75 with a fixed
+  10,000-brick goal, upgrades kept across prestige. Design:
+  `memory/designs/DESIGN007-tier-and-prestige-balance.md`.
+- Shipped PRs #88/#90/#91: hit-flash clock, canvas aspect, Stats formatting,
+  modal cancel, load-once guard, toast queue, save-on-load, and the mobile
+  layout (responsive CSS must stay last in `src/App.css`).
 
 - Completed TASK010 dependency upgrade to latest (branch `chore/deps-upgrade-latest`):
   - bumped all runtime and dev dependencies to their latest releases: react/react-dom 19.3.0, phaser 4.2.1, zustand 5.0.15, lucide-react 1.48.0, vite 8.3.1, vitest/@vitest/* 5.0.2, eslint 10.11.0, jsdom 30.1.1, @testing-library/jest-dom 7.0.1, @types/node 26.6.3, typescript-eslint 8.70.1

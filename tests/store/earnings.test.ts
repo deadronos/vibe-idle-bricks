@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateOfflineEarnings } from '../../src/store/earnings'
+import { calculateOfflineEarnings, MAX_OFFLINE_SECONDS } from '../../src/store/earnings'
 import type { BallData } from '../../src/types'
 
 const createBall = (type: BallData['type']): BallData => ({
@@ -25,6 +25,31 @@ describe('calculateOfflineEarnings', () => {
 
     expect(result.coins.eq(0)).toBe(true)
     expect(result.message).toBeNull()
+  })
+
+  it('should stop earning after the offline cap', () => {
+    const args: [BallData[], number, number, number, number, number] = [
+      [createBall('basic')], 1, 1, 1, 0, 1,
+    ]
+    const atCap = calculateOfflineEarnings(...args, MAX_OFFLINE_SECONDS)
+    const afterCap = calculateOfflineEarnings(...args, MAX_OFFLINE_SECONDS * 10)
+
+    expect(afterCap.coins.eq(atCap.coins)).toBe(true)
+    expect(afterCap.message).toContain('24h')
+  })
+
+  it('should state the credited duration in the welcome-back message', () => {
+    const result = calculateOfflineEarnings(
+      [createBall('basic')],
+      1,
+      1,
+      1,
+      0,
+      1,
+      2 * 3600 + 5 * 60
+    )
+
+    expect(result.message).toContain('over 2h 5m')
   })
 
   it('should count prestige damage and coins while bricks take multiple hits', () => {

@@ -4,6 +4,17 @@ import { OFFLINE_EARNINGS_CONSTANT } from '../game/constants';
 import { formatNumber } from '../utils';
 import type { BallData } from '../types';
 
+/** Offline income stops after this much time away. */
+export const MAX_OFFLINE_SECONDS = 24 * 60 * 60;
+
+const formatElapsed = (seconds: number): string => {
+  const totalMinutes = Math.floor(seconds / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${totalMinutes}m`;
+  return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
+};
+
 export interface OfflineEarningsResult {
   coins: Decimal;
   message: string | null;
@@ -18,7 +29,7 @@ export const calculateOfflineEarnings = (
   currentTier: number,
   offlineSeconds: number
 ): OfflineEarningsResult => {
-  const safeOfflineSeconds = Math.max(0, offlineSeconds);
+  const safeOfflineSeconds = Math.min(Math.max(0, offlineSeconds), MAX_OFFLINE_SECONDS);
   const prestigeBonus = getPrestigeMultiplier(prestigeLevel);
   const { maxHealth, value } = calculateBrickStats(currentTier);
 
@@ -48,6 +59,6 @@ export const calculateOfflineEarnings = (
 
   return {
     coins: offlineCoins,
-    message: `Welcome back! You earned ${formatNumber(offlineCoins)} coins while away.`,
+    message: `Welcome back! You earned ${formatNumber(offlineCoins)} coins over ${formatElapsed(safeOfflineSeconds)}.`,
   };
 };

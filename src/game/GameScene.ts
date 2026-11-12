@@ -12,6 +12,7 @@ import { SpatialGrid } from './SpatialGrid';
 import {
   BALL_RADIUS,
   FIXED_STEP,
+  clampAccumulator,
   MIN_BRICKS_ON_SCREEN,
   EXPLOSION_DAMAGE_MULTIPLIER,
   EXPLOSION_HIT_PARTICLE_COUNT,
@@ -140,7 +141,7 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    this.physicsAccumulator += delta;
+    this.physicsAccumulator = clampAccumulator(this.physicsAccumulator, delta);
     while (this.physicsAccumulator >= FIXED_STEP) {
       this.updateBalls(FIXED_STEP);
       this.physicsAccumulator -= FIXED_STEP;
