@@ -120,10 +120,13 @@ export class BrickRenderer extends BaseRenderer<BrickData> {
       this.seenAtFrame.set(brick.id, this.frame);
 
       const previousBrick = this.renderedBrickRefs.get(brick.id);
-      const hitAge = now - (brick.lastHitTime || 0);
+      const hitAge = now - (brick.lastHitTime ?? 0);
       // A negative age means the timestamp came from another clock (e.g. Date.now);
       // treating it as a hit would keep the brick white forever.
-      const isHitFlash = hitAge >= 0 && hitAge < HIT_FLASH_DURATION_MS;
+      const isHitFlash =
+        brick.lastHitTime !== undefined &&
+        hitAge >= 0 &&
+        hitAge < HIT_FLASH_DURATION_MS;
       const wasHitFlash = this.flashingBrickIds.has(brick.id);
 
       // Redraw while flashing and once more when the flash expires, otherwise

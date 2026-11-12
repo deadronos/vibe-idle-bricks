@@ -83,6 +83,14 @@ describe('BrickRenderer hit flash', () => {
     expect(flashedWhite(graphics)).toBe(false);
   });
 
+  it('does not flash an unhit brick', () => {
+    const { renderer, graphics } = createRenderer();
+
+    renderer.render([makeBrick()]);
+
+    expect(flashedWhite(graphics)).toBe(false);
+  });
+
   it('does not flash for timestamps from a different clock', () => {
     const { renderer, graphics } = createRenderer();
 

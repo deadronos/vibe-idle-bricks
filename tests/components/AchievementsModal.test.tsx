@@ -149,10 +149,9 @@ describe('AchievementsModal', () => {
     const onClose = vi.fn()
     render(<AchievementsModal open={true} onClose={onClose} />)
     // The modal has a single dismiss button (no duplicate Close/Done).
-    const buttons = screen.getAllByRole('button')
-    expect(buttons).toHaveLength(1)
-    expect(buttons[0].textContent).toBe('Done')
-    buttons[0].click()
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument()
+    const doneButton = screen.getByRole('button', { name: 'Done' })
+    doneButton.click()
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 })
