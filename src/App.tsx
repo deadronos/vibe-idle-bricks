@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Component } from 'react';
 import { Footer } from './components/Footer';
@@ -84,10 +84,6 @@ function GameLoadingFallback() {
   );
 }
 
-// Module-level guard: StrictMode remounts effects in dev and the Phaser scene
-// must not load the save a second time.
-let hasLoadedSave = false;
-
 /**
  * Inner app wrapper that runs the load-on-mount effect and shows an offline
  * earnings toast, now that it has access to the ToastProvider context.
@@ -98,6 +94,8 @@ function GameApp() {
   const clearOfflineMessage = useGameStore((state) => state.clearOfflineMessage);
   const setPaused = useGameStore((state) => state.setPaused);
   const { showToast } = useToast();
+  // StrictMode re-runs mount effects; the ref survives that re-run.
+  const hasLoadedRef = useRef(false);
 
   const handlePauseToggle = useCallback(() => {
     setPaused(!useGameStore.getState().isPaused);
@@ -117,8 +115,8 @@ function GameApp() {
   useAchievementToasts();
 
   useEffect(() => {
-    if (hasLoadedSave) return;
-    hasLoadedSave = true;
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
     load();
   }, [load]);
 

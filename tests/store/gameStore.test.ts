@@ -754,6 +754,24 @@ describe('gameStore', () => {
     })
   })
 
+  describe('drainPendingAchievementUnlocks', () => {
+    it('removes only the unlocks that were shown', () => {
+      useGameStore.setState({ pendingAchievementUnlocks: ['first_brick', 'hundred_bricks'] })
+
+      useGameStore.getState().drainPendingAchievementUnlocks(['first_brick'])
+
+      expect(useGameStore.getState().pendingAchievementUnlocks).toEqual(['hundred_bricks'])
+    })
+
+    it('clears the whole queue when no ids are given', () => {
+      useGameStore.setState({ pendingAchievementUnlocks: ['first_brick'] })
+
+      useGameStore.getState().drainPendingAchievementUnlocks()
+
+      expect(useGameStore.getState().pendingAchievementUnlocks).toEqual([])
+    })
+  })
+
   describe('exportSave', () => {
     beforeEach(() => {
       resetStore()

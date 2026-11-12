@@ -33,6 +33,6 @@ export function useAchievementToasts(): void {
       if (!def) continue;
       showToast(`🏆 Achievement unlocked: ${def.name}`, 'success');
     }
-    drainQueue();
+    drainQueue(pendingUnlocks);
   }, [pendingUnlocks, showToast, drainQueue]);
 }

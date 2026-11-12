@@ -74,6 +74,7 @@ export class GameScene extends Phaser.Scene {
 
     this.scale.on('resize', this.handleResize, this);
     this.handleResize(this.scale.gameSize);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.handleBrickClick(pointer);
