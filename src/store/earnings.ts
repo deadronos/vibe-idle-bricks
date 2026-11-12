@@ -1,5 +1,5 @@
 import Decimal from 'break_infinity.js';
-import { BALL_TYPES, OFFLINE_EARNINGS_RATE, getPrestigeMultiplier } from '../types';
+import { BALL_TYPES, OFFLINE_EARNINGS_RATE, calculateBrickStats, getPrestigeMultiplier } from '../types';
 import { OFFLINE_EARNINGS_CONSTANT } from '../game/constants';
 import { formatNumber } from '../utils';
 import type { BallData } from '../types';
@@ -31,7 +31,10 @@ export const calculateOfflineEarnings = (
     totalBallPower = totalBallPower.add(power);
   }
 
-  const cps = totalBallPower.mul(coinMult).mul(prestigeBonus).mul(OFFLINE_EARNINGS_CONSTANT).mul(currentTier);
+  // Match the live value/health curve, normalised to 1 at tier 1.
+  const { maxHealth, value } = calculateBrickStats(currentTier);
+  const tierYield = value.mul(3).div(maxHealth);
+  const cps = totalBallPower.mul(coinMult).mul(prestigeBonus).mul(OFFLINE_EARNINGS_CONSTANT).mul(tierYield);
   const offlineCoins = cps.mul(safeOfflineSeconds).mul(OFFLINE_EARNINGS_RATE).floor();
 
   if (offlineCoins.lte(0)) {

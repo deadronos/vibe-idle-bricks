@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import Decimal from 'break_infinity.js'
 import { useGameStore } from '../../src/store/gameStore'
-import { BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeThreshold, MAX_TIER, MAX_BALLS, MAX_SPEED_UPGRADE } from '../../src/types/game'
+import { BALL_TYPES, PRESTIGE_THRESHOLD, MAX_TIER, MAX_BALLS, MAX_SPEED_UPGRADE } from '../../src/types/game'
 
 // Mock localStorage
 const createLocalStorageMock = () => {
@@ -300,15 +300,14 @@ describe('gameStore', () => {
       expect(useGameStore.getState().bricksBroken.eq(0)).toBe(true)
     })
 
-    it('should scale prestige threshold with prestige level', () => {
-      const levelOneThreshold = getPrestigeThreshold(1)
+    it('should keep the prestige threshold fixed at higher levels', () => {
       useGameStore.setState({ 
-        prestigeLevel: 1,
-        bricksBroken: new Decimal(levelOneThreshold - 1),
+        prestigeLevel: 3,
+        bricksBroken: new Decimal(PRESTIGE_THRESHOLD - 1),
       })
       expect(useGameStore.getState().canPrestige()).toBe(false)
 
-      useGameStore.setState({ bricksBroken: new Decimal(levelOneThreshold) })
+      useGameStore.setState({ bricksBroken: new Decimal(PRESTIGE_THRESHOLD) })
       expect(useGameStore.getState().canPrestige()).toBe(true)
     })
   })

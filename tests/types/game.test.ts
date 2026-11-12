@@ -3,12 +3,11 @@ import {
   BALL_TYPES,
   UPGRADE_MULTIPLIER,
   PRESTIGE_MULTIPLIER,
-  PRESTIGE_THRESHOLD_GROWTH,
+  PRESTIGE_THRESHOLD,
   OFFLINE_EARNINGS_RATE,
   MAX_TIER,
   calculateBrickStats,
   getPrestigeMultiplier,
-  getPrestigeThreshold,
 } from '../../src/types/game';
 
 describe('Ball Types Configuration', () => {
@@ -106,10 +105,6 @@ describe('Game Constants', () => {
     expect(PRESTIGE_MULTIPLIER).toBe(1.75);
   });
 
-  it('should grow the next prestige threshold by 1.5x', () => {
-    expect(PRESTIGE_THRESHOLD_GROWTH).toBe(1.5);
-  });
-
   it('should be 0.5 (50% of normal earnings)', () => {
     expect(OFFLINE_EARNINGS_RATE).toBe(0.5);
   });
@@ -119,24 +114,8 @@ describe('Game Constants', () => {
     expect(OFFLINE_EARNINGS_RATE).toBeLessThan(1);
   });
 
-  describe('getPrestigeThreshold', () => {
-    it('should be a positive integer', () => {
-      expect(getPrestigeThreshold(0)).toBeGreaterThan(0);
-      expect(Number.isInteger(getPrestigeThreshold(0))).toBe(true);
-    });
-
-    it('should be 10000 bricks', () => {
-      expect(getPrestigeThreshold(0)).toBe(10000);
-    });
-
-    it('should scale by 1.5x per level', () => {
-      expect(getPrestigeThreshold(0)).toBe(10000);
-      expect(getPrestigeThreshold(1)).toBe(15000);
-      expect(getPrestigeThreshold(2)).toBe(22500);
-      expect(getPrestigeThreshold(3)).toBe(33750);
-      expect(getPrestigeThreshold(4)).toBe(50625);
-      expect(getPrestigeThreshold(5)).toBe(75937);
-    });
+  it('should keep the prestige goal fixed at 10,000 bricks', () => {
+    expect(PRESTIGE_THRESHOLD).toBe(10000);
   });
 
   describe('getPrestigeMultiplier', () => {
@@ -152,7 +131,7 @@ describe('Game Constants', () => {
 
     it('should make each prestige need less income for its threshold', () => {
       // speed-run proxy: bricks to break divided by the income multiplier
-      const work = (level: number) => getPrestigeThreshold(level) / getPrestigeMultiplier(level);
+      const work = (level: number) => PRESTIGE_THRESHOLD / getPrestigeMultiplier(level);
       for (let level = 0; level < 20; level++) {
         expect(work(level + 1)).toBeLessThan(work(level));
       }

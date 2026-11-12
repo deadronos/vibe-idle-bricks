@@ -5,8 +5,8 @@ import {
   BALL_TYPES,
   UPGRADE_MULTIPLIER,
   MAX_TIER,
+  PRESTIGE_THRESHOLD,
   getPrestigeMultiplier,
-  getPrestigeThreshold,
   MAX_BALLS,
   MAX_SPEED_UPGRADE,
   MAX_PRESTIGE_LEVEL,
@@ -658,7 +658,7 @@ export const useGameStore = create<GameStore>()(
 
     canPrestige: () => {
       const state = get();
-      const threshold = getPrestigeThreshold(state.prestigeLevel);
+      const threshold = PRESTIGE_THRESHOLD;
       return state.bricksBroken.gte(threshold);
     },
 
@@ -820,7 +820,9 @@ export const useGameStore = create<GameStore>()(
           if (minutes > 1) {
             const newState = get();
             const speedMult = newState.getSpeedMult();
-            const damageMult = newState.getDamageMult();
+            // Offline pays the prestige bonus once (in earnings.ts). Passing
+            // the prestige-scaled damage too would square it.
+            const damageMult = 1 + newState.upgrades.damage * UPGRADE_MULTIPLIER;
             const coinMult = newState.getCoinMult();
 
             const { coins: offlineCoins, message } = calculateOfflineEarnings(

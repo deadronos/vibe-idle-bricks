@@ -1,6 +1,6 @@
 import { useState, useId } from 'react';
 import { useGameStore } from '../store';
-import { type BallType, BALL_TYPES, getPrestigeMultiplier, getPrestigeThreshold, MAX_BALLS, MAX_SPEED_UPGRADE } from '../types';
+import { type BallType, BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeMultiplier, MAX_BALLS, MAX_SPEED_UPGRADE } from '../types';
 import { formatMultiplier, formatNumber } from '../utils';
 import { ShoppingCart, Zap, Crosshair, Bomb, Circle, Hexagon, Star, ArrowUpCircle, Coins, TrendingUp } from 'lucide-react';
 import { Modal } from './Modal';
@@ -78,7 +78,7 @@ export function Shop() {
   const prestigeMult = getPrestigeMultiplier(prestigeLevel);
   const nextPrestigeMult = getPrestigeMultiplier(prestigeLevel + 1);
   const canDoPrestige = canPrestige();
-  const prestigeThreshold = getPrestigeThreshold(prestigeLevel);
+  const prestigeThreshold = PRESTIGE_THRESHOLD;
   const bricksNeeded = Math.max(0, prestigeThreshold - bricksBroken.toNumber());
 
   return (

@@ -27,6 +27,20 @@ describe('calculateOfflineEarnings', () => {
     expect(result.message).toBeNull()
   })
 
+  it('should apply the prestige bonus exactly once', () => {
+    const balls = [createBall('basic')]
+    const base = calculateOfflineEarnings(balls, 1, 1, 1, 0, 1, 60).coins.toNumber()
+    const prestiged = calculateOfflineEarnings(balls, 1, 1, 1, 1, 1, 60).coins.toNumber()
+    expect(prestiged).toBeCloseTo(base * 1.75)
+  })
+
+  it('should follow the value/health yield at higher tiers', () => {
+    const tier1 = calculateOfflineEarnings([createBall('basic')], 1, 1, 1, 0, 1, 3600).coins.toNumber()
+    const tier20 = calculateOfflineEarnings([createBall('basic')], 1, 1, 1, 0, 20, 3600).coins.toNumber()
+    // value 120, health 17.25 -> 120*3/17.25
+    expect(tier20 / tier1).toBeCloseTo((120 * 3) / 17.25, 2)
+  })
+
   it('should format large offline earnings in the welcome-back message', () => {
     const result = calculateOfflineEarnings(
       [createBall('basic')],

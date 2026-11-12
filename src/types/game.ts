@@ -219,8 +219,6 @@ export const BALL_TYPES: Record<BallType, BallTypeConfig> = {
 export const UPGRADE_MULTIPLIER = 0.1;
 /** Damage and coin income are multiplied by this for every prestige level. */
 export const PRESTIGE_MULTIPLIER = 1.75;
-/** The growth factor applied to the brick threshold after each prestige. */
-export const PRESTIGE_THRESHOLD_GROWTH = 1.5;
 /** The fraction of theoretical earnings awarded for offline time (50%). */
 export const OFFLINE_EARNINGS_RATE = 0.5;
 /** The maximum tier level for bricks. */
@@ -228,13 +226,6 @@ export const MAX_TIER = 20;
 /** The base threshold for the first prestige. */
 export const PRESTIGE_THRESHOLD = 10000;
 
-/**
- * Calculates the number of bricks required to reach the next prestige level.
- * @param prestigeLevel - The current prestige level.
- * @returns {number} The number of bricks required for the next prestige.
- */
-export const getPrestigeThreshold = (prestigeLevel: number): number =>
-  Math.floor(PRESTIGE_THRESHOLD * Math.pow(PRESTIGE_THRESHOLD_GROWTH, prestigeLevel));
 
 /**
  * Calculates the permanent coin multiplier for a prestige level.
@@ -260,7 +251,7 @@ export const COST_MULTIPLIER = 1.15;
 /**
  * Calculates brick health and value based on tier.
  * Health grows slowly with tier (5.75x by tier 20) while value grows much
- * faster (121x), so a higher tier pays more for roughly the same work.
+ * faster (120x), so a higher tier pays more for roughly the same work.
  */
 export const calculateBrickStats = (tier: number): { maxHealth: Decimal; value: Decimal } => {
   const maxHealth = new Decimal(3 * (1 + 0.25 * (tier - 1)));
