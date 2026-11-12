@@ -106,25 +106,40 @@ export class BallRenderer extends BaseRenderer<BallData> {
 export class BrickRenderer extends BaseRenderer<BrickData> {
   private readonly textById = new Map<string, Phaser.GameObjects.Text>();
   private readonly renderedBrickRefs = new Map<string, BrickData>();
-  private readonly clock: Phaser.Time.Clock;
+  private readonly flashingBrickIds = new Set<string>();
 
-  constructor(scene: Phaser.Scene, clock: Phaser.Time.Clock) {
+  constructor(scene: Phaser.Scene) {
     super(scene);
-    this.clock = clock;
   }
 
   render(bricks: BrickData[]) {
     this.frame++;
+    const now = performance.now();
 
     for (const brick of bricks) {
       this.seenAtFrame.set(brick.id, this.frame);
 
       const previousBrick = this.renderedBrickRefs.get(brick.id);
-      const isHitFlash = this.clock.now - (brick.lastHitTime || 0) < HIT_FLASH_DURATION_MS;
+      const hitAge = now - (brick.lastHitTime ?? 0);
+      // A negative age means the timestamp came from another clock (e.g. Date.now);
+      // treating it as a hit would keep the brick white forever.
+      const isHitFlash =
+        brick.lastHitTime !== undefined &&
+        hitAge >= 0 &&
+        hitAge < HIT_FLASH_DURATION_MS;
+      const wasHitFlash = this.flashingBrickIds.has(brick.id);
 
-      if (previousBrick !== brick || isHitFlash) {
+      // Redraw while flashing and once more when the flash expires, otherwise
+      // the white flash frame would stay on screen until the next hit.
+      if (previousBrick !== brick || isHitFlash || wasHitFlash) {
         this.drawBrick(brick, isHitFlash);
         this.renderedBrickRefs.set(brick.id, brick);
+      }
+
+      if (isHitFlash) {
+        this.flashingBrickIds.add(brick.id);
+      } else {
+        this.flashingBrickIds.delete(brick.id);
       }
 
       this.syncBrickText(brick);
@@ -143,6 +158,7 @@ export class BrickRenderer extends BaseRenderer<BrickData> {
     }
     this.textById.clear();
     this.renderedBrickRefs.clear();
+    this.flashingBrickIds.clear();
   }
 
   private drawBrick(brick: BrickData, isHitFlash: boolean) {
@@ -210,6 +226,7 @@ export class BrickRenderer extends BaseRenderer<BrickData> {
 
   protected onPruned(id: string) {
     this.renderedBrickRefs.delete(id);
+    this.flashingBrickIds.delete(id);
     const text = this.textById.get(id);
     if (text) {
       text.destroy();

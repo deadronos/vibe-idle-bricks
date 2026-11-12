@@ -62,7 +62,7 @@ export function AchievementsModal({ open, onClose }: AchievementsModalProps) {
       open={open}
       title="Achievements"
       confirmLabel="Done"
-      cancelLabel="Close"
+      cancelLabel={null}
       onConfirm={onClose}
       onCancel={onClose}
     >

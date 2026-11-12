@@ -145,14 +145,13 @@ describe('AchievementsModal', () => {
     expect(screen.getByTestId('achievements-summary')).toHaveTextContent('1 /')
   })
 
-  it('calls onClose when the cancel button is clicked', () => {
+  it('calls onClose when the dismiss button is clicked', () => {
     const onClose = vi.fn()
     render(<AchievementsModal open={true} onClose={onClose} />)
-    // The Modal's cancel button is the second button (Close).
-    const buttons = screen.getAllByRole('button')
-    const closeBtn = buttons.find((b) => b.textContent === 'Close')
-    expect(closeBtn).toBeDefined()
-    closeBtn!.click()
+    // The modal has a single dismiss button (no duplicate Close/Done).
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument()
+    const doneButton = screen.getByRole('button', { name: 'Done' })
+    doneButton.click()
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 })

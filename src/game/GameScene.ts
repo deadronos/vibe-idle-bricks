@@ -53,7 +53,7 @@ export class GameScene extends Phaser.Scene {
 
     this.brickManager = new BrickManager(this);
     this.ballRenderer = new BallRenderer(this);
-    this.brickRenderer = new BrickRenderer(this, this.time);
+    this.brickRenderer = new BrickRenderer(this);
     this.effects = new GameEffects(this);
     this.effects.initialize();
 
