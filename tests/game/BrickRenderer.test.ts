@@ -42,6 +42,7 @@ const createRenderer = () => {
     add: {
       graphics: () => graphics,
       text: () => ({
+        style: { color: '#ffffff' },
         setOrigin: () => undefined,
         setText: () => undefined,
         setColor: () => undefined,

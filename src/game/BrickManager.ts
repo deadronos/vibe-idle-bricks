@@ -7,6 +7,8 @@ import {
   BRICK_HEIGHT,
   BRICK_PADDING,
   MAX_ROWS_FILL_FACTOR,
+  ARENA_FLOOR_HEIGHT,
+  getSpawnZoneHeight,
 } from './constants';
 
 /**
@@ -24,11 +26,28 @@ export class BrickManager {
     return Math.max(20, this.scene.cameras.main.height * 0.2);
   }
 
+  /** Lowest brick row stays above the floor and launch zone. */
+  private get fillBottom() {
+    const { height } = this.scene.cameras.main;
+    const spawnTop = height - ARENA_FLOOR_HEIGHT - getSpawnZoneHeight(height);
+    return Math.min(height * MAX_ROWS_FILL_FACTOR, spawnTop);
+  }
+
   /** Rows that fit between offsetTop and the bottom fill limit. */
   private get maxRows() {
-    const { height } = this.scene.cameras.main;
-    const fillHeight = height * MAX_ROWS_FILL_FACTOR;
-    return Math.max(1, Math.floor((fillHeight - this.offsetTop) / (BRICK_HEIGHT + BRICK_PADDING)));
+    return Math.max(
+      1,
+      Math.floor((this.fillBottom - this.offsetTop) / (BRICK_HEIGHT + BRICK_PADDING))
+    );
+  }
+
+  /** Maximum bricks the current viewport can hold. */
+  getCapacity(): number {
+    const { width } = this.scene.cameras.main;
+    const cols = Math.floor(
+      (width - this.offsetLeft * 2) / (BRICK_WIDTH + BRICK_PADDING)
+    );
+    return Math.max(0, cols * this.maxRows);
   }
 
   private get offsetLeft() {

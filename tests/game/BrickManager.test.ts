@@ -7,7 +7,7 @@ vi.mock('phaser', () => ({
 
 import { describe, it, expect } from 'vitest';
 import { BrickManager } from '../../src/game/BrickManager';
-import { BRICK_WIDTH, BRICK_HEIGHT, BRICK_PADDING, MAX_ROWS_FILL_FACTOR } from '../../src/game/constants';
+import { BRICK_WIDTH, BRICK_HEIGHT, BRICK_PADDING, MAX_ROWS_FILL_FACTOR, ARENA_FLOOR_HEIGHT, getSpawnZoneHeight } from '../../src/game/constants';
 
 function createMockScene(width: number, height: number) {
   return {
@@ -22,6 +22,19 @@ function createMockScene(width: number, height: number) {
 
 describe('BrickManager', () => {
   describe('generateBricks', () => {
+    it('keeps every brick above the launch zone on a short canvas', () => {
+      const height = 250;
+      const manager = new BrickManager(createMockScene(375, height));
+      const bricks = manager.generateBricks(1000, 1);
+      const spawnTop = height - ARENA_FLOOR_HEIGHT - getSpawnZoneHeight(height);
+
+      expect(bricks.length).toBeGreaterThan(0);
+      expect(bricks.length).toBeLessThanOrEqual(manager.getCapacity());
+      for (const brick of bricks) {
+        expect(brick.y + brick.height).toBeLessThanOrEqual(spawnTop);
+      }
+    })
+
     it('generates the requested number of bricks', () => {
       const manager = new BrickManager(createMockScene(800, 600));
       const bricks = manager.generateBricks(20, 1);

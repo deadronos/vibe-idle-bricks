@@ -47,3 +47,7 @@ export const MAX_ROWS_FILL_FACTOR = 0.7;
 export const ARENA_FLOOR_HEIGHT = 12;
 /** Height of the launch zone above the floor where balls spawn. */
 export const SPAWN_ZONE_HEIGHT = 90;
+
+/** Launch zone shrinks on very short canvases instead of eating the field. */
+export const getSpawnZoneHeight = (height: number): number =>
+  Math.min(SPAWN_ZONE_HEIGHT, height * 0.2);
