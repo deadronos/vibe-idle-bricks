@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import Decimal from 'break_infinity.js'
-import { generateId, formatMultiplier, formatNumber, adjustBrightness, getTierColor, getAccessibleTierColor } from '../../src/utils/helpers'
+import { generateId, formatMultiplier, formatNumber, adjustBrightness, getTierColor, getAccessibleTierColor, getContrastTextColor } from '../../src/utils/helpers'
 
 describe('generateId', () => {
   it('should generate a string ID', () => {
@@ -132,6 +132,18 @@ describe('adjustBrightness', () => {
   it('should handle colors without # prefix', () => {
     const result = adjustBrightness('ff5500', 0)
     expect(result).toMatch(/^#[0-9a-f]{6}$/i)
+  })
+})
+
+describe('getContrastTextColor', () => {
+  it('uses dark text on light tier colours', () => {
+    expect(getContrastTextColor('#facc15')).toBe('#0f172a')
+    expect(getContrastTextColor('#14b8a6')).toBe('#0f172a')
+  })
+
+  it('uses white text on dark colours', () => {
+    expect(getContrastTextColor('#0000ff')).toBe('#ffffff')
+    expect(getContrastTextColor('#111827')).toBe('#ffffff')
   })
 })
 

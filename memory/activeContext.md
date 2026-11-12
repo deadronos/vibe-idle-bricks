@@ -2,13 +2,23 @@
 
 ## Current Work Focus
 
-PR #94 (fix/accumulator-offline-cap) is **in flight**: clamped the Phaser
-fixed-step accumulator to 5 catch-up steps per frame (#75) and capped offline
-earnings at 24 hours with the credited duration in the toast (#77).
+PR #95 (visuals/brick-health-board) is **in flight**: brick HP bars and
+contrast-correct tier numbers (#58), an arena floor plus launch zone so the
+lower canvas reads as play space (#57), and a disabled max-level prestige
+button with run progress (#69).
 
 TASK009 (Suggestion Set) is **complete** and merged to `main` (merge `20505e0`).
 
 ## Recent Changes
+
+- Shipped visuals batch PR #95: `getContrastTextColor()` picks near-black or
+  white from WCAG luminance; damaged bricks draw a green/yellow/red HP bar;
+  `drawBackground()` adds a floor strip, launch-zone band and side walls;
+  `BrickManager.offsetTop` is 20% of height; prestige shows
+  `current / threshold bricks this run` and disables at `MAX_PRESTIGE_LEVEL`.
+- Shipped reliability PR #94 (merged `b857249`): catch-up clamp
+  `FIXED_STEP * MAX_CATCH_UP_STEPS = 5`, 24h `MAX_OFFLINE_SECONDS` cap and
+  `over 24h (max)` toast. 338 tests.
 
 - Shipped reliability batch PR #94: `clampAccumulator` in
   `src/game/constants.ts` (max `FIXED_STEP * 5` per frame), `MAX_OFFLINE_SECONDS

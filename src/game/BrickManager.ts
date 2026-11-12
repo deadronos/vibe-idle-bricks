@@ -20,7 +20,8 @@ export class BrickManager {
   }
 
   private get offsetTop() {
-    return Math.max(20, this.scene.cameras.main.height * 0.1);
+    // Centres the field between the top edge and the launch zone.
+    return Math.max(20, this.scene.cameras.main.height * 0.2);
   }
 
   private get offsetLeft() {

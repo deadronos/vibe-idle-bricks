@@ -42,3 +42,8 @@ export const CLICK_PARTICLE_COUNT = 5;
 export const CLICK_DAMAGE_BASE = 0.5;
 
 export const MAX_ROWS_FILL_FACTOR = 0.5;
+
+/** Height of the decorative floor strip at the bottom of the arena. */
+export const ARENA_FLOOR_HEIGHT = 12;
+/** Height of the launch zone above the floor where balls spawn. */
+export const SPAWN_ZONE_HEIGHT = 90;

@@ -41,6 +41,12 @@ const createRenderer = () => {
   const scene = {
     add: {
       graphics: () => graphics,
+      text: () => ({
+        setOrigin: () => undefined,
+        setText: () => undefined,
+        setColor: () => undefined,
+        destroy: () => undefined,
+      }),
     },
   } as unknown as SceneArg;
   return { renderer: new BrickRenderer(scene), graphics };
@@ -61,6 +67,34 @@ const makeBrick = (lastHitTime?: number): BrickData => ({
 
 const flashedWhite = (graphics: RecordingGraphics) =>
   graphics.fillStyles.some(({ color }) => color === 0xffffff);
+
+describe('BrickRenderer health bar', () => {
+  it('draws a green bar for a lightly damaged brick', () => {
+    const { renderer, graphics } = createRenderer();
+    const brick = { ...makeBrick(), tier: 2, health: new Decimal(2.5) };
+    renderer.render([brick]);
+
+    expect(graphics.fillStyles.some(({ color }) => color === 0x4ade80)).toBe(true);
+  })
+
+  it('draws a red bar when the brick is nearly broken', () => {
+    const { renderer, graphics } = createRenderer();
+    const brick = { ...makeBrick(), tier: 2, health: new Decimal(0.5) };
+    renderer.render([brick]);
+
+    expect(graphics.fillStyles.some(({ color }) => color === 0xef4444)).toBe(true);
+  })
+
+  it('draws no bar on a full-health brick', () => {
+    const { renderer, graphics } = createRenderer();
+    renderer.render([{ ...makeBrick(), tier: 2 }]);
+
+    const bars = graphics.fillStyles.filter(
+      ({ color }) => color === 0x4ade80 || color === 0xfacc15 || color === 0xef4444
+    );
+    expect(bars).toHaveLength(0);
+  })
+})
 
 describe('BrickRenderer hit flash', () => {
   it('flashes a just-hit brick white', () => {

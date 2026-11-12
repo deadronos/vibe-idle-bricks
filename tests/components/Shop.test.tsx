@@ -254,6 +254,20 @@ describe('Shop', () => {
       expect(screen.getByText(/break 1.00K more bricks/i)).toBeInTheDocument()
     })
 
+    it('should disable prestige at max level even with enough bricks', async () => {
+      useGameStore.setState({
+        bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
+        prestigeLevel: 100,
+      })
+      renderShop()
+      const user = userEvent.setup()
+      await user.click(screen.getByRole('tab', { name: /prestige/i }))
+
+      const prestigeButton = within(screen.getByRole('heading', { name: /prestige/i }).parentElement!).getByRole('button', { name: /prestige/i })
+      expect(prestigeButton).toBeDisabled()
+      expect(screen.getByText(/max level/i)).toBeInTheDocument()
+    })
+
     it('should enable prestige when threshold met', async () => {
       useGameStore.setState({
         bricksBroken: new Decimal(PRESTIGE_THRESHOLD),

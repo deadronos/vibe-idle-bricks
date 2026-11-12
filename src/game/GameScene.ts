@@ -12,6 +12,8 @@ import { SpatialGrid } from './SpatialGrid';
 import {
   BALL_RADIUS,
   FIXED_STEP,
+  ARENA_FLOOR_HEIGHT,
+  SPAWN_ZONE_HEIGHT,
   clampAccumulator,
   clampFrameDelta,
   MIN_BRICKS_ON_SCREEN,
@@ -129,6 +131,30 @@ export class GameScene extends Phaser.Scene {
       this.backgroundGraphics.moveTo(0, y);
       this.backgroundGraphics.lineTo(width, y);
       this.backgroundGraphics.strokePath();
+    }
+
+    // Frame the arena so the lower half reads as play space, not empty canvas.
+    const floorY = height - ARENA_FLOOR_HEIGHT;
+    this.backgroundGraphics.fillStyle(0x1e293b, 0.9);
+    this.backgroundGraphics.fillRect(0, floorY, width, ARENA_FLOOR_HEIGHT);
+    this.backgroundGraphics.lineStyle(2, 0x38bdf8, 0.45);
+    this.backgroundGraphics.lineBetween(0, floorY, width, floorY);
+
+    this.backgroundGraphics.lineStyle(2, 0x38bdf8, 0.12);
+    this.backgroundGraphics.lineBetween(1, 0, 1, floorY);
+    this.backgroundGraphics.lineBetween(width - 1, 0, width - 1, floorY);
+
+    // Launch zone: gives the otherwise empty lower half a purpose.
+    const spawnY = floorY - SPAWN_ZONE_HEIGHT;
+    this.backgroundGraphics.fillStyle(0x38bdf8, 0.06);
+    this.backgroundGraphics.fillRect(0, spawnY, width, SPAWN_ZONE_HEIGHT);
+    this.backgroundGraphics.lineStyle(1, 0x38bdf8, 0.25);
+    for (let x = 8; x < width; x += 20) {
+      this.backgroundGraphics.lineBetween(x, spawnY, Math.min(x + 12, width), spawnY);
+    }
+    this.backgroundGraphics.lineStyle(2, 0x38bdf8, 0.2);
+    for (let i = 1; i <= 3; i++) {
+      this.backgroundGraphics.strokeCircle((width * i) / 4, spawnY + SPAWN_ZONE_HEIGHT / 2, 7);
     }
   }
 
