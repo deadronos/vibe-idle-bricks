@@ -57,7 +57,7 @@ value = tier^1.2  (Tier 10 → ~15.8 coins instead of 10)
 | 500–599 | 6 |
 | 900+ | 10 |
 
-**Analysis:** Progression is predictable but the cap at tier 10 creates a ceiling effect. Combined with the 10,000 brick prestige threshold, players will spend significant time at max tier with no new challenges.
+**Analysis:** Progression is predictable but the cap at tier 20 creates a ceiling effect. Combined with the 10,000 brick prestige threshold, players will spend significant time at max tier with no new challenges.
 
 **Issues:**
 - 900+ bricks at tier 10 = ~9,100 bricks of repetitive gameplay before prestige
@@ -133,17 +133,17 @@ Damage Per Second ≈ `(damage × speed) / average_bounce_distance`
 
 ### 5. Prestige System
 
-**Current:**
-- Threshold: 10,000 bricks broken
-- Reward: +25% permanent coin bonus per prestige
-- Resets: coins, upgrades, balls, tier
-- Keeps: prestigeLevel, totalBricksBroken
+**Current (after #62/#63):**
+- Threshold: always 10,000 bricks broken
+- Reward: ×1.75 damage and coin income per prestige level
+- Resets: coins, balls, ball costs, tier, bricks broken
+- Keeps: upgrades, upgrade costs, prestigeLevel, totalBricksBroken
 
 **Time to First Prestige (estimated):**
 
 Assuming average DPS and brick spawn rates:
 - ~10 bricks/minute early → ~30 bricks/minute late
-- Rough estimate: 500–800 minutes (8–13 hours) of active play
+- Greedy simulation: ~30 minutes with active buying (see DESIGN007)
 
 **Analysis:**
 
@@ -154,7 +154,7 @@ Assuming average DPS and brick spawn rates:
 
 ❌ **Issues:**
 - Single prestige layer limits long-term engagement
-- 25% bonus compounds slowly (need 4 prestiges for 2× coins)
+- ×1.75 per level is a 75% jump, so each run is much faster than the last
 - No prestige upgrades or choices
 - 10,000 threshold may feel arbitrary
 
@@ -227,19 +227,19 @@ Prestige Transition
 ```typescript
 // types/game.ts
 UPGRADE_MULTIPLIER = 0.1      // 10% per upgrade level
-PRESTIGE_BONUS = 0.25         // 25% per prestige
+PRESTIGE_MULTIPLIER = 1.75    // damage and coins per prestige
 OFFLINE_EARNINGS_RATE = 0.5   // 50% while offline
-PRESTIGE_THRESHOLD = 10000    // Bricks to prestige
+PRESTIGE_THRESHOLD = 10000    // Bricks to prestige (fixed)
 
 // Ball scaling
 Ball cost growth: ×1.15 per purchase
-Upgrade cost growth: ×1.2 per level
+Upgrade cost growth: ×1.15 per level
 
 // Brick scaling
-Health: tier × 3
-Value: tier (linear)
+Health: 3 * (1 + 0.25 * (tier - 1))
+Value: floor(tier ^ 1.6)
 Tier increase: every 100 bricks
-Tier cap: 10
+Tier cap: 20
 ```
 
 ---

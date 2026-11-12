@@ -76,7 +76,7 @@ Game auto-saves every 30s via Phaser timer. Manual save/load available in store.
 
 ### Prestige System
 
-Reset triggered at 10,000 bricks broken. Resets: coins, upgrades, balls, tier. Keeps: `prestigeLevel`, `totalBricksBroken`.
+Reset triggered at 10,000 bricks broken. Resets: coins, balls, ball costs, tier, and this run's bricks. Keeps: upgrades, upgrade costs, `prestigeLevel`, `totalBricksBroken`.
 
 ## Workflow Guidelines
 

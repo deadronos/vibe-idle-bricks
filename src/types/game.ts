@@ -217,29 +217,23 @@ export const BALL_TYPES: Record<BallType, BallTypeConfig> = {
 
 /** Multiplier applied to stats per upgrade level (10% boost). */
 export const UPGRADE_MULTIPLIER = 0.1;
-/** Bonus multiplier applied to coins per prestige level (25% bonus). */
-export const PRESTIGE_BONUS = 0.25;
+/** Damage and coin income are multiplied by this for every prestige level. */
+export const PRESTIGE_MULTIPLIER = 1.75;
 /** The fraction of theoretical earnings awarded for offline time (50%). */
 export const OFFLINE_EARNINGS_RATE = 0.5;
 /** The maximum tier level for bricks. */
 export const MAX_TIER = 20;
-/** The number of broken bricks required to reach each prestige threshold. */
-export const PRESTIGE_THRESHOLDS = [10000, 20000, 40000];
 /** The base threshold for the first prestige. */
-export const PRESTIGE_THRESHOLD = PRESTIGE_THRESHOLDS[0];
+export const PRESTIGE_THRESHOLD = 10000;
 
 /**
- * Calculates the number of bricks required to reach the next prestige level.
+ * Calculates the permanent coin multiplier for a prestige level.
+ * Each level multiplies income, so prestiging repeatedly compounds.
  * @param prestigeLevel - The current prestige level.
- * @returns {number} The number of bricks required for the next prestige.
+ * @returns {number} The current coin multiplier.
  */
-export const getPrestigeThreshold = (prestigeLevel: number): number => {
-  if (prestigeLevel < PRESTIGE_THRESHOLDS.length) {
-    return PRESTIGE_THRESHOLDS[prestigeLevel];
-  }
-  const lastThreshold = PRESTIGE_THRESHOLDS[PRESTIGE_THRESHOLDS.length - 1];
-  return Math.floor(lastThreshold * Math.pow(1.5, prestigeLevel - (PRESTIGE_THRESHOLDS.length - 1)));
-};
+export const getPrestigeMultiplier = (prestigeLevel: number): number =>
+  Math.pow(PRESTIGE_MULTIPLIER, prestigeLevel);
 
 /** Maximum number of balls allowed in the game to prevent performance issues. */
 export const MAX_BALLS = 50;
@@ -255,11 +249,11 @@ export const COST_MULTIPLIER = 1.15;
 
 /**
  * Calculates brick health and value based on tier.
- * Health scales linearly with tier.
- * Value scales with tier^1.2 for slight acceleration.
+ * Health grows slowly with tier (5.75x by tier 20) while value grows much
+ * faster (120x), so a higher tier pays more for roughly the same work.
  */
 export const calculateBrickStats = (tier: number): { maxHealth: Decimal; value: Decimal } => {
-  const maxHealth = new Decimal(tier * 3);
-  const value = new Decimal(Math.floor(Math.pow(tier, 1.2)));
+  const maxHealth = new Decimal(3 * (1 + 0.25 * (tier - 1)));
+  const value = new Decimal(Math.floor(Math.pow(tier, 1.6)));
   return { maxHealth, value };
 };

@@ -5,7 +5,7 @@ import Decimal from 'break_infinity.js'
 import { Shop } from '../../src/components/Shop'
 import { ToastProvider } from '../../src/components/Toast'
 import { useGameStore } from '../../src/store/gameStore'
-import { BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeThreshold } from '../../src/types/game'
+import { BALL_TYPES, PRESTIGE_THRESHOLD } from '../../src/types/game'
 
 /** Renders Shop inside the required ToastProvider. */
 const renderShop = () =>
@@ -221,11 +221,10 @@ describe('Shop', () => {
       expect(screen.getByText(/break 5.00K more bricks/i)).toBeInTheDocument()
     })
 
-    it('should scale required bricks with prestige level', async () => {
-      const nextThreshold = getPrestigeThreshold(1)
+    it('should require the same bricks at every prestige level', async () => {
       useGameStore.setState({
-        prestigeLevel: 1,
-        bricksBroken: new Decimal(nextThreshold - 1000),
+        prestigeLevel: 4,
+        bricksBroken: new Decimal(PRESTIGE_THRESHOLD - 1000),
       })
 
       renderShop()
@@ -252,7 +251,7 @@ describe('Shop', () => {
 
     it('should show bonus info when can prestige', async () => {
       useGameStore.setState({
-        bricksBroken: new Decimal(getPrestigeThreshold(2)),
+        bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
         prestigeLevel: 2,
       })
       renderShop()
@@ -260,8 +259,8 @@ describe('Shop', () => {
       const prestigeTab = screen.getByRole('tab', { name: /prestige/i })
       await user.click(prestigeTab)
 
-      expect(screen.getByText(/\+25% coin bonus/i)).toBeInTheDocument()
-      expect(screen.getByText(/current: \+50%/i)).toBeInTheDocument()
+      expect(screen.getByText(/next: ×5\.36 damage & coins/i)).toBeInTheDocument()
+      expect(screen.getByText(/current: ×3\.06/i)).toBeInTheDocument()
     })
 
     it('should show confirm dialog when prestige clicked', async () => {

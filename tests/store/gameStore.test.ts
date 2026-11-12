@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import Decimal from 'break_infinity.js'
 import { useGameStore } from '../../src/store/gameStore'
-import { BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeThreshold, MAX_TIER, MAX_BALLS, MAX_SPEED_UPGRADE } from '../../src/types/game'
+import { BALL_TYPES, PRESTIGE_THRESHOLD, MAX_TIER, MAX_BALLS, MAX_SPEED_UPGRADE } from '../../src/types/game'
 
 // Mock localStorage
 const createLocalStorageMock = () => {
@@ -100,8 +100,8 @@ describe('gameStore', () => {
       useGameStore.setState({ prestigeLevel: 1 })
       const store = useGameStore.getState()
       store.addCoins(new Decimal(100))
-      // Prestige level 1 = 25% bonus, so 100 * 1.25 = 125
-      expect(useGameStore.getState().coins.eq(125)).toBe(true)
+      // Prestige level 1 multiplies income by 1.75
+      expect(useGameStore.getState().coins.eq(175)).toBe(true)
     })
 
     it('should handle large Decimal values', () => {
@@ -246,12 +246,18 @@ describe('gameStore', () => {
       expect(useGameStore.getState().canPrestige()).toBe(true)
     })
 
-    it('should reset progress on prestige', () => {
+    it('should keep upgrades and reset the board on prestige', () => {
       useGameStore.setState({ 
         bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
         coins: new Decimal(10000),
         currentTier: 5,
         upgrades: { speed: 5, damage: 5, coinMult: 5 },
+        upgradeCosts: {
+          speed: new Decimal(500),
+          damage: new Decimal(750),
+          coinMult: new Decimal(1000),
+        },
+        ballCosts: { ...useGameStore.getState().ballCosts, basic: new Decimal(99) },
         canvasSize: { width: 800, height: 500 }
       })
       
@@ -261,9 +267,14 @@ describe('gameStore', () => {
       expect(state.coins.eq(0)).toBe(true)
       expect(state.bricksBroken.eq(0)).toBe(true)
       expect(state.currentTier).toBe(1)
-      expect(state.upgrades.speed).toBe(0)
-      expect(state.upgrades.damage).toBe(0)
-      expect(state.upgrades.coinMult).toBe(0)
+      // Upgrades are permanent progression; only balls/coins reset.
+      expect(state.upgrades.speed).toBe(5)
+      expect(state.upgrades.damage).toBe(5)
+      expect(state.upgrades.coinMult).toBe(5)
+      expect(state.upgradeCosts.speed.eq(500)).toBe(true)
+      expect(state.balls).toHaveLength(1)
+      expect(state.balls[0].type).toBe('basic')
+      expect(state.ballCosts.basic.eq(BALL_TYPES.basic.baseCost)).toBe(true)
     })
 
     it('should increment prestige level', () => {
@@ -289,15 +300,14 @@ describe('gameStore', () => {
       expect(useGameStore.getState().bricksBroken.eq(0)).toBe(true)
     })
 
-    it('should scale prestige threshold with prestige level', () => {
-      const levelOneThreshold = getPrestigeThreshold(1)
+    it('should keep the prestige threshold fixed at higher levels', () => {
       useGameStore.setState({ 
-        prestigeLevel: 1,
-        bricksBroken: new Decimal(levelOneThreshold - 1),
+        prestigeLevel: 3,
+        bricksBroken: new Decimal(PRESTIGE_THRESHOLD - 1),
       })
       expect(useGameStore.getState().canPrestige()).toBe(false)
 
-      useGameStore.setState({ bricksBroken: new Decimal(levelOneThreshold) })
+      useGameStore.setState({ bricksBroken: new Decimal(PRESTIGE_THRESHOLD) })
       expect(useGameStore.getState().canPrestige()).toBe(true)
     })
   })
@@ -439,6 +449,12 @@ describe('gameStore', () => {
       useGameStore.setState({ upgrades: { speed: 0, damage: 5, coinMult: 0 } })
       // 5 levels * 0.1 = 0.5, so 1 + 0.5 = 1.5
       expect(useGameStore.getState().getDamageMult()).toBe(1.5)
+    })
+
+    it('should include the prestige multiplier in damage', () => {
+      useGameStore.setState({ prestigeLevel: 2, upgrades: { speed: 0, damage: 5, coinMult: 0 } })
+      // (1 + 5*0.1) * 1.75^2 = 1.5 * 3.0625
+      expect(useGameStore.getState().getDamageMult()).toBeCloseTo(4.59375)
     })
 
     it('should calculate coin multiplier correctly', () => {
@@ -689,6 +705,35 @@ describe('gameStore', () => {
 
       // Should have more than starting coins due to offline earnings
       expect(useGameStore.getState().coins.gt(1000)).toBe(true)
+    })
+
+    it('should include prestige damage in offline earnings', () => {
+      const hourAgo = Date.now() - 60 * 60 * 1000
+      const save = (prestigeLevel: number) => ({
+        coins: '0',
+        bricksBroken: '0',
+        totalBricksBroken: '0',
+        prestigeLevel,
+        upgrades: { speed: 0, damage: 0, coinMult: 0 },
+        ballCosts: {},
+        upgradeCosts: {},
+        currentTier: 1,
+        balls: ['basic'],
+        timestamp: hourAgo,
+      })
+
+      localStorageMock._setStore({ idleBricksSave: JSON.stringify(save(0)) })
+      useGameStore.getState().load()
+      const plainCoins = useGameStore.getState().coins.toNumber()
+
+      resetStore()
+      localStorageMock.clear()
+      localStorageMock._setStore({ idleBricksSave: JSON.stringify(save(1)) })
+      useGameStore.getState().load()
+      const prestigeCoins = useGameStore.getState().coins.toNumber()
+
+      // 1.75x damage cuts a tier-1 brick from 3 hits to 2 (1.5x) and coins 1.75x.
+      expect(prestigeCoins / plainCoins).toBeCloseTo(1.5 * 1.75, 1)
     })
 
     it('should not re-apply offline earnings when load runs twice', () => {
