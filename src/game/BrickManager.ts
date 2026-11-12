@@ -36,7 +36,7 @@ export class BrickManager {
   /** Rows that fit between offsetTop and the bottom fill limit. */
   private get maxRows() {
     return Math.max(
-      1,
+      0,
       Math.floor((this.fillBottom - this.offsetTop) / (BRICK_HEIGHT + BRICK_PADDING))
     );
   }
