@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 
 vi.mock('phaser', () => ({ default: {} }))
 
@@ -64,6 +64,10 @@ const createEffects = () => {
   } as unknown as ConstructorParameters<typeof GameEffects>[0]
   return { effects: new GameEffects(scene), texts }
 }
+
+afterEach(() => {
+  useSettingsStore.setState({ reducedMotion: false })
+})
 
 describe('GameEffects floating text', () => {
   it('colours coins and damage differently', () => {
@@ -145,7 +149,6 @@ describe('GameEffects floating text', () => {
     effects.updateFloatingTexts(100)
 
     expect(text.y).toBe(startY)
-    useSettingsStore.setState({ reducedMotion: false })
   })
 
   it('drifts popups upward when motion is allowed', () => {

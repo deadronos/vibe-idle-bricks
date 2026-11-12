@@ -86,6 +86,9 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       this.game.canvas.style.cursor = this.findBrickAt(pointer.x, pointer.y) ? 'pointer' : 'default';
     });
+    this.input.on('gameout', () => {
+      this.game.canvas.style.cursor = 'default';
+    });
   }
 
 

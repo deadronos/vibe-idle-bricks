@@ -15,6 +15,6 @@ describe('HowToPlay', () => {
     expect(details?.open).toBe(false);
     expect(screen.getByText(/Space/)).toBeInTheDocument();
     expect(screen.getByText(/Esc/)).toBeInTheDocument();
-    expect(screen.getByText(/10,000 bricks/)).toBeInTheDocument();
+    expect(screen.getByText(/10.00K bricks/)).toBeInTheDocument();
   });
 });

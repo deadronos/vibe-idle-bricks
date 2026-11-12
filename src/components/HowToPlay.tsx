@@ -1,3 +1,6 @@
+import { PRESTIGE_THRESHOLD } from '../types';
+import { formatNumber } from '../utils';
+
 /**
  * Collapsible rules panel under the board.
  *
@@ -14,7 +17,7 @@ export function HowToPlay() {
         <li>Bricks break when their health reaches zero; higher tiers pay more coins.</li>
         <li>Click a brick to deal extra damage to it.</li>
         <li>Buy balls and upgrades in the shop; each ball keeps bouncing on its own.</li>
-        <li>Prestige after 10,000 bricks for a permanent damage and coin multiplier.</li>
+        <li>Prestige after {formatNumber(PRESTIGE_THRESHOLD)} bricks for a permanent damage and coin multiplier.</li>
         <li>
           <kbd>Space</kbd> or <kbd>P</kbd> pauses; <kbd>Esc</kbd> resumes.
         </li>
