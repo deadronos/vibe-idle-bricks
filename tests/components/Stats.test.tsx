@@ -60,16 +60,36 @@ describe('Stats', () => {
     expect(statContainer).toHaveTextContent('500')
   })
 
-  it('should render total bricks (current + total)', () => {
+  it('should render total bricks without double counting the current run', () => {
     useGameStore.setState({
       bricksBroken: new Decimal(100),
       totalBricksBroken: new Decimal(900),
     })
     render(<Stats />)
     
-    // 100 + 900 = 1000 = 1.00K
-    expect(screen.getByText('1.00K')).toBeInTheDocument()
-    expect(screen.getByText('Total Bricks')).toBeInTheDocument()
+    // totalBricksBroken already includes the current run: 900, not 900 + 100
+    const totalLabel = screen.getByText('Total Bricks')
+    const statContainer = totalLabel.closest('.stat')
+    expect(statContainer).toHaveTextContent('900')
+    expect(screen.queryByText('1.00K')).not.toBeInTheDocument()
+  })
+
+  it('increases Total Bricks by exactly N after breaking N bricks', () => {
+    render(<Stats />)
+
+    act(() => {
+      for (let i = 0; i < 3; i++) {
+        useGameStore.getState().incrementBricksBroken()
+      }
+    })
+
+    // Current run and lifetime total both increase by N; display shows the lifetime total only
+    const state = useGameStore.getState()
+    expect(state.bricksBroken.eq(3)).toBe(true)
+    expect(state.totalBricksBroken.eq(3)).toBe(true)
+
+    const statContainer = screen.getByText('Total Bricks').closest('.stat')
+    expect(statContainer).toHaveTextContent('3')
   })
 
   it('should render ball count', () => {
