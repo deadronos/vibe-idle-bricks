@@ -55,7 +55,7 @@ describe('GameStore load legacy/partial save', () => {
     });
   });
 
-    it('should initialize missing upgrade costs when loading an incomplete save', () => {
+    it('should derive upgrade costs from levels when a save omits them', () => {
     // Create a save data that only has 'speed' upgrade cost
     const partialSaveData = {
       coins: "100",

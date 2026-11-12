@@ -219,7 +219,7 @@ export const BALL_TYPES: Record<BallType, BallTypeConfig> = {
 export const UPGRADE_MULTIPLIER = 0.1;
 /** Coins granted on a fresh game so the first purchase is minutes away. */
 export const STARTING_COINS = 35;
-/** Upgrade cost growth; matches the flat +10% effect so value per coin stays flat. */
+/** Upgrade cost growth; value per coin still decays ~9%/level, but slower than balls. */
 export const UPGRADE_COST_MULTIPLIER = 1.10;
 /** Damage and coin income are multiplied by this for every prestige level. */
 export const PRESTIGE_MULTIPLIER = 1.75;

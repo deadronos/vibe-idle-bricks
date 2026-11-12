@@ -482,9 +482,15 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
   }
 
   const savedUpgrades = saveData.upgrades ?? { speed: 0, damage: 0, coinMult: 0 };
+  // Parse once: costs must use the same clamped level the game will use.
+  const upgrades = {
+    speed: parseInteger(savedUpgrades.speed, 0, MAX_SPEED_UPGRADE),
+    damage: parseInteger(savedUpgrades.damage),
+    coinMult: parseInteger(savedUpgrades.coinMult),
+  };
   const upgradeCosts = getDefaultUpgradeCosts();
   for (const key of Object.keys(upgradeCosts) as (keyof Upgrades)[]) {
-    upgradeCosts[key] = calculateUpgradeCost(key, savedUpgrades[key] ?? 0);
+    upgradeCosts[key] = calculateUpgradeCost(key, upgrades[key]);
   }
 
   // Validate the unlocked-achievements map. Older saves will not have this
@@ -503,11 +509,7 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
     bricksBroken: parseDecimal(saveData.bricksBroken),
     totalBricksBroken: parseDecimal(saveData.totalBricksBroken),
     prestigeLevel: parseInteger(saveData.prestigeLevel),
-    upgrades: {
-      speed: parseInteger(savedUpgrades.speed, 0, MAX_SPEED_UPGRADE),
-      damage: parseInteger(savedUpgrades.damage),
-      coinMult: parseInteger(savedUpgrades.coinMult),
-    },
+    upgrades,
     ballCosts,
     upgradeCosts,
     currentTier: parseInteger(saveData.currentTier, 1),
