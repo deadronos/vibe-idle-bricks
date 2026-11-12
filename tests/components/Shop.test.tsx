@@ -94,7 +94,7 @@ describe('Shop', () => {
       const user = userEvent.setup()
       await user.click(screen.getByRole('tab', { name: /upgrades/i }))
 
-      expect(screen.getByText(/max \+11 → lv\.11/i)).toBeInTheDocument()
+      expect(screen.getByText('Max +11 → Lv.11 · 962 coins')).toBeInTheDocument()
       expect(screen.queryByText(/need 50 more/i)).not.toBeInTheDocument()
     })
 
@@ -107,7 +107,7 @@ describe('Shop', () => {
       const user = userEvent.setup()
       await user.click(screen.getByRole('tab', { name: /upgrades/i }))
 
-      expect(screen.getByText(/need 50 more coins \(~50s\)/i)).toBeInTheDocument()
+      expect(screen.getByText('Need 50 more coins (~8m)')).toBeInTheDocument()
     })
 
     it('should render upgrade buttons', async () => {

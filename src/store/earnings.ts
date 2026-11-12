@@ -44,7 +44,15 @@ export const calculateHitRate = (
   return hitRate;
 };
 
-/** Nominal coins per second, before the offline play-rate discount. */
+/**
+ * Simulated bricks-per-second is optimistic: balls bounce and spend time in
+ * empty space. Live measurement at tier 1 (one basic ball, 60 s) gave 0.1
+ * coins/s against a nominal 1/s, so display and ETA hints apply this factor.
+ * Offline earnings keep their own constants and are not affected.
+ */
+export const LIVE_INCOME_CALIBRATION = 0.1;
+
+/** Nominal coins per second; offline earnings apply their own constants. */
 export const calculateIncomePerSecond = (
   balls: BallData[],
   speedMult: number,

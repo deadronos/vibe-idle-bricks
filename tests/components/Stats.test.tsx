@@ -91,7 +91,7 @@ describe('Stats', () => {
     })
     render(<Stats />)
 
-    expect(screen.getByText('≈ 1/s')).toBeInTheDocument()
+    expect(screen.getByText('≈ 0.1/s')).toBeInTheDocument()
     expect(screen.getByText('1 / 50')).toBeInTheDocument()
   })
 

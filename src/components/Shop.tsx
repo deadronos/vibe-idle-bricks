@@ -1,4 +1,5 @@
-import { useState, useId } from 'react';
+import { useMemo, useState, useId } from 'react';
+import type Decimal from 'break_infinity.js';
 import { planMaxUpgrade, useGameStore } from '../store';
 import { type BallType, BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeMultiplier, MAX_BALLS, MAX_SPEED_UPGRADE, MAX_PRESTIGE_LEVEL, UPGRADE_MULTIPLIER } from '../types';
 import { formatMultiplier, formatNumber } from '../utils';
@@ -31,7 +32,7 @@ const effectText = (level: number, maxed = false): string => {
 const formatEta = (seconds: number): string => {
   if (!Number.isFinite(seconds) || seconds <= 0) return '';
   if (seconds < 60) return `~${Math.ceil(seconds)}s`;
-  if (seconds < 3600) return `~${Math.ceil(seconds / 60)}m`;
+  if (seconds < 3600) return `~${Math.round(seconds / 60)}m`;
   return `~${(seconds / 3600).toFixed(1)}h`;
 };
 
@@ -91,7 +92,14 @@ export function Shop() {
   };
 
   const prestigeMult = getPrestigeMultiplier(prestigeLevel);
-  const incomePerSecond = useGameStore.getState().getIncomePerSecond();
+  const ballTypesKey = useGameStore((state) => state.balls.map((ball) => ball.type).join(','));
+  const currentTier = useGameStore((state) => state.currentTier);
+  const incomePerSecond = useMemo(
+    () => useGameStore.getState().getIncomePerSecond(),
+    // The getter reads the current store; these selections trigger re-renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ballTypesKey, currentTier, upgrades.speed, upgrades.damage, upgrades.coinMult, prestigeLevel]
+  );
   const nextPrestigeMult = getPrestigeMultiplier(prestigeLevel + 1);
   const canDoPrestige = canPrestige();
   const isMaxPrestige = prestigeLevel >= MAX_PRESTIGE_LEVEL;
@@ -259,8 +267,8 @@ interface UpgradeButtonProps {
   coins: import('break_infinity.js').default;
   /** Current level of the upgrade. */
   level: number;
-  /** Nominal coins per second, used for the time-to-afford hint. */
-  incomePerSecond: import('break_infinity.js').default;
+  /** Estimated coins per second, used for the time-to-afford hint. */
+  incomePerSecond: Decimal;
   /** Callback to trigger purchase. */
   onBuy: () => void;
   /** Callback to trigger "buy max" purchase. */
@@ -270,14 +278,18 @@ interface UpgradeButtonProps {
 }
 
 function UpgradeButton({ type, name, icon: Icon, description, cost, coins, level, incomePerSecond, onBuy, onBuyMax, isMaxed }: UpgradeButtonProps) {
+  const previewId = useId();
   const canAfford = coins.gte(cost) && !isMaxed;
-  const plan = planMaxUpgrade(type, level, cost, coins);
+  const plan = useMemo(() => planMaxUpgrade(type, level, cost, coins), [type, level, cost, coins]);
+  const shortfall = cost.sub(coins);
+  const eta = incomePerSecond.gt(0)
+    ? formatEta(shortfall.div(incomePerSecond).toNumber())
+    : '';
   const maxPreview = isMaxed
     ? null
     : plan.levels > 0
       ? `Max +${plan.levels} → Lv.${level + plan.levels} · ${formatNumber(plan.totalCost)} coins`
-      : `Need ${formatNumber(cost.sub(coins))} more coins` +
-        (incomePerSecond.gt(0) ? ` (${formatEta(cost.sub(coins).div(incomePerSecond).toNumber())})` : '');
+      : `Need ${formatNumber(shortfall)} more coins${eta ? ` (${eta})` : ''}`;
 
   return (
     <div className={`shop-item upgrade-item ${canAfford ? 'affordable' : ''}`}>
@@ -288,11 +300,22 @@ function UpgradeButton({ type, name, icon: Icon, description, cost, coins, level
         </span>
         <span className="item-cost">{isMaxed ? 'MAX' : formatNumber(cost)}</span> {isMaxed ? '' : 'coins'}
         <div className="item-desc">{description}</div>
-        {maxPreview && <div className="item-desc upgrade-preview">{maxPreview}</div>}
+        {maxPreview && (
+          <div className="item-desc upgrade-preview" id={previewId}>
+            {maxPreview}
+          </div>
+        )}
       </div>
       <div className="upgrade-actions">
         <button className="buy-btn" disabled={!canAfford} onClick={onBuy}>Buy</button>
-        <button className="buy-max-btn" disabled={!canAfford} onClick={onBuyMax}>Max</button>
+        <button
+          className="buy-max-btn"
+          disabled={!canAfford}
+          onClick={onBuyMax}
+          aria-describedby={maxPreview ? previewId : undefined}
+        >
+          Max
+        </button>
       </div>
     </div>
   );

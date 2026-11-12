@@ -17,13 +17,11 @@ TASK009 (Suggestion Set) is **complete** and merged to `main` (merge `20505e0`).
   gold with `¢`, damage near-white, `MAX_ACTIVE_FLOATING_TEXTS = 8` with coin
   eviction and jitter; killing hits no longer stack a damage popup under the
   coin popup.
-- Working on #68: `calculateHitRate`/`calculateIncomePerSecond` in
-  `src/store/earnings.ts` (shared with offline earnings), store
-  `getIncomePerSecond()`, `planMaxUpgrade()` shared by the Max button and its
-  shop preview, ball cap and time-to-afford hints.
-- Shipped #59: `GameEffects.showFloatingText` takes `'damage' | 'coin'`,
-  colours by kind, `MAX_ACTIVE_FLOATING_TEXTS = 8`, coin popups replace the
-  oldest damage popup at the cap, and positions get ±6/±4 px jitter.
+- Working on #68 (PR #97): `calculateHitRate`/`calculateIncomePerSecond` in
+  `src/store/earnings.ts` (nominal, shared with offline earnings), store
+  `getIncomePerSecond()` applies `LIVE_INCOME_CALIBRATION = 0.1` measured in
+  live play, `planMaxUpgrade()` shared by the Max button and its shop preview,
+  `n / 50` ball cap, and time-to-afford hints with `aria-describedby`.
 - Shipped visuals batch PR #95: `getContrastTextColor()` picks near-black or
   white from WCAG luminance; damaged bricks draw a green/yellow/red HP bar;
   `drawBackground()` adds a floor strip, launch-zone band and side walls;

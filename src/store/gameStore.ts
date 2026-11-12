@@ -29,7 +29,7 @@ import {
   type AchievementGameState,
 } from '../types/achievements';
 import { createBall } from '../utils/helpers';
-import { calculateIncomePerSecond, calculateOfflineEarnings } from './earnings';
+import { LIVE_INCOME_CALIBRATION, calculateIncomePerSecond, calculateOfflineEarnings } from './earnings';
 import { playSound } from '../utils/audio';
 
 /**
@@ -458,6 +458,11 @@ export const planMaxUpgrade = (
   let currentCost = cost;
   let totalCost = new Decimal(0);
   let levels = 0;
+
+  // Crafted saves can contain a zero/negative cost; never grant free levels.
+  if (cost.lte(0)) {
+    return { levels: 0, totalCost, remainingCoins, nextCost: cost };
+  }
 
   while (
     remainingCoins.gte(currentCost) &&
@@ -1004,7 +1009,7 @@ export const useGameStore = create<GameStore>()(
         state.getCoinMult(),
         state.prestigeLevel,
         state.currentTier
-      );
+      ).mul(LIVE_INCOME_CALIBRATION);
     },
   }))
 );

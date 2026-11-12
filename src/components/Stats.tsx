@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useGameStore } from '../store';
 import { formatMultiplier, formatNumber } from '../utils';
 import { MAX_BALLS, PRESTIGE_THRESHOLD, getPrestigeMultiplier } from '../types';
@@ -15,10 +16,19 @@ export function Stats() {
   const totalBricksBroken = useGameStore((state) => state.totalBricksBroken);
   // Selector selects just the length to avoid re-rendering on every frame when ball positions update
   const ballCount = useGameStore((state) => state.balls.length);
+  const ballTypesKey = useGameStore((state) => state.balls.map((ball) => ball.type).join(','));
+  const speedLevel = useGameStore((state) => state.upgrades.speed);
+  const damageLevel = useGameStore((state) => state.upgrades.damage);
+  const coinLevel = useGameStore((state) => state.upgrades.coinMult);
+  const currentTier = useGameStore((state) => state.currentTier);
   const prestigeLevel = useGameStore((state) => state.prestigeLevel);
   const prestigeMult = getPrestigeMultiplier(prestigeLevel);
-  // Not selected directly: ball types change with ballCount, which is selected.
-  const incomePerSecond = useGameStore.getState().getIncomePerSecond();
+  const incomePerSecond = useMemo(
+    () => useGameStore.getState().getIncomePerSecond(),
+    // The getter reads the current store; these selections trigger re-renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ballTypesKey, speedLevel, damageLevel, coinLevel, currentTier, prestigeLevel]
+  );
 
   return (
     <div className="stats">
@@ -40,7 +50,9 @@ export function Stats() {
       </div>
       <div className="stat stat-balls">
         <Circle className="stat-icon" size={24} />
-        <span className="stat-value">{ballCount} / {MAX_BALLS}</span>
+        <span className="stat-value" aria-label={`${ballCount} of ${MAX_BALLS} balls`}>
+          {ballCount} / {MAX_BALLS}
+        </span>
         <label>Balls</label>
       </div>
       <div className="stat stat-prestige-target">
