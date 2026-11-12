@@ -57,7 +57,7 @@ value = tier^1.2  (Tier 10 → ~15.8 coins instead of 10)
 | 500–599 | 6 |
 | 900+ | 10 |
 
-**Analysis:** Progression is predictable but the cap at tier 10 creates a ceiling effect. Combined with the 10,000 brick prestige threshold, players will spend significant time at max tier with no new challenges.
+**Analysis:** Progression is predictable but the cap at tier 20 creates a ceiling effect. Combined with the 10,000 brick prestige threshold, players will spend significant time at max tier with no new challenges.
 
 **Issues:**
 - 900+ bricks at tier 10 = ~9,100 bricks of repetitive gameplay before prestige
@@ -143,7 +143,7 @@ Damage Per Second ≈ `(damage × speed) / average_bounce_distance`
 
 Assuming average DPS and brick spawn rates:
 - ~10 bricks/minute early → ~30 bricks/minute late
-- Rough estimate: 500–800 minutes (8–13 hours) of active play
+- Greedy simulation: ~30 minutes with active buying (see DESIGN007)
 
 **Analysis:**
 
@@ -154,7 +154,7 @@ Assuming average DPS and brick spawn rates:
 
 ❌ **Issues:**
 - Single prestige layer limits long-term engagement
-- 25% bonus compounds slowly (need 4 prestiges for 2× coins)
+- ×1.75 per level is a 75% jump, so each run is much faster than the last
 - No prestige upgrades or choices
 - 10,000 threshold may feel arbitrary
 

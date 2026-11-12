@@ -43,6 +43,12 @@ describe('calculateOfflineEarnings', () => {
     expect(level20 / level19).toBeCloseTo(1.75, 2)
   })
 
+  it('should pin tier 1 income to the live rate', () => {
+    // basic ball: 3 hits per brick, value 1, 50% offline -> 0.05 coins/s
+    const result = calculateOfflineEarnings([createBall('basic')], 1, 1, 1, 0, 1, 3600)
+    expect(result.coins.toNumber()).toBe(90)
+  })
+
   it('should follow the value/health yield at higher tiers', () => {
     const tier1 = calculateOfflineEarnings([createBall('basic')], 1, 1, 1, 0, 1, 3600).coins.toNumber()
     const tier20 = calculateOfflineEarnings([createBall('basic')], 1, 1, 1, 0, 20, 3600).coins.toNumber()

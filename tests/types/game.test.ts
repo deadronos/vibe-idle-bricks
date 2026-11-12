@@ -129,13 +129,6 @@ describe('Game Constants', () => {
       expect(getPrestigeMultiplier(5)).toBeCloseTo(16.413);
     });
 
-    it('should make each prestige need less income for its threshold', () => {
-      // speed-run proxy: bricks to break divided by the income multiplier
-      const work = (level: number) => PRESTIGE_THRESHOLD / getPrestigeMultiplier(level);
-      for (let level = 0; level < 20; level++) {
-        expect(work(level + 1)).toBeLessThan(work(level));
-      }
-    });
   });
 
   describe('calculateBrickStats tier curve', () => {

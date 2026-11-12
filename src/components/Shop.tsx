@@ -210,7 +210,7 @@ export function Shop() {
         {formatMultiplier(nextPrestigeMult)}.
       </p>
       <p>Keeps: upgrades, achievements, and the prestige bonus.</p>
-      <p>Resets: coins, balls, tier, and bricks broken this run.</p>
+      <p>Resets: coins, balls and their costs, tier, and bricks broken this run.</p>
     </Modal>
     </>
   );

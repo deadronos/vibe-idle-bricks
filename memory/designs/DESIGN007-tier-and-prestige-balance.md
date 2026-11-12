@@ -48,8 +48,9 @@ nominal ball power to bricks/s.
 - Fixed one-ball comparison: tier 20 brick takes 5.75x longer (115 s vs 20 s)
   but pays 21x more per second (1.04 vs 0.05 coins/s); with normal purchasing
   the measured per-brick time falls from 20 s at tier 1 to 0.1 s at tier 20.
-- Offline earnings use the same `value * 3 / health` yield factor (normalised
-  to 1 at tier 1) and apply the prestige bonus once.
+- Offline uses the same hit count as live: `rate = speed / ceil(health /
+  damage)` per ball, pays `value` per break, and applies the prestige bonus once.
+  A basic ball at tier 1 yields 0.05 coins/s, matching measured live income.
 
 ## Tests
 
