@@ -1,5 +1,5 @@
 import Decimal from 'break_infinity.js';
-import { BALL_TYPES, PRESTIGE_BONUS, OFFLINE_EARNINGS_RATE } from '../types';
+import { BALL_TYPES, OFFLINE_EARNINGS_RATE, getPrestigeMultiplier } from '../types';
 import { OFFLINE_EARNINGS_CONSTANT } from '../game/constants';
 import { formatNumber } from '../utils';
 import type { BallData } from '../types';
@@ -19,7 +19,7 @@ export const calculateOfflineEarnings = (
   offlineSeconds: number
 ): OfflineEarningsResult => {
   const safeOfflineSeconds = Math.max(0, offlineSeconds);
-  const prestigeBonus = 1 + prestigeLevel * PRESTIGE_BONUS;
+  const prestigeBonus = getPrestigeMultiplier(prestigeLevel);
 
   let totalBallPower = new Decimal(0);
   for (const ball of balls) {

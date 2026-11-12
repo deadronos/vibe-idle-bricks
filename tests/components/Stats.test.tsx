@@ -90,7 +90,7 @@ describe('Stats', () => {
     render(<Stats />)
 
     expect(screen.getByText('Next Prestige')).toBeInTheDocument()
-    expect(screen.getByText('40.00K')).toBeInTheDocument()
+    expect(screen.getByText('22.50K')).toBeInTheDocument()
   })
 
   it('should update when store changes', () => {

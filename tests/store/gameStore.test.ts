@@ -100,8 +100,8 @@ describe('gameStore', () => {
       useGameStore.setState({ prestigeLevel: 1 })
       const store = useGameStore.getState()
       store.addCoins(new Decimal(100))
-      // Prestige level 1 = 25% bonus, so 100 * 1.25 = 125
-      expect(useGameStore.getState().coins.eq(125)).toBe(true)
+      // Prestige level 1 multiplies income by 1.75
+      expect(useGameStore.getState().coins.eq(175)).toBe(true)
     })
 
     it('should handle large Decimal values', () => {
@@ -246,12 +246,18 @@ describe('gameStore', () => {
       expect(useGameStore.getState().canPrestige()).toBe(true)
     })
 
-    it('should reset progress on prestige', () => {
+    it('should keep upgrades and reset the board on prestige', () => {
       useGameStore.setState({ 
         bricksBroken: new Decimal(PRESTIGE_THRESHOLD),
         coins: new Decimal(10000),
         currentTier: 5,
         upgrades: { speed: 5, damage: 5, coinMult: 5 },
+        upgradeCosts: {
+          speed: new Decimal(500),
+          damage: new Decimal(750),
+          coinMult: new Decimal(1000),
+        },
+        ballCosts: { ...useGameStore.getState().ballCosts, basic: new Decimal(99) },
         canvasSize: { width: 800, height: 500 }
       })
       
@@ -261,9 +267,14 @@ describe('gameStore', () => {
       expect(state.coins.eq(0)).toBe(true)
       expect(state.bricksBroken.eq(0)).toBe(true)
       expect(state.currentTier).toBe(1)
-      expect(state.upgrades.speed).toBe(0)
-      expect(state.upgrades.damage).toBe(0)
-      expect(state.upgrades.coinMult).toBe(0)
+      // Upgrades are permanent progression; only balls/coins reset.
+      expect(state.upgrades.speed).toBe(5)
+      expect(state.upgrades.damage).toBe(5)
+      expect(state.upgrades.coinMult).toBe(5)
+      expect(state.upgradeCosts.speed.eq(500)).toBe(true)
+      expect(state.balls).toHaveLength(1)
+      expect(state.balls[0].type).toBe('basic')
+      expect(state.ballCosts.basic.eq(BALL_TYPES.basic.baseCost)).toBe(true)
     })
 
     it('should increment prestige level', () => {
@@ -439,6 +450,12 @@ describe('gameStore', () => {
       useGameStore.setState({ upgrades: { speed: 0, damage: 5, coinMult: 0 } })
       // 5 levels * 0.1 = 0.5, so 1 + 0.5 = 1.5
       expect(useGameStore.getState().getDamageMult()).toBe(1.5)
+    })
+
+    it('should include the prestige multiplier in damage', () => {
+      useGameStore.setState({ prestigeLevel: 2, upgrades: { speed: 0, damage: 5, coinMult: 0 } })
+      // (1 + 5*0.1) * 1.75^2 = 1.5 * 3.0625
+      expect(useGameStore.getState().getDamageMult()).toBeCloseTo(4.59375)
     })
 
     it('should calculate coin multiplier correctly', () => {

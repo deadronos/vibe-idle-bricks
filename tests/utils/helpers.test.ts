@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import Decimal from 'break_infinity.js'
-import { generateId, formatNumber, adjustBrightness, getTierColor, getAccessibleTierColor } from '../../src/utils/helpers'
+import { generateId, formatMultiplier, formatNumber, adjustBrightness, getTierColor, getAccessibleTierColor } from '../../src/utils/helpers'
 
 describe('generateId', () => {
   it('should generate a string ID', () => {
@@ -24,6 +24,18 @@ describe('generateId', () => {
   it('should only contain alphanumeric characters', () => {
     const id = generateId()
     expect(id).toMatch(/^[a-z0-9]+$/)
+  })
+})
+
+describe('formatMultiplier', () => {
+  it('should trim trailing zeros', () => {
+    expect(formatMultiplier(1.75)).toBe('1.75')
+    expect(formatMultiplier(2)).toBe('2')
+    expect(formatMultiplier(0.5)).toBe('0.5')
+  })
+
+  it('should fall back to compact formatting for large values', () => {
+    expect(formatMultiplier(1234)).toBe('1.23K')
   })
 })
 

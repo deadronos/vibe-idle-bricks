@@ -4,8 +4,8 @@ import Decimal from 'break_infinity.js';
 import {
   BALL_TYPES,
   UPGRADE_MULTIPLIER,
-  PRESTIGE_BONUS,
   MAX_TIER,
+  getPrestigeMultiplier,
   getPrestigeThreshold,
   MAX_BALLS,
   MAX_SPEED_UPGRADE,
@@ -544,7 +544,7 @@ export const useGameStore = create<GameStore>()(
 
     addCoins: (amount) => {
       const state = get();
-      const prestigeBonus = 1 + state.prestigeLevel * PRESTIGE_BONUS;
+      const prestigeBonus = getPrestigeMultiplier(state.prestigeLevel);
       const newCoins = state.coins.add(amount.mul(prestigeBonus));
       set({ coins: newCoins });
       // Only play the "coin" sound for small, non-coin-spam additions
@@ -674,9 +674,8 @@ export const useGameStore = create<GameStore>()(
         coins: new Decimal(0),
         bricksBroken: new Decimal(0),
         currentTier: 1,
-        upgrades: { speed: 0, damage: 0, coinMult: 0 },
+        // Upgrades and their costs are permanent; only the ball board resets.
         ballCosts: getDefaultBallCosts(),
-        upgradeCosts: getDefaultUpgradeCosts(),
         balls: [createBall('basic', width, height)],
         bricks: [],
         explosions: [],
@@ -927,7 +926,12 @@ export const useGameStore = create<GameStore>()(
 
     getDamageMult: () => {
       const state = get();
-      return 1 + state.upgrades.damage * UPGRADE_MULTIPLIER;
+      // Prestige also strengthens balls, otherwise thresholds (bricks) would
+      // outgrow the damage needed to break them.
+      return (
+        (1 + state.upgrades.damage * UPGRADE_MULTIPLIER) *
+        getPrestigeMultiplier(state.prestigeLevel)
+      );
     },
 
     getCoinMult: () => {

@@ -2,10 +2,12 @@ import { describe, it, expect } from 'vitest';
 import {
   BALL_TYPES,
   UPGRADE_MULTIPLIER,
-  PRESTIGE_BONUS,
+  PRESTIGE_MULTIPLIER,
+  PRESTIGE_THRESHOLD_GROWTH,
   OFFLINE_EARNINGS_RATE,
   MAX_TIER,
-  PRESTIGE_THRESHOLDS,
+  calculateBrickStats,
+  getPrestigeMultiplier,
   getPrestigeThreshold,
 } from '../../src/types/game';
 
@@ -100,8 +102,12 @@ describe('Game Constants', () => {
     expect(UPGRADE_MULTIPLIER).toBe(0.1);
   });
 
-  it('should be 0.25 (25% per prestige)', () => {
-    expect(PRESTIGE_BONUS).toBe(0.25);
+  it('should multiply income by 1.75 per prestige', () => {
+    expect(PRESTIGE_MULTIPLIER).toBe(1.75);
+  });
+
+  it('should grow the next prestige threshold by 1.5x', () => {
+    expect(PRESTIGE_THRESHOLD_GROWTH).toBe(1.5);
   });
 
   it('should be 0.5 (50% of normal earnings)', () => {
@@ -123,18 +129,58 @@ describe('Game Constants', () => {
       expect(getPrestigeThreshold(0)).toBe(10000);
     });
 
-    it('should define the scaling thresholds', () => {
-      expect(PRESTIGE_THRESHOLDS).toEqual([10000, 20000, 40000]);
+    it('should scale by 1.5x per level', () => {
+      expect(getPrestigeThreshold(0)).toBe(10000);
+      expect(getPrestigeThreshold(1)).toBe(15000);
+      expect(getPrestigeThreshold(2)).toBe(22500);
+      expect(getPrestigeThreshold(3)).toBe(33750);
+      expect(getPrestigeThreshold(4)).toBe(50625);
+      expect(getPrestigeThreshold(5)).toBe(75937);
+    });
+  });
+
+  describe('getPrestigeMultiplier', () => {
+    it('should start at 1x', () => {
+      expect(getPrestigeMultiplier(0)).toBe(1);
     });
 
-    it('should scale exponentially beyond defined thresholds', () => {
-      expect(getPrestigeThreshold(0)).toBe(10000);
-      expect(getPrestigeThreshold(1)).toBe(20000);
-      expect(getPrestigeThreshold(2)).toBe(40000);
-      // New behavior: should scale beyond array
-      expect(getPrestigeThreshold(3)).toBe(60000); // 40000 * 1.5
-      expect(getPrestigeThreshold(4)).toBe(90000); // 60000 * 1.5
-      expect(getPrestigeThreshold(5)).toBe(135000); // 90000 * 1.5
+    it('should compound multiplicatively', () => {
+      expect(getPrestigeMultiplier(1)).toBe(1.75);
+      expect(getPrestigeMultiplier(2)).toBeCloseTo(3.0625);
+      expect(getPrestigeMultiplier(5)).toBeCloseTo(16.413);
+    });
+
+    it('should make each prestige need less income for its threshold', () => {
+      // speed-run proxy: bricks to break divided by the income multiplier
+      const work = (level: number) => getPrestigeThreshold(level) / getPrestigeMultiplier(level);
+      for (let level = 0; level < 20; level++) {
+        expect(work(level + 1)).toBeLessThan(work(level));
+      }
+    });
+  });
+
+  describe('calculateBrickStats tier curve', () => {
+    it('should keep tier 1 pacing unchanged', () => {
+      const { maxHealth, value } = calculateBrickStats(1);
+      expect(maxHealth.toNumber()).toBe(3);
+      expect(value.toNumber()).toBe(1);
+    });
+
+    it('should pay more per hit as the tier rises', () => {
+      let previous = 0;
+      for (let tier = 1; tier <= MAX_TIER; tier++) {
+        const { maxHealth, value } = calculateBrickStats(tier);
+        const coinsPerHealth = value.div(maxHealth).toNumber();
+        expect(coinsPerHealth).toBeGreaterThan(previous);
+        previous = coinsPerHealth;
+      }
+    });
+
+    it('should soften health growth so higher tiers stay killable', () => {
+      const tier1 = calculateBrickStats(1).maxHealth;
+      const tier20 = calculateBrickStats(MAX_TIER).maxHealth;
+      expect(tier20.div(tier1).toNumber()).toBeLessThanOrEqual(6);
+      expect(calculateBrickStats(MAX_TIER).value.toNumber()).toBeGreaterThanOrEqual(100);
     });
   });
 });

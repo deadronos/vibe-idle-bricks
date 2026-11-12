@@ -260,8 +260,8 @@ describe('Shop', () => {
       const prestigeTab = screen.getByRole('tab', { name: /prestige/i })
       await user.click(prestigeTab)
 
-      expect(screen.getByText(/\+25% coin bonus/i)).toBeInTheDocument()
-      expect(screen.getByText(/current: \+50%/i)).toBeInTheDocument()
+      expect(screen.getByText(/next: ×5\.36 coin income/i)).toBeInTheDocument()
+      expect(screen.getByText(/current: ×3\.06/i)).toBeInTheDocument()
     })
 
     it('should show confirm dialog when prestige clicked', async () => {

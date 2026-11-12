@@ -1,7 +1,7 @@
 import { useState, useId } from 'react';
 import { useGameStore } from '../store';
-import { type BallType, BALL_TYPES, PRESTIGE_BONUS, getPrestigeThreshold, MAX_BALLS, MAX_SPEED_UPGRADE } from '../types';
-import { formatNumber } from '../utils';
+import { type BallType, BALL_TYPES, getPrestigeMultiplier, getPrestigeThreshold, MAX_BALLS, MAX_SPEED_UPGRADE } from '../types';
+import { formatMultiplier, formatNumber } from '../utils';
 import { ShoppingCart, Zap, Crosshair, Bomb, Circle, Hexagon, Star, ArrowUpCircle, Coins, TrendingUp } from 'lucide-react';
 import { Modal } from './Modal';
 
@@ -75,7 +75,8 @@ export function Shop() {
     }
   };
 
-  const prestigePercent = Math.round(PRESTIGE_BONUS * 100);
+  const prestigeMult = getPrestigeMultiplier(prestigeLevel);
+  const nextPrestigeMult = getPrestigeMultiplier(prestigeLevel + 1);
   const canDoPrestige = canPrestige();
   const prestigeThreshold = getPrestigeThreshold(prestigeLevel);
   const bricksNeeded = Math.max(0, prestigeThreshold - bricksBroken.toNumber());
@@ -187,7 +188,7 @@ export function Shop() {
             <span className="item-desc">Reset for permanent bonuses</span>
             <span className="item-desc">
               {canDoPrestige
-                ? `+${prestigePercent}% coin bonus (Current: +${prestigeLevel * prestigePercent}%)`
+                ? `Next: ×${formatMultiplier(nextPrestigeMult)} coin income (Current: ×${formatMultiplier(prestigeMult)})`
                 : `Break ${formatNumber(bricksNeeded)} more bricks`}
             </span>
           </button>
@@ -205,7 +206,12 @@ export function Shop() {
       onConfirm={confirmPrestige}
       onCancel={() => setPrestigeOpen(false)}
     >
-      <p>You will lose all coins, balls, and upgrades but gain a permanent +{prestigePercent}% coin bonus.</p>
+      <p>
+        Prestige raises your damage and coin multiplier from ×{formatMultiplier(prestigeMult)} to ×
+        {formatMultiplier(nextPrestigeMult)}.
+      </p>
+      <p>Keeps: upgrades, achievements, and the prestige bonus.</p>
+      <p>Resets: coins, balls, tier, and bricks broken this run.</p>
     </Modal>
     </>
   );
