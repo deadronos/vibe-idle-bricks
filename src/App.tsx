@@ -117,6 +117,8 @@ function GameApp() {
   useEffect(() => {
     if (hasLoadedRef.current) return;
     hasLoadedRef.current = true;
+    // The canvas is fixed at 800x500 in FIT mode, matching the store default,
+    // so loading before Phaser's create() still places restored balls in bounds.
     load();
   }, [load]);
 
