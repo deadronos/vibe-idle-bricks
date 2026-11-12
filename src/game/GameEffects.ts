@@ -94,6 +94,7 @@ export class GameEffects {
    * Updates active floating text objects and returns expired ones to the pool.
    */
   updateFloatingTexts(delta: number) {
+    const reduceMotion = useSettingsStore.getState().reducedMotion;
     for (let index = this.activeFloatingTexts.length - 1; index >= 0; index--) {
       const entry = this.activeFloatingTexts[index];
       entry.life -= delta;
@@ -103,7 +104,7 @@ export class GameEffects {
         continue;
       }
 
-      entry.text.y -= 0.05 * delta;
+      if (!reduceMotion) entry.text.y -= 0.05 * delta;
       entry.text.setAlpha(entry.life / FLOATING_TEXT_LIFE_MS);
     }
   }

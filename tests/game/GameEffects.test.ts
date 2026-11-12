@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 
 vi.mock('phaser', () => ({ default: {} }))
 
 import { GameEffects, MAX_ACTIVE_FLOATING_TEXTS } from '../../src/game/GameEffects'
+import { useSettingsStore } from '../../src/store/settingsStore'
 
 interface FakeText {
   text: string
@@ -63,6 +64,10 @@ const createEffects = () => {
   } as unknown as ConstructorParameters<typeof GameEffects>[0]
   return { effects: new GameEffects(scene), texts }
 }
+
+afterEach(() => {
+  useSettingsStore.setState({ reducedMotion: false })
+})
 
 describe('GameEffects floating text', () => {
   it('colours coins and damage differently', () => {
@@ -132,5 +137,29 @@ describe('GameEffects floating text', () => {
     expect(texts).toHaveLength(1)
     expect(texts[0].text).toBe('-2')
     expect(texts[0].visible).toBe(true)
+  })
+
+  it('keeps popups still when reduced motion is enabled', () => {
+    useSettingsStore.setState({ reducedMotion: true })
+    const { effects, texts } = createEffects()
+    effects.showFloatingText(10, 10, '-1', 'damage')
+    const text = texts[0]
+    const startY = text.y
+
+    effects.updateFloatingTexts(100)
+
+    expect(text.y).toBe(startY)
+  })
+
+  it('drifts popups upward when motion is allowed', () => {
+    useSettingsStore.setState({ reducedMotion: false })
+    const { effects, texts } = createEffects()
+    effects.showFloatingText(10, 10, '-1', 'damage')
+    const text = texts[0]
+    const startY = text.y
+
+    effects.updateFloatingTexts(100)
+
+    expect(text.y).toBeLessThan(startY)
   })
 })

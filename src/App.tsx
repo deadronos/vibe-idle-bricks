@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Component } from 'react';
 import { Footer } from './components/Footer';
+import { HowToPlay } from './components/HowToPlay';
 import { PauseButton } from './components/PauseButton';
 import { PauseIndicator } from './components/PauseIndicator';
 import { PauseOverlay } from './components/PauseOverlay';
@@ -141,13 +142,16 @@ function GameApp() {
       </header>
 
       <main>
-        <div className="game-area">
-          <PhaserErrorBoundary>
-            <Suspense fallback={<GameLoadingFallback />}>
-              <LazyPhaserGame />
-            </Suspense>
-          </PhaserErrorBoundary>
-          <PauseOverlay />
+        <div className="board-column">
+          <div className="game-area">
+            <PhaserErrorBoundary>
+              <Suspense fallback={<GameLoadingFallback />}>
+                <LazyPhaserGame />
+              </Suspense>
+            </PhaserErrorBoundary>
+            <PauseOverlay />
+          </div>
+          <HowToPlay />
         </div>
         <Shop />
       </main>

@@ -79,7 +79,7 @@ export function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
             onChange={(event) => setReducedMotion(event.target.checked)}
             data-testid="setting-reduced-motion"
           />
-          <span>Reduce motion (camera shake, trails)</span>
+          <span>Reduce motion (particles, shake, floating text)</span>
         </label>
       </div>
 
