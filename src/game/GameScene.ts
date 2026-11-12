@@ -173,7 +173,7 @@ export class GameScene extends Phaser.Scene {
     this.renderBalls(renderState.balls);
     this.renderBricks(renderState.bricks);
     this.renderExplosions();
-    this.updateFloatingTexts(delta);
+    this.updateFloatingTexts(frameDelta);
   }
 
   /**
