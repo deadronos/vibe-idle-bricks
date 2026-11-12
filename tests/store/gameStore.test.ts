@@ -39,9 +39,9 @@ const resetStore = () => {
       sniper: new Decimal(BALL_TYPES.sniper.baseCost),
     },
     upgradeCosts: {
-      speed: new Decimal(100),
-      damage: new Decimal(150),
-      coinMult: new Decimal(200),
+      speed: new Decimal(50),
+      damage: new Decimal(75),
+      coinMult: new Decimal(100),
     },
     currentTier: 1,
     balls: [],
@@ -61,9 +61,11 @@ describe('gameStore', () => {
   })
 
   describe('initial state', () => {
-    it('should start with zero coins', () => {
-      const state = useGameStore.getState()
-      expect(state.coins.eq(0)).toBe(true)
+    it('should start with starting coins', () => {
+      useGameStore.getState().reset()
+      expect(useGameStore.getState().coins.eq(35)).toBe(true)
+      expect(useGameStore.getState().upgradeCosts.speed.eq(50)).toBe(true)
+      expect(useGameStore.getState().upgradeCosts.damage.eq(75)).toBe(true)
     })
 
     it('should start at tier 1', () => {
@@ -201,13 +203,12 @@ describe('gameStore', () => {
       expect(newCost).toBeGreaterThan(initialCost)
     })
 
-    it('should apply 15% cost increase per upgrade', () => {
+    it('should apply 10% cost increase per upgrade', () => {
       useGameStore.setState({ coins: new Decimal(10000) })
-      const initialCost = useGameStore.getState().upgradeCosts.speed.toNumber()
       useGameStore.getState().buyUpgrade('speed')
       const newCost = useGameStore.getState().upgradeCosts.speed.toNumber()
-      // Cost should increase by 15%
-      expect(newCost).toBe(Math.ceil(initialCost * 1.15))
+      // Cost should increase by 10%
+      expect(newCost).toBe(55)
     })
   })
 
@@ -224,10 +225,10 @@ describe('gameStore', () => {
       const purchased = useGameStore.getState().buyMaxUpgrade('speed')
       const state = useGameStore.getState()
 
-      expect(purchased).toBe(6)
-      expect(state.upgrades.speed).toBe(6)
-      expect(state.coins.eq(120)).toBe(true)
-      expect(state.upgradeCosts.speed.eq(234)).toBe(true)
+      expect(purchased).toBe(11)
+      expect(state.upgrades.speed).toBe(11)
+      expect(state.coins.eq(38)).toBe(true)
+      expect(state.upgradeCosts.speed.eq(152)).toBe(true)
     })
   })
 
@@ -509,7 +510,7 @@ describe('gameStore', () => {
       useGameStore.getState().reset()
 
       const state = useGameStore.getState()
-      expect(state.coins.eq(0)).toBe(true)
+      expect(state.coins.eq(35)).toBe(true)
       expect(state.bricksBroken.eq(0)).toBe(true)
       expect(state.prestigeLevel).toBe(0)
       expect(state.currentTier).toBe(1)

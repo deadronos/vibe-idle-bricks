@@ -11,6 +11,8 @@ import {
   MAX_SPEED_UPGRADE,
   MAX_PRESTIGE_LEVEL,
   COST_MULTIPLIER,
+  STARTING_COINS,
+  UPGRADE_COST_MULTIPLIER,
 } from '../types';
 import type {
   BallType,
@@ -406,9 +408,9 @@ const getDefaultBallCosts = (): Record<BallType, Decimal> => ({
  * @returns {Record<keyof Upgrades, Decimal>} A map of upgrades to their initial costs.
  */
 const getDefaultUpgradeCosts = (): Record<keyof Upgrades, Decimal> => ({
-  speed: new Decimal(100),
-  damage: new Decimal(150),
-  coinMult: new Decimal(200),
+  speed: new Decimal(50),
+  damage: new Decimal(75),
+  coinMult: new Decimal(100),
 });
 
 type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -515,7 +517,7 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
 export const useGameStore = create<GameStore>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
-    coins: new Decimal(0),
+    coins: new Decimal(STARTING_COINS),
     bricksBroken: new Decimal(0),
     totalBricksBroken: new Decimal(0),
     prestigeLevel: 0,
@@ -610,7 +612,7 @@ export const useGameStore = create<GameStore>()(
           },
           upgradeCosts: {
             ...state.upgradeCosts,
-            [type]: cost.mul(COST_MULTIPLIER).ceil(),
+            [type]: cost.mul(UPGRADE_COST_MULTIPLIER).ceil(),
           },
         });
         playSound('purchase');
@@ -636,7 +638,7 @@ export const useGameStore = create<GameStore>()(
       while (currentCoins.gte(cost) && (type !== 'speed' || currentUpgradeLevel < MAX_SPEED_UPGRADE)) {
         currentCoins = currentCoins.sub(cost);
         currentUpgradeLevel++;
-        cost = cost.mul(COST_MULTIPLIER).ceil();
+        cost = cost.mul(UPGRADE_COST_MULTIPLIER).ceil();
         currentUpgradeCosts[type] = cost;
         purchased++;
       }
@@ -856,7 +858,7 @@ export const useGameStore = create<GameStore>()(
       const { width, height } = state.canvasSize;
 
       set({
-        coins: new Decimal(0),
+        coins: new Decimal(STARTING_COINS),
         bricksBroken: new Decimal(0),
         totalBricksBroken: new Decimal(0),
         prestigeLevel: 0,

@@ -121,7 +121,7 @@ describe('Save Migration and Backward Compatibility', () => {
 
     // Verify missing cost is default
     expect(state.upgradeCosts.damage).toBeDefined()
-    expect(state.upgradeCosts.damage.eq(150)).toBe(true) // Default damage cost
+    expect(state.upgradeCosts.damage.eq(75)).toBe(true) // Default damage cost
 
     // Verify safety
     expect(() => {

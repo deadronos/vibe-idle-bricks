@@ -1,6 +1,6 @@
 import { useState, useId } from 'react';
 import { useGameStore } from '../store';
-import { type BallType, BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeMultiplier, MAX_BALLS, MAX_SPEED_UPGRADE } from '../types';
+import { type BallType, BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeMultiplier, MAX_BALLS, MAX_SPEED_UPGRADE, UPGRADE_MULTIPLIER } from '../types';
 import { formatMultiplier, formatNumber } from '../utils';
 import { ShoppingCart, Zap, Crosshair, Bomb, Circle, Hexagon, Star, ArrowUpCircle, Coins, TrendingUp } from 'lucide-react';
 import { Modal } from './Modal';
@@ -18,6 +18,13 @@ const BallIcons: Record<BallType, React.ElementType> = {
   plasma: Star,
   explosive: Bomb,
   sniper: Crosshair,
+};
+
+/** Current and next total upgrade effect, e.g. "×1.30 → ×1.40". */
+const effectText = (level: number, maxed = false): string => {
+  const current = formatMultiplier(1 + level * UPGRADE_MULTIPLIER);
+  if (maxed) return `Max: ×${current}`;
+  return `×${current} → ×${formatMultiplier(1 + (level + 1) * UPGRADE_MULTIPLIER)}`;
 };
 
 const TABS = [
@@ -141,7 +148,7 @@ export function Shop() {
               type="speed"
               name="Speed Boost"
               icon={Zap}
-              description={upgrades.speed >= MAX_SPEED_UPGRADE ? "Max Level Reached" : "All balls +10% speed"}
+              description={`Speed ${effectText(upgrades.speed, upgrades.speed >= MAX_SPEED_UPGRADE)}`}
               cost={upgradeCosts.speed}
               coins={coins}
               level={upgrades.speed}
@@ -153,7 +160,7 @@ export function Shop() {
               type="damage"
               name="Power Boost"
               icon={ArrowUpCircle}
-              description="All balls +10% damage"
+              description={`Damage ${effectText(upgrades.damage)}`}
               cost={upgradeCosts.damage}
               coins={coins}
               level={upgrades.damage}
@@ -164,7 +171,7 @@ export function Shop() {
               type="coinMult"
               name="Coin Multiplier"
               icon={Coins}
-              description="+10% coins earned"
+              description={`Coins ${effectText(upgrades.coinMult)}`}
               cost={upgradeCosts.coinMult}
               coins={coins}
               level={upgrades.coinMult}

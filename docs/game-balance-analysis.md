@@ -169,9 +169,9 @@ Assuming average DPS and brick spawn rates:
 
 ```
 Early Game (0-500 bricks)
-├── Start with 1 basic ball
-├── First purchases: Basic balls (cost 10→12→14...)
-├── First upgrade: Speed (100 coins) around ~100 bricks
+├── Start with 35 coins and 1 basic ball
+├── First purchases: Basic balls (cost 10→12→14...) or a 50-coin upgrade
+├── First upgrade affordable ~2 minutes in
 └── Tier 1-5 progression feels good
 
 Mid Game (500-3000 bricks)
@@ -188,8 +188,8 @@ Late Game (3000-10000 bricks)
 
 Prestige Transition
 ├── Reset is satisfying
-├── 25% bonus noticeable
-└── Second run ~20% faster
+├── ×1.75 damage and coins
+└── Each run faster until the one-hit cap
 ```
 
 ### Identified Walls
@@ -233,7 +233,8 @@ PRESTIGE_THRESHOLD = 10000    // Bricks to prestige (fixed)
 
 // Ball scaling
 Ball cost growth: ×1.15 per purchase
-Upgrade cost growth: ×1.15 per level
+Upgrade cost growth: ×1.10 per level (base 50/75/100)
+Starting coins: 35
 
 // Brick scaling
 Health: 3 * (1 + 0.25 * (tier - 1))

@@ -89,6 +89,6 @@ describe('GameStore load legacy/partial save', () => {
 
     // Check if 'damage' cost is initialized to default
     expect(state.upgradeCosts.damage).toBeDefined();
-    expect(state.upgradeCosts.damage.toString()).toBe("150"); // Default damage cost
+    expect(state.upgradeCosts.damage.toString()).toBe("75"); // Default damage cost
   });
 });
