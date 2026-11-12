@@ -4,10 +4,22 @@ import { getAccessibleTierColor, type ColorblindMode } from '../utils';
 import { getParsedColor } from './color';
 import { useSettingsStore } from '../store/settingsStore';
 
+export type FloatingTextKind = 'damage' | 'coin';
+
 interface FloatingTextEntry {
   life: number;
   text: Phaser.GameObjects.Text;
+  kind: FloatingTextKind;
 }
+
+/** Past this many popups the board turns into noise; damage is dropped first. */
+export const MAX_ACTIVE_FLOATING_TEXTS = 8;
+const FLOATING_TEXT_LIFE_MS = 1000;
+
+const FLOATING_TEXT_COLORS: Record<FloatingTextKind, string> = {
+  damage: '#fca5a5',
+  coin: '#fbbf24',
+};
 
 /**
  * Manages transient visual effects used by the gameplay loop.
@@ -48,16 +60,28 @@ export class GameEffects {
   /**
    * Displays a floating text indicator.
    */
-  showFloatingText(x: number, y: number, text: string, color: string = '#ffffff') {
+  showFloatingText(x: number, y: number, text: string, kind: FloatingTextKind = 'damage') {
+    if (this.activeFloatingTexts.length >= MAX_ACTIVE_FLOATING_TEXTS) {
+      if (kind === 'damage') return;
+      const oldestDamage = this.activeFloatingTexts.findIndex((entry) => entry.kind === 'damage');
+      if (oldestDamage === -1) return;
+      this.releaseAt(oldestDamage);
+    }
+
     const floatingText = this.getFloatingText();
+    // Small jitter keeps simultaneous popups on the same brick readable.
     floatingText
-      .setPosition(x, y)
+      .setPosition(x + (Math.random() - 0.5) * 12, y + (Math.random() - 0.5) * 8)
       .setText(text)
-      .setColor(color)
+      .setColor(FLOATING_TEXT_COLORS[kind])
       .setAlpha(1)
       .setVisible(true);
 
-    this.activeFloatingTexts.push({ life: 1000, text: floatingText });
+    this.activeFloatingTexts.push({
+      life: FLOATING_TEXT_LIFE_MS,
+      text: floatingText,
+      kind,
+    });
   }
 
   /**
@@ -69,14 +93,12 @@ export class GameEffects {
       entry.life -= delta;
 
       if (entry.life <= 0) {
-        entry.text.setVisible(false);
-        this.floatingTextPool.push(entry.text);
-        this.activeFloatingTexts.splice(index, 1);
+        this.releaseAt(index);
         continue;
       }
 
       entry.text.y -= 0.05 * delta;
-      entry.text.setAlpha(entry.life / 1000);
+      entry.text.setAlpha(entry.life / FLOATING_TEXT_LIFE_MS);
     }
   }
 
@@ -138,6 +160,12 @@ export class GameEffects {
 
     this.activeFloatingTexts.length = 0;
     this.floatingTextPool.length = 0;
+  }
+
+  private releaseAt(index: number) {
+    const [entry] = this.activeFloatingTexts.splice(index, 1);
+    entry.text.setVisible(false);
+    this.floatingTextPool.push(entry.text);
   }
 
   private getFloatingText() {

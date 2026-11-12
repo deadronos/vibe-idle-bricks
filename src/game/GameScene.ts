@@ -6,7 +6,7 @@ import type { BallData, BrickData } from '../types';
 import { formatNumber } from '../utils';
 import { BallPhysics } from './BallPhysics';
 import { BrickManager } from './BrickManager';
-import { GameEffects } from './GameEffects';
+import { GameEffects, type FloatingTextKind } from './GameEffects';
 import { BallRenderer, BrickRenderer } from './GameRenderers';
 import { SpatialGrid } from './SpatialGrid';
 import {
@@ -207,8 +207,8 @@ export class GameScene extends Phaser.Scene {
   /**
    * Spawns a floating text effect at the specified position.
    */
-  showFloatingText(x: number, y: number, text: string, color: string = '#ffffff') {
-    this.effects.showFloatingText(x, y, text, color);
+  showFloatingText(x: number, y: number, text: string, kind: FloatingTextKind = 'damage') {
+    this.effects.showFloatingText(x, y, text, kind);
   }
 
   /**
@@ -264,7 +264,7 @@ export class GameScene extends Phaser.Scene {
             brick.x + brick.width / 2,
             brick.y,
             `-${formatNumber(actualDamage)}`,
-            '#ff4444'
+            'damage'
           );
         }
 
@@ -372,8 +372,8 @@ export class GameScene extends Phaser.Scene {
       this.showFloatingText(
         brick.x + brick.width / 2,
         brick.y,
-        `+${formatNumber(coinsEarned)}`,
-        '#ffd700'
+        `+${formatNumber(coinsEarned)}¢`,
+        'coin'
       );
     }
   }
@@ -440,7 +440,7 @@ export class GameScene extends Phaser.Scene {
 
         const result = store.damageBrick(brick.id, clickDamage);
         if (result) {
-          this.showFloatingText(x, y, `-${formatNumber(clickDamage)}`, '#ffcc00');
+          this.showFloatingText(x, y, `-${formatNumber(clickDamage)}`, 'damage');
           if (result.destroyed) {
             this.handleBrickDestroyed(brick, coinMult, CLICK_PARTICLE_COUNT, true);
           }

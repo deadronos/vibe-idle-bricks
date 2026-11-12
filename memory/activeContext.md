@@ -2,15 +2,19 @@
 
 ## Current Work Focus
 
-PR #95 (visuals/brick-health-board) is **in flight**: brick HP bars and
-contrast-correct tier numbers (#58), an arena floor plus launch zone so the
-lower canvas reads as play space (#57), and a disabled max-level prestige
-button with run progress (#69).
+PR #59 (visuals/floating-text) is **in flight**: coin popups are gold with a
+`¢` suffix, damage is red, popups are capped at 8 (coins evict the oldest
+damage) and jitter slightly so same-brick hits stay readable. #56 (HiDPI) is
+blocked on Phaser 4: the engine no longer exposes a game-level `resolution`
+and the manual backing-store workaround is broken upstream.
 
 TASK009 (Suggestion Set) is **complete** and merged to `main` (merge `20505e0`).
 
 ## Recent Changes
 
+- Shipped #59: `GameEffects.showFloatingText` takes `'damage' | 'coin'`,
+  colours by kind, `MAX_ACTIVE_FLOATING_TEXTS = 8`, coin popups replace the
+  oldest damage popup at the cap, and positions get ±6/±4 px jitter.
 - Shipped visuals batch PR #95: `getContrastTextColor()` picks near-black or
   white from WCAG luminance; damaged bricks draw a green/yellow/red HP bar;
   `drawBackground()` adds a floor strip, launch-zone band and side walls;
