@@ -421,7 +421,10 @@ const getDefaultUpgradeCosts = (): Record<keyof Upgrades, Decimal> => ({
 
 /** Costs are derived from level, so a curve change applies to existing saves. */
 const calculateUpgradeCost = (type: keyof Upgrades, level: number): Decimal => {
-  let cost = new Decimal(UPGRADE_BASE_COSTS[type]);
+  const base = new Decimal(UPGRADE_BASE_COSTS[type]);
+  // Large levels come from crafted saves; a per-level loop would freeze load.
+  if (level > 100) return base.mul(new Decimal(UPGRADE_COST_MULTIPLIER).pow(level)).ceil();
+  let cost = base;
   for (let i = 0; i < level; i++) cost = cost.mul(UPGRADE_COST_MULTIPLIER).ceil();
   return cost;
 };

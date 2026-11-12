@@ -166,6 +166,21 @@ describe('Save Migration and Backward Compatibility', () => {
     expect(useGameStore.getState().upgradeCosts.speed.eq(50)).toBe(true)
   })
 
+  it('should price huge damage levels without looping', () => {
+    const save = JSON.stringify({
+      coins: '0',
+      prestigeLevel: 0,
+      upgrades: { speed: 0, damage: 1e12, coinMult: 0 },
+      upgradeCosts: {},
+      ballCosts: {},
+      balls: ['basic'],
+      version: 1,
+    })
+
+    expect(useGameStore.getState().importSave(save)).toBe(true)
+    expect(useGameStore.getState().upgradeCosts.damage.gt(0)).toBe(true)
+  })
+
   it('should ignore garbage keys in ballCosts', () => {
     const garbageData = {
         coins: '100',
