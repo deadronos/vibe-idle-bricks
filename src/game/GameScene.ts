@@ -83,6 +83,9 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.handleBrickClick(pointer);
     });
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      this.game.canvas.style.cursor = this.findBrickAt(pointer.x, pointer.y) ? 'pointer' : 'default';
+    });
   }
 
 
@@ -432,25 +435,28 @@ export class GameScene extends Phaser.Scene {
     ball.dy = normalizedVelocity.dy;
   }
 
+  private findBrickAt(x: number, y: number): BrickData | undefined {
+    const potentialBricks = this.spatialGrid.queryBounds(x - 5, y - 5, x + 5, y + 5);
+    return potentialBricks.find(
+      (brick) => x >= brick.x && x <= brick.x + brick.width && y >= brick.y && y <= brick.y + brick.height
+    );
+  }
+
   private handleBrickClick(pointer: Phaser.Input.Pointer) {
     const { x, y } = pointer;
     const store = useGameStore.getState();
-    const potentialBricks = this.spatialGrid.queryBounds(x - 5, y - 5, x + 5, y + 5);
+    const brick = this.findBrickAt(x, y);
+    if (!brick) return;
 
-    for (const brick of potentialBricks) {
-      if (x >= brick.x && x <= brick.x + brick.width && y >= brick.y && y <= brick.y + brick.height) {
-        const damageMult = store.getDamageMult();
-        const coinMult = store.getCoinMult();
-        const clickDamage = new Decimal(damageMult).mul(CLICK_DAMAGE_BASE);
+    const damageMult = store.getDamageMult();
+    const coinMult = store.getCoinMult();
+    const clickDamage = new Decimal(damageMult).mul(CLICK_DAMAGE_BASE);
 
-        const result = store.damageBrick(brick.id, clickDamage);
-        if (result) {
-          this.showFloatingText(x, y, `-${formatNumber(clickDamage)}`, 'damage');
-          if (result.destroyed) {
-            this.handleBrickDestroyed(brick, coinMult, CLICK_PARTICLE_COUNT, true);
-          }
-        }
-        break;
+    const result = store.damageBrick(brick.id, clickDamage);
+    if (result) {
+      this.showFloatingText(x, y, `-${formatNumber(clickDamage)}`, 'damage');
+      if (result.destroyed) {
+        this.handleBrickDestroyed(brick, coinMult, CLICK_PARTICLE_COUNT, true);
       }
     }
   }

@@ -13,6 +13,12 @@ TASK009 (Suggestion Set) is **complete** and merged to `main` (merge `20505e0`).
 
 ## Recent Changes
 
+- In review: accessibility/onboarding batch (#72, #73, #74) on
+  `ux/accessibility-batch`. A collapsible hint under the board ("Click a brick
+  to chip it · How to play"), a labelled canvas with `aria-describedby`, a
+  `pointer` cursor only while hovering a brick, and honest reduced-motion
+  copy plus non-drifting popups. Design:
+  `memory/designs/DESIGN009-accessibility-and-onboarding.md`.
 - Shipped #59 (PR #96): floating popups take `'damage' | 'coin'`, coins are
   gold with `¢`, damage near-white, `MAX_ACTIVE_FLOATING_TEXTS = 8` with coin
   eviction and jitter; killing hits no longer stack a damage popup under the
