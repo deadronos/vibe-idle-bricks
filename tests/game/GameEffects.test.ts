@@ -71,7 +71,7 @@ describe('GameEffects floating text', () => {
     effects.showFloatingText(10, 10, '-3', 'damage')
 
     expect(texts[0].color).toBe('#fbbf24')
-    expect(texts[1].color).toBe('#fca5a5')
+    expect(texts[1].color).toBe('#f8fafc')
   })
 
   it('caps active damage popups', () => {
@@ -95,6 +95,32 @@ describe('GameEffects floating text', () => {
     expect(texts.filter((text) => text.visible)).toHaveLength(MAX_ACTIVE_FLOATING_TEXTS)
     expect(texts.some((text) => text.text === '-0' && text.visible)).toBe(false)
     expect(texts.some((text) => text.text === '+9¢' && text.visible)).toBe(true)
+  })
+
+  it('drops a coin popup when every visible popup is a coin', () => {
+    const { effects, texts } = createEffects()
+    for (let i = 0; i < MAX_ACTIVE_FLOATING_TEXTS; i++) {
+      effects.showFloatingText(10, 10, `+${i}¢`, 'coin')
+    }
+
+    effects.showFloatingText(10, 10, '+99¢', 'coin')
+
+    expect(texts).toHaveLength(MAX_ACTIVE_FLOATING_TEXTS)
+    expect(texts.some((text) => text.text === '+99¢')).toBe(false)
+  })
+
+  it('releases expired popups independently', () => {
+    const { effects, texts } = createEffects()
+    effects.showFloatingText(10, 10, '-1', 'damage')
+    effects.updateFloatingTexts(400)
+    effects.showFloatingText(10, 10, '-2', 'damage')
+
+    effects.updateFloatingTexts(700)
+
+    expect(texts[0].visible).toBe(false)
+    expect(texts[1].visible).toBe(true)
+    effects.showFloatingText(10, 10, '-3', 'damage')
+    expect(texts.filter((text) => text.visible).map((text) => text.text).sort()).toEqual(['-2', '-3'])
   })
 
   it('returns expired popups to the pool', () => {

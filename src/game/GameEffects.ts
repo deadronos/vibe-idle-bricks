@@ -12,12 +12,18 @@ interface FloatingTextEntry {
   kind: FloatingTextKind;
 }
 
-/** Past this many popups the board turns into noise; damage is dropped first. */
+/**
+ * Past this many popups the board turns into noise. New damage popups are
+ * dropped; a coin popup evicts the oldest damage popup, or is dropped when the
+ * board is all coins.
+ */
 export const MAX_ACTIVE_FLOATING_TEXTS = 8;
 const FLOATING_TEXT_LIFE_MS = 1000;
 
+// Near-white vs gold stays distinguishable under red-green colour blindness;
+// the '-' and '¢' markers are the second cue.
 const FLOATING_TEXT_COLORS: Record<FloatingTextKind, string> = {
-  damage: '#fca5a5',
+  damage: '#f8fafc',
   coin: '#fbbf24',
 };
 

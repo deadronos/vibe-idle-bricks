@@ -2,11 +2,11 @@
 
 ## Current Work Focus
 
-PR #59 (visuals/floating-text) is **in flight**: coin popups are gold with a
-`¢` suffix, damage is red, popups are capped at 8 (coins evict the oldest
-damage) and jitter slightly so same-brick hits stay readable. #56 (HiDPI) is
-blocked on Phaser 4: the engine no longer exposes a game-level `resolution`
-and the manual backing-store workaround is broken upstream.
+Issue #59 (PR #96, `visuals/floating-text`) is **in flight**: coin popups are
+gold with a `¢` suffix, damage is near-white, popups are capped at 8 (coins
+evict the oldest damage) and jitter slightly so same-brick hits stay readable.
+#56 (HiDPI) is blocked on Phaser 4: no game-level `resolution` and the manual
+backing-store workaround is broken upstream.
 
 TASK009 (Suggestion Set) is **complete** and merged to `main` (merge `20505e0`).
 

@@ -259,7 +259,12 @@ export class GameScene extends Phaser.Scene {
       const result = store.damageBrick(brick.id, actualDamage);
 
       if (result) {
-        if (config.damage > 1 || config.explosive || ball.type === 'sniper') {
+        // The killing hit is followed by a coin popup in the same spot; showing
+        // both just stacks two numbers.
+        if (
+          !result.destroyed &&
+          (config.damage > 1 || config.explosive || ball.type === 'sniper')
+        ) {
           this.showFloatingText(
             brick.x + brick.width / 2,
             brick.y,
