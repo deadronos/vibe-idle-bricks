@@ -29,7 +29,7 @@ import {
   type AchievementGameState,
 } from '../types/achievements';
 import { createBall } from '../utils/helpers';
-import { calculateOfflineEarnings } from './earnings';
+import { LIVE_INCOME_CALIBRATION, calculateIncomePerSecond, calculateOfflineEarnings } from './earnings';
 import { playSound } from '../utils/audio';
 
 /**
@@ -244,6 +244,12 @@ interface GameStore {
    * @returns {number} The speed multiplier.
    */
   getSpeedMult: () => number;
+
+  /**
+   * Estimates nominal coins per second for the current board.
+   * @returns {Decimal} Estimated income.
+   */
+  getIncomePerSecond: () => Decimal;
 }
 
 interface BrickDamageOperation {
@@ -427,6 +433,49 @@ const calculateUpgradeCost = (type: keyof Upgrades, level: number): Decimal => {
   let cost = base;
   for (let i = 0; i < level; i++) cost = cost.mul(UPGRADE_COST_MULTIPLIER).ceil();
   return cost;
+};
+
+export interface MaxUpgradePlan {
+  /** Number of levels the current coins can buy. */
+  levels: number;
+  /** Total coins spent by those levels. */
+  totalCost: Decimal;
+  /** Coins left afterwards. */
+  remainingCoins: Decimal;
+  /** Cost of the next level after the purchase. */
+  nextCost: Decimal;
+}
+
+/** Plans a "Max" purchase without mutating state. */
+export const planMaxUpgrade = (
+  type: keyof Upgrades,
+  level: number,
+  cost: Decimal,
+  coins: Decimal
+): MaxUpgradePlan => {
+  let remainingCoins = coins;
+  let currentLevel = level;
+  let currentCost = cost;
+  let totalCost = new Decimal(0);
+  let levels = 0;
+
+  // Crafted saves can contain a zero/negative cost; never grant free levels.
+  if (cost.lte(0)) {
+    return { levels: 0, totalCost, remainingCoins, nextCost: cost };
+  }
+
+  while (
+    remainingCoins.gte(currentCost) &&
+    (type !== 'speed' || currentLevel < MAX_SPEED_UPGRADE)
+  ) {
+    remainingCoins = remainingCoins.sub(currentCost);
+    totalCost = totalCost.add(currentCost);
+    currentLevel++;
+    currentCost = calculateUpgradeCost(type, currentLevel);
+    levels++;
+  }
+
+  return { levels, totalCost, remainingCoins, nextCost: currentCost };
 };
 
 type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -638,36 +687,28 @@ export const useGameStore = create<GameStore>()(
       const state = get();
       if (type === 'speed' && state.upgrades.speed >= MAX_SPEED_UPGRADE) return 0;
 
-      let cost = state.upgradeCosts[type];
-      let purchased = 0;
+      const plan = planMaxUpgrade(
+        type,
+        state.upgrades[type],
+        state.upgradeCosts[type],
+        state.coins
+      );
 
-      if (state.coins.lt(cost) || cost.lte(0)) return 0;
-
-      let currentCoins = state.coins;
-      let currentUpgradeLevel = state.upgrades[type];
-      const currentUpgradeCosts = { ...state.upgradeCosts };
-
-      while (currentCoins.gte(cost) && (type !== 'speed' || currentUpgradeLevel < MAX_SPEED_UPGRADE)) {
-        currentCoins = currentCoins.sub(cost);
-        currentUpgradeLevel++;
-        cost = calculateUpgradeCost(type, currentUpgradeLevel);
-        currentUpgradeCosts[type] = cost;
-        purchased++;
-      }
-
-      set({
-        coins: currentCoins,
-        upgrades: {
-          ...state.upgrades,
-          [type]: currentUpgradeLevel,
-        },
-        upgradeCosts: currentUpgradeCosts,
-      });
-
-      if (purchased > 0) {
+      if (plan.levels > 0) {
+        set({
+          coins: plan.remainingCoins,
+          upgrades: {
+            ...state.upgrades,
+            [type]: state.upgrades[type] + plan.levels,
+          },
+          upgradeCosts: {
+            ...state.upgradeCosts,
+            [type]: plan.nextCost,
+          },
+        });
         get().checkAchievements();
       }
-      return purchased;
+      return plan.levels;
     },
 
     canPrestige: () => {
@@ -957,6 +998,18 @@ export const useGameStore = create<GameStore>()(
     getSpeedMult: () => {
       const state = get();
       return 1 + state.upgrades.speed * UPGRADE_MULTIPLIER;
+    },
+
+    getIncomePerSecond: () => {
+      const state = get();
+      return calculateIncomePerSecond(
+        state.balls,
+        state.getSpeedMult(),
+        state.getDamageMult(),
+        state.getCoinMult(),
+        state.prestigeLevel,
+        state.currentTier
+      ).mul(LIVE_INCOME_CALIBRATION);
     },
   }))
 );

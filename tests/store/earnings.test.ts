@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateOfflineEarnings, MAX_OFFLINE_SECONDS } from '../../src/store/earnings'
+import { calculateIncomePerSecond, calculateOfflineEarnings, MAX_OFFLINE_SECONDS } from '../../src/store/earnings'
 import type { BallData } from '../../src/types'
 
 const createBall = (type: BallData['type']): BallData => ({
@@ -104,5 +104,24 @@ describe('calculateOfflineEarnings', () => {
     expect(result.coins.gt(0)).toBe(true)
     expect(result.message).toContain('Welcome back!')
     expect(result.message).toContain('M')
+  })
+})
+describe('calculateIncomePerSecond', () => {
+  it('returns nominal income for a basic ball at tier 1', () => {
+    expect(calculateIncomePerSecond([createBall('basic')], 1, 1, 1, 0, 1).toNumber()).toBe(1)
+  })
+
+  it('scales with coin and prestige multipliers', () => {
+    const base = calculateIncomePerSecond([createBall('basic')], 1, 1, 1, 0, 1)
+    const boosted = calculateIncomePerSecond([createBall('basic')], 1, 1, 2, 1, 1)
+
+    expect(boosted.div(base).toNumber()).toBeCloseTo(3.5, 10)
+  })
+
+  it('caps extra damage at the hits a brick actually needs', () => {
+    const enough = calculateIncomePerSecond([createBall('basic')], 1, 100, 1, 0, 20)
+    const overkill = calculateIncomePerSecond([createBall('basic')], 1, 1000, 1, 0, 20)
+
+    expect(overkill.eq(enough)).toBe(true)
   })
 })

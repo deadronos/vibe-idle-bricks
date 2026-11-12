@@ -1,5 +1,6 @@
-import { useState, useId } from 'react';
-import { useGameStore } from '../store';
+import { useMemo, useState, useId } from 'react';
+import type Decimal from 'break_infinity.js';
+import { planMaxUpgrade, useGameStore } from '../store';
 import { type BallType, BALL_TYPES, PRESTIGE_THRESHOLD, getPrestigeMultiplier, MAX_BALLS, MAX_SPEED_UPGRADE, MAX_PRESTIGE_LEVEL, UPGRADE_MULTIPLIER } from '../types';
 import { formatMultiplier, formatNumber } from '../utils';
 import { ShoppingCart, Zap, Crosshair, Bomb, Circle, Hexagon, Star, ArrowUpCircle, Coins, TrendingUp } from 'lucide-react';
@@ -25,6 +26,14 @@ const effectText = (level: number, maxed = false): string => {
   const current = formatMultiplier(1 + level * UPGRADE_MULTIPLIER);
   if (maxed) return `Max: ×${current}`;
   return `×${current} → ×${formatMultiplier(1 + (level + 1) * UPGRADE_MULTIPLIER)}`;
+};
+
+/** Short estimate for "time until affordable"; empty when income is zero. */
+const formatEta = (seconds: number): string => {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '';
+  if (seconds < 60) return `~${Math.ceil(seconds)}s`;
+  if (seconds < 3600) return `~${Math.round(seconds / 60)}m`;
+  return `~${(seconds / 3600).toFixed(1)}h`;
 };
 
 const TABS = [
@@ -83,6 +92,14 @@ export function Shop() {
   };
 
   const prestigeMult = getPrestigeMultiplier(prestigeLevel);
+  const ballTypesKey = useGameStore((state) => state.balls.map((ball) => ball.type).join(','));
+  const currentTier = useGameStore((state) => state.currentTier);
+  const incomePerSecond = useMemo(
+    () => useGameStore.getState().getIncomePerSecond(),
+    // The getter reads the current store; these selections trigger re-renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ballTypesKey, currentTier, upgrades.speed, upgrades.damage, upgrades.coinMult, prestigeLevel]
+  );
   const nextPrestigeMult = getPrestigeMultiplier(prestigeLevel + 1);
   const canDoPrestige = canPrestige();
   const isMaxPrestige = prestigeLevel >= MAX_PRESTIGE_LEVEL;
@@ -153,6 +170,7 @@ export function Shop() {
               cost={upgradeCosts.speed}
               coins={coins}
               level={upgrades.speed}
+              incomePerSecond={incomePerSecond}
               onBuy={() => buyUpgrade('speed')}
               onBuyMax={() => buyMaxUpgrade('speed')}
               isMaxed={upgrades.speed >= MAX_SPEED_UPGRADE}
@@ -165,6 +183,7 @@ export function Shop() {
               cost={upgradeCosts.damage}
               coins={coins}
               level={upgrades.damage}
+              incomePerSecond={incomePerSecond}
               onBuy={() => buyUpgrade('damage')}
               onBuyMax={() => buyMaxUpgrade('damage')}
             />
@@ -176,6 +195,7 @@ export function Shop() {
               cost={upgradeCosts.coinMult}
               coins={coins}
               level={upgrades.coinMult}
+              incomePerSecond={incomePerSecond}
               onBuy={() => buyUpgrade('coinMult')}
               onBuyMax={() => buyMaxUpgrade('coinMult')}
             />
@@ -247,6 +267,8 @@ interface UpgradeButtonProps {
   coins: import('break_infinity.js').default;
   /** Current level of the upgrade. */
   level: number;
+  /** Estimated coins per second, used for the time-to-afford hint. */
+  incomePerSecond: Decimal;
   /** Callback to trigger purchase. */
   onBuy: () => void;
   /** Callback to trigger "buy max" purchase. */
@@ -255,8 +277,19 @@ interface UpgradeButtonProps {
   isMaxed?: boolean;
 }
 
-function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBuy, onBuyMax, isMaxed }: UpgradeButtonProps) {
+function UpgradeButton({ type, name, icon: Icon, description, cost, coins, level, incomePerSecond, onBuy, onBuyMax, isMaxed }: UpgradeButtonProps) {
+  const previewId = useId();
   const canAfford = coins.gte(cost) && !isMaxed;
+  const plan = useMemo(() => planMaxUpgrade(type, level, cost, coins), [type, level, cost, coins]);
+  const shortfall = cost.sub(coins);
+  const eta = incomePerSecond.gt(0)
+    ? formatEta(shortfall.div(incomePerSecond).toNumber())
+    : '';
+  const maxPreview = isMaxed
+    ? null
+    : plan.levels > 0
+      ? `Max +${plan.levels} → Lv.${level + plan.levels} · ${formatNumber(plan.totalCost)} coins`
+      : `Need ${formatNumber(shortfall)} more coins${eta ? ` (${eta})` : ''}`;
 
   return (
     <div className={`shop-item upgrade-item ${canAfford ? 'affordable' : ''}`}>
@@ -267,10 +300,22 @@ function UpgradeButton({ name, icon: Icon, description, cost, coins, level, onBu
         </span>
         <span className="item-cost">{isMaxed ? 'MAX' : formatNumber(cost)}</span> {isMaxed ? '' : 'coins'}
         <div className="item-desc">{description}</div>
+        {maxPreview && (
+          <div className="item-desc upgrade-preview" id={previewId}>
+            {maxPreview}
+          </div>
+        )}
       </div>
       <div className="upgrade-actions">
         <button className="buy-btn" disabled={!canAfford} onClick={onBuy}>Buy</button>
-        <button className="buy-max-btn" disabled={!canAfford} onClick={onBuyMax}>Max</button>
+        <button
+          className="buy-max-btn"
+          disabled={!canAfford}
+          onClick={onBuyMax}
+          aria-describedby={maxPreview ? previewId : undefined}
+        >
+          Max
+        </button>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import Decimal from 'break_infinity.js'
-import { useGameStore } from '../../src/store/gameStore'
+import { planMaxUpgrade, useGameStore } from '../../src/store/gameStore'
 import { BALL_TYPES, PRESTIGE_THRESHOLD, MAX_TIER, MAX_BALLS, MAX_SPEED_UPGRADE } from '../../src/types/game'
 
 // Mock localStorage
@@ -1084,5 +1084,35 @@ describe('gameStore', () => {
       expect(state.currentTier).toBe(7)
       expect(state.balls.map(b => b.type)).toEqual(['sniper', 'explosive'])
     })
+  })
+})
+
+describe('planMaxUpgrade', () => {
+  it('returns nothing when coins cannot cover the next level', () => {
+    const plan = planMaxUpgrade('speed', 0, new Decimal(50), new Decimal(49))
+
+    expect(plan.levels).toBe(0)
+    expect(plan.totalCost.eq(0)).toBe(true)
+    expect(plan.remainingCoins.eq(49)).toBe(true)
+    expect(plan.nextCost.eq(50)).toBe(true)
+  })
+
+  it('plans the same purchase as buyMaxUpgrade', () => {
+    const plan = planMaxUpgrade('speed', 0, new Decimal(50), new Decimal(1000))
+
+    expect(plan.levels).toBe(11)
+    expect(plan.totalCost.add(plan.remainingCoins).eq(1000)).toBe(true)
+  })
+
+  it('stops at the speed cap', () => {
+    const plan = planMaxUpgrade('speed', 49, new Decimal(1000), new Decimal(1e9))
+
+    expect(plan.levels).toBe(1)
+  })
+
+  it('never grants free levels from a zero cost', () => {
+    const plan = planMaxUpgrade('damage', 0, new Decimal(0), new Decimal(1e9))
+
+    expect(plan.levels).toBe(0)
   })
 })
