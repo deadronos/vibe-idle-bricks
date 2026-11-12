@@ -17,9 +17,10 @@
 | Ball cost growth | ×1.15 | unchanged |
 | Upgrade effect | +10% of base per level | unchanged |
 
-Cost growth now matches the linear +10% effect: each level costs ~10% more and
-adds the same absolute amount, so value per coin stays roughly flat instead of
-decaying. Balls keep ×1.15 so ball stacking still gets expensive.
+Cost growth is now close to the +10% effect. Because cost still compounds, value
+per coin decays about 9% per level, but slower than before and slower than
+balls, which stay at ×1.15 and get relatively more expensive over time. Costs
+are recomputed from level on load, so existing saves adopt the new curve.
 
 Speed stays capped at 50 (6× base speed). At 60 Hz and the current ball
 radius, higher speeds risk tunneling through bricks; the cap is a physics

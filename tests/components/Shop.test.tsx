@@ -69,6 +69,15 @@ describe('Shop', () => {
       expect(screen.getByText(/sniper ball/i)).toBeInTheDocument()
     })
 
+    it('should show the max effect at the speed cap', async () => {
+      useGameStore.setState({ upgrades: { speed: 50, damage: 0, coinMult: 0 } })
+      const user = userEvent.setup()
+      renderShop()
+      await user.click(screen.getByRole('tab', { name: /upgrades/i }))
+
+      expect(screen.getByText(/max: ×6/i)).toBeInTheDocument()
+    })
+
     it('should show current and next upgrade effects', async () => {
       const user = userEvent.setup()
       renderShop()

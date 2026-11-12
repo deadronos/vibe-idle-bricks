@@ -20,7 +20,7 @@ const BallIcons: Record<BallType, React.ElementType> = {
   sniper: Crosshair,
 };
 
-/** Current and next total upgrade effect, e.g. "×1.30 → ×1.40". */
+/** Current and next total effect, e.g. "×1.3 → ×1.4" (trailing zeros trimmed). */
 const effectText = (level: number, maxed = false): string => {
   const current = formatMultiplier(1 + level * UPGRADE_MULTIPLIER);
   if (maxed) return `Max: ×${current}`;

@@ -116,8 +116,8 @@ describe('Save Migration and Backward Compatibility', () => {
 
     const state = useGameStore.getState()
 
-    // Verify saved cost
-    expect(state.upgradeCosts.speed.eq(500)).toBe(true)
+    // Saved cost is ignored; level 0 rebuilds to the new base cost.
+    expect(state.upgradeCosts.speed.eq(50)).toBe(true)
 
     // Verify missing cost is default
     expect(state.upgradeCosts.damage).toBeDefined()
@@ -127,6 +127,21 @@ describe('Save Migration and Backward Compatibility', () => {
     expect(() => {
         state.buyUpgrade('damage')
     }).not.toThrow()
+  })
+
+  it('should rebuild upgrade costs from levels for old saves', () => {
+    const save = {
+      coins: '0',
+      prestigeLevel: 0,
+      upgrades: { speed: 6, damage: 0, coinMult: 0 },
+      upgradeCosts: { speed: '234' },
+      ballCosts: {},
+      balls: ['basic'],
+      version: 1,
+    }
+
+    expect(useGameStore.getState().importSave(JSON.stringify(save))).toBe(true)
+    expect(useGameStore.getState().upgradeCosts.speed.eq(92)).toBe(true)
   })
 
   it('should ignore garbage keys in ballCosts', () => {

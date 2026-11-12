@@ -61,7 +61,7 @@ describe('gameStore', () => {
   })
 
   describe('initial state', () => {
-    it('should start with starting coins', () => {
+    it('should reset to starting coins', () => {
       useGameStore.getState().reset()
       expect(useGameStore.getState().coins.eq(35)).toBe(true)
       expect(useGameStore.getState().upgradeCosts.speed.eq(50)).toBe(true)

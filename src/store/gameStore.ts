@@ -407,11 +407,24 @@ const getDefaultBallCosts = (): Record<BallType, Decimal> => ({
  * Returns the default costs for all upgrades.
  * @returns {Record<keyof Upgrades, Decimal>} A map of upgrades to their initial costs.
  */
+const UPGRADE_BASE_COSTS: Record<keyof Upgrades, number> = {
+  speed: 50,
+  damage: 75,
+  coinMult: 100,
+};
+
 const getDefaultUpgradeCosts = (): Record<keyof Upgrades, Decimal> => ({
-  speed: new Decimal(50),
-  damage: new Decimal(75),
-  coinMult: new Decimal(100),
+  speed: new Decimal(UPGRADE_BASE_COSTS.speed),
+  damage: new Decimal(UPGRADE_BASE_COSTS.damage),
+  coinMult: new Decimal(UPGRADE_BASE_COSTS.coinMult),
 });
+
+/** Costs are derived from level, so a curve change applies to existing saves. */
+const calculateUpgradeCost = (type: keyof Upgrades, level: number): Decimal => {
+  let cost = new Decimal(UPGRADE_BASE_COSTS[type]);
+  for (let i = 0; i < level; i++) cost = cost.mul(UPGRADE_COST_MULTIPLIER).ceil();
+  return cost;
+};
 
 type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
@@ -468,17 +481,11 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
     }
   }
 
-  const upgradeCosts = getDefaultUpgradeCosts();
-  if (saveData.upgradeCosts) {
-    for (const [key, value] of Object.entries(saveData.upgradeCosts)) {
-      if (Object.prototype.hasOwnProperty.call(upgradeCosts, key)) {
-        const upgradeKey = key as keyof Upgrades;
-        upgradeCosts[upgradeKey] = parseDecimal(value, upgradeCosts[upgradeKey]);
-      }
-    }
-  }
-
   const savedUpgrades = saveData.upgrades ?? { speed: 0, damage: 0, coinMult: 0 };
+  const upgradeCosts = getDefaultUpgradeCosts();
+  for (const key of Object.keys(upgradeCosts) as (keyof Upgrades)[]) {
+    upgradeCosts[key] = calculateUpgradeCost(key, savedUpgrades[key] ?? 0);
+  }
 
   // Validate the unlocked-achievements map. Older saves will not have this
   // field, in which case we start with an empty map.
@@ -672,6 +679,8 @@ export const useGameStore = create<GameStore>()(
 
       set({
         prestigeLevel: state.prestigeLevel + 1,
+        // A fresh run starts empty; kept upgrades and the multiplier already
+        // make income higher than a new game's 35 starting coins.
         coins: new Decimal(0),
         bricksBroken: new Decimal(0),
         currentTier: 1,
