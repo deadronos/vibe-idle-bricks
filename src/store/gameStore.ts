@@ -624,7 +624,7 @@ export const useGameStore = create<GameStore>()(
           },
           upgradeCosts: {
             ...state.upgradeCosts,
-            [type]: cost.mul(UPGRADE_COST_MULTIPLIER).ceil(),
+            [type]: calculateUpgradeCost(type, state.upgrades[type] + 1),
           },
         });
         playSound('purchase');
@@ -650,7 +650,7 @@ export const useGameStore = create<GameStore>()(
       while (currentCoins.gte(cost) && (type !== 'speed' || currentUpgradeLevel < MAX_SPEED_UPGRADE)) {
         currentCoins = currentCoins.sub(cost);
         currentUpgradeLevel++;
-        cost = cost.mul(UPGRADE_COST_MULTIPLIER).ceil();
+        cost = calculateUpgradeCost(type, currentUpgradeLevel);
         currentUpgradeCosts[type] = cost;
         purchased++;
       }
