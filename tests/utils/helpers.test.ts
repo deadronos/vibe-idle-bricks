@@ -35,6 +35,8 @@ describe('formatMultiplier', () => {
   })
 
   it('should fall back to compact formatting for large values', () => {
+    expect(formatMultiplier(10)).toBe('10')
+    expect(formatMultiplier(999.999)).toBe('1000')
     expect(formatMultiplier(1234)).toBe('1.23K')
   })
 })

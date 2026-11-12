@@ -133,11 +133,11 @@ Damage Per Second ≈ `(damage × speed) / average_bounce_distance`
 
 ### 5. Prestige System
 
-**Current:**
-- Threshold: 10,000 bricks broken
-- Reward: +25% permanent coin bonus per prestige
-- Resets: coins, upgrades, balls, tier
-- Keeps: prestigeLevel, totalBricksBroken
+**Current (after #62/#63):**
+- Threshold: always 10,000 bricks broken
+- Reward: ×1.75 damage and coin income per prestige level
+- Resets: coins, balls, ball costs, tier, bricks broken
+- Keeps: upgrades, upgrade costs, prestigeLevel, totalBricksBroken
 
 **Time to First Prestige (estimated):**
 
@@ -227,19 +227,19 @@ Prestige Transition
 ```typescript
 // types/game.ts
 UPGRADE_MULTIPLIER = 0.1      // 10% per upgrade level
-PRESTIGE_BONUS = 0.25         // 25% per prestige
+PRESTIGE_MULTIPLIER = 1.75    // damage and coins per prestige
 OFFLINE_EARNINGS_RATE = 0.5   // 50% while offline
-PRESTIGE_THRESHOLD = 10000    // Bricks to prestige
+PRESTIGE_THRESHOLD = 10000    // Bricks to prestige (fixed)
 
 // Ball scaling
 Ball cost growth: ×1.15 per purchase
-Upgrade cost growth: ×1.2 per level
+Upgrade cost growth: ×1.15 per level
 
 // Brick scaling
-Health: tier × 3
-Value: tier (linear)
+Health: 3 * (1 + 0.25 * (tier - 1))
+Value: floor(tier ^ 1.6)
 Tier increase: every 100 bricks
-Tier cap: 10
+Tier cap: 20
 ```
 
 ---

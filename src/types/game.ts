@@ -226,7 +226,6 @@ export const MAX_TIER = 20;
 /** The base threshold for the first prestige. */
 export const PRESTIGE_THRESHOLD = 10000;
 
-
 /**
  * Calculates the permanent coin multiplier for a prestige level.
  * Each level multiplies income, so prestiging repeatedly compounds.

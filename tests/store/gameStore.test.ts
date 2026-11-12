@@ -707,6 +707,35 @@ describe('gameStore', () => {
       expect(useGameStore.getState().coins.gt(1000)).toBe(true)
     })
 
+    it('should include prestige damage in offline earnings', () => {
+      const hourAgo = Date.now() - 60 * 60 * 1000
+      const save = (prestigeLevel: number) => ({
+        coins: '0',
+        bricksBroken: '0',
+        totalBricksBroken: '0',
+        prestigeLevel,
+        upgrades: { speed: 0, damage: 0, coinMult: 0 },
+        ballCosts: {},
+        upgradeCosts: {},
+        currentTier: 1,
+        balls: ['basic'],
+        timestamp: hourAgo,
+      })
+
+      localStorageMock._setStore({ idleBricksSave: JSON.stringify(save(0)) })
+      useGameStore.getState().load()
+      const plainCoins = useGameStore.getState().coins.toNumber()
+
+      resetStore()
+      localStorageMock.clear()
+      localStorageMock._setStore({ idleBricksSave: JSON.stringify(save(1)) })
+      useGameStore.getState().load()
+      const prestigeCoins = useGameStore.getState().coins.toNumber()
+
+      // 1.75x damage cuts a tier-1 brick from 3 hits to 2 (1.5x) and coins 1.75x.
+      expect(prestigeCoins / plainCoins).toBeCloseTo(1.5 * 1.75, 1)
+    })
+
     it('should not re-apply offline earnings when load runs twice', () => {
       const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
       const saveData = {

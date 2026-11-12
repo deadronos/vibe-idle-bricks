@@ -259,7 +259,7 @@ describe('Shop', () => {
       const prestigeTab = screen.getByRole('tab', { name: /prestige/i })
       await user.click(prestigeTab)
 
-      expect(screen.getByText(/next: ×5\.36 coin income/i)).toBeInTheDocument()
+      expect(screen.getByText(/next: ×5\.36 damage & coins/i)).toBeInTheDocument()
       expect(screen.getByText(/current: ×3\.06/i)).toBeInTheDocument()
     })
 

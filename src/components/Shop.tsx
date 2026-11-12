@@ -78,8 +78,7 @@ export function Shop() {
   const prestigeMult = getPrestigeMultiplier(prestigeLevel);
   const nextPrestigeMult = getPrestigeMultiplier(prestigeLevel + 1);
   const canDoPrestige = canPrestige();
-  const prestigeThreshold = PRESTIGE_THRESHOLD;
-  const bricksNeeded = Math.max(0, prestigeThreshold - bricksBroken.toNumber());
+  const bricksNeeded = Math.max(0, PRESTIGE_THRESHOLD - bricksBroken.toNumber());
 
   return (
     <>
@@ -188,7 +187,7 @@ export function Shop() {
             <span className="item-desc">Reset for permanent bonuses</span>
             <span className="item-desc">
               {canDoPrestige
-                ? `Next: ×${formatMultiplier(nextPrestigeMult)} coin income (Current: ×${formatMultiplier(prestigeMult)})`
+                ? `Next: ×${formatMultiplier(nextPrestigeMult)} damage & coins (Current: ×${formatMultiplier(prestigeMult)})`
                 : `Break ${formatNumber(bricksNeeded)} more bricks`}
             </span>
           </button>
