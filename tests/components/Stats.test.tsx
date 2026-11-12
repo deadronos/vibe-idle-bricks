@@ -60,15 +60,14 @@ describe('Stats', () => {
     expect(statContainer).toHaveTextContent('500')
   })
 
-  it('should render total bricks (current + total)', () => {
+  it('should render total bricks without double counting the current run', () => {
     useGameStore.setState({
       bricksBroken: new Decimal(100),
       totalBricksBroken: new Decimal(900),
     })
     render(<Stats />)
     
-    // 100 + 900 = 1000 = 1.00K
-    expect(screen.getByText('1.00K')).toBeInTheDocument()
+    expect(screen.getByText('900')).toBeInTheDocument()
     expect(screen.getByText('Total Bricks')).toBeInTheDocument()
   })
 

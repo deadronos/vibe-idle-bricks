@@ -371,7 +371,7 @@ const resolveBrickDamageBatch = (
       continue;
     }
 
-    const updatedBrick = { ...brick, health: newHealth, lastHitTime: Date.now() };
+    const updatedBrick = { ...brick, health: newHealth, lastHitTime: performance.now() };
     nextBricks.push(updatedBrick);
     results.push({
       id: brick.id,

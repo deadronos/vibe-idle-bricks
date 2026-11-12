@@ -33,7 +33,7 @@ export function Stats() {
       </div>
       <div className="stat">
         <Layers className="stat-icon" size={24} />
-        <span className="stat-value">{formatNumber(totalBricksBroken.add(bricksBroken))}</span>
+        <span className="stat-value">{formatNumber(totalBricksBroken)}</span>
         <label>Total Bricks</label>
       </div>
       <div className="stat">

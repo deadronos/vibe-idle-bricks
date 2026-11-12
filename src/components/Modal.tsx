@@ -10,8 +10,8 @@ interface ModalProps {
   children?: ReactNode;
   /** Label for the confirm / primary action button. Defaults to 'Confirm'. */
   confirmLabel?: string;
-  /** Label for the cancel button. Defaults to 'Cancel'. */
-  cancelLabel?: string;
+  /** Label for the cancel button. Defaults to 'Cancel'. Pass `null` to hide it. */
+  cancelLabel?: string | null;
   /** Visual variant of the confirm button. */
   confirmVariant?: 'danger' | 'primary';
   /**
@@ -48,14 +48,17 @@ export function Modal({
   useEffect(() => {
     if (open) {
       previousFocusRef.current = document.activeElement as HTMLElement;
-      const selector = initialFocus === 'confirm' ? '.modal-btn-confirm' : '.modal-btn-cancel';
+      const selector =
+        initialFocus === 'confirm' || cancelLabel === null
+          ? '.modal-btn-confirm'
+          : '.modal-btn-cancel';
       const btn = dialogRef.current?.querySelector<HTMLButtonElement>(selector);
       btn?.focus();
     } else if (previousFocusRef.current) {
       previousFocusRef.current.focus();
       previousFocusRef.current = null;
     }
-  }, [open, initialFocus]);
+  }, [open, initialFocus, cancelLabel]);
 
   // Escape key handler
   useEffect(() => {
@@ -107,9 +110,11 @@ export function Modal({
         </h2>
         {children && <div className="modal-body">{children}</div>}
         <div className="modal-actions">
-          <button className="modal-btn modal-btn-cancel" onClick={onCancel}>
-            {cancelLabel}
-          </button>
+          {cancelLabel !== null && (
+            <button className="modal-btn modal-btn-cancel" onClick={onCancel}>
+              {cancelLabel}
+            </button>
+          )}
           <button
             className={`modal-btn modal-btn-confirm modal-btn-${confirmVariant}`}
             onClick={onConfirm}

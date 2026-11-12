@@ -179,8 +179,6 @@ main {
 }
 
 .game-canvas canvas {
-  width: 100% !important;
-  height: 100% !important;
   display: block; /* Remove inline-block spacing */
 }
 
@@ -870,8 +868,6 @@ main {
 }
 
 .game-canvas canvas {
-  width: 100% !important;
-  height: 100% !important;
   display: block; /* Remove inline-block spacing */
 }
 
