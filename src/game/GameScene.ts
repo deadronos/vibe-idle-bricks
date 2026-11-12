@@ -65,7 +65,6 @@ export class GameScene extends Phaser.Scene {
 
     const initialBricks = this.brickManager.generateBricks(50, store.currentTier);
     store.setBricks(initialBricks);
-    store.load();
 
     this.time.addEvent({
       delay: 30000,
@@ -75,6 +74,7 @@ export class GameScene extends Phaser.Scene {
 
     this.scale.on('resize', this.handleResize, this);
     this.handleResize(this.scale.gameSize);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.handleBrickClick(pointer);
@@ -92,6 +92,8 @@ export class GameScene extends Phaser.Scene {
     }
     this.resizeTimer = setTimeout(() => {
       this.resizeTimer = null;
+      // The scene may have been destroyed while the debounce was pending.
+      if (!this.cameras?.main) return;
       const { width, height } = gameSize;
       this.ballPhysics = new BallPhysics(width, height);
       useGameStore.getState().setCanvasSize(width, height);
@@ -103,7 +105,9 @@ export class GameScene extends Phaser.Scene {
    * Draws the background grid and background color.
    */
   drawBackground() {
-    const { width, height } = this.cameras.main;
+    const camera = this.cameras?.main;
+    if (!camera || !this.backgroundGraphics) return;
+    const { width, height } = camera;
     this.backgroundGraphics.clear();
 
     this.backgroundGraphics.fillStyle(0x0f0f1a);

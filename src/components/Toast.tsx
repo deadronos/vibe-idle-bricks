@@ -24,20 +24,35 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 /** Duration (ms) before a toast auto-dismisses. */
 const TOAST_DURATION = 3500;
 
+/** Toasts rendered at once; the rest wait in a queue so the board stays usable. */
+const MAX_VISIBLE_TOASTS = 3;
+
 /**
  * Provider component that supplies `showToast` to its subtree and renders
  * the live toast stack.
  */
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [toastState, setToastState] = useState<{ visible: ToastItem[]; queued: ToastItem[] }>({
+    visible: [],
+    queued: [],
+  });
 
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
-    const id = crypto.randomUUID();
-    setToasts((prev) => [...prev, { id, message, type }]);
+    const toast = { id: crypto.randomUUID(), message, type };
+    setToastState((prev) =>
+      prev.visible.length < MAX_VISIBLE_TOASTS
+        ? { visible: [...prev.visible, toast], queued: prev.queued }
+        : { visible: prev.visible, queued: [...prev.queued, toast] },
+    );
   }, []);
 
   const dismiss = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToastState((prev) => {
+      const visible = prev.visible.filter((t) => t.id !== id);
+      if (visible.length === prev.visible.length) return prev;
+      const [next, ...queued] = prev.queued;
+      return next ? { visible: [...visible, next], queued } : { visible, queued: prev.queued };
+    });
   }, []);
 
   return (
@@ -50,7 +65,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         aria-label="Notifications"
         aria-atomic="false"
       >
-        {toasts.map((toast) => (
+        {toastState.visible.map((toast) => (
           <ToastItem key={toast.id} toast={toast} onDismiss={dismiss} />
         ))}
       </div>

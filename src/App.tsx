@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Component } from 'react';
 import { Footer } from './components/Footer';
@@ -94,6 +94,8 @@ function GameApp() {
   const clearOfflineMessage = useGameStore((state) => state.clearOfflineMessage);
   const setPaused = useGameStore((state) => state.setPaused);
   const { showToast } = useToast();
+  // StrictMode re-runs mount effects; the ref survives that re-run.
+  const hasLoadedRef = useRef(false);
 
   const handlePauseToggle = useCallback(() => {
     setPaused(!useGameStore.getState().isPaused);
@@ -113,8 +115,12 @@ function GameApp() {
   useAchievementToasts();
 
   useEffect(() => {
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
+    // The canvas is fixed at 800x500 in FIT mode, matching the store default,
+    // so loading before Phaser's create() still places restored balls in bounds.
     load();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [load]);
 
   // Surface the offline-earnings message as a toast once it is set by load().
   useEffect(() => {

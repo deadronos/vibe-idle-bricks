@@ -221,8 +221,9 @@ interface GameStore {
    * Removes the achievement unlock queue after the UI has shown toasts. The
    * achievements remain unlocked in `unlockedAchievements`; this only clears
    * the transient notification queue.
+   * @param ids - Unlocks that were actually shown. Omit to clear the whole queue.
    */
-  drainPendingAchievementUnlocks: () => void;
+  drainPendingAchievementUnlocks: (ids?: string[]) => void;
 
   /**
    * Calculates the current global damage multiplier.
@@ -841,6 +842,10 @@ export const useGameStore = create<GameStore>()(
             }
           }
         }
+
+        // Persist immediately so a repeated load (StrictMode, second owner)
+        // cannot re-apply the same offline earnings.
+        get().save();
       } catch (e) {
         console.error('Failed to load save:', e);
       }
@@ -910,9 +915,14 @@ export const useGameStore = create<GameStore>()(
       return newlyUnlocked;
     },
 
-    drainPendingAchievementUnlocks: () => {
-      if (get().pendingAchievementUnlocks.length === 0) return;
-      set({ pendingAchievementUnlocks: [] });
+    drainPendingAchievementUnlocks: (ids) => {
+      const pending = get().pendingAchievementUnlocks;
+      if (pending.length === 0) return;
+      set({
+        pendingAchievementUnlocks: ids
+          ? pending.filter((id) => !ids.includes(id))
+          : [],
+      });
     },
 
     getDamageMult: () => {

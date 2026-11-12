@@ -18,18 +18,21 @@ export function useAchievementToasts(): void {
     (state) => state.drainPendingAchievementUnlocks,
   );
   const { showToast } = useToast();
-  const lastSeenRef = useRef<number>(-1);
+  // Identify a handled queue by its array reference, so StrictMode's double
+  // effect run does not duplicate toasts and a later single unlock (same
+  // length as the drained queue) is not skipped.
+  const handledQueueRef = useRef<string[] | null>(null);
 
   useEffect(() => {
     if (pendingUnlocks.length === 0) return;
-    if (lastSeenRef.current === pendingUnlocks.length) return;
-    lastSeenRef.current = pendingUnlocks.length;
+    if (handledQueueRef.current === pendingUnlocks) return;
+    handledQueueRef.current = pendingUnlocks;
 
     for (const id of pendingUnlocks) {
       const def = ACHIEVEMENTS_BY_ID[id];
       if (!def) continue;
       showToast(`🏆 Achievement unlocked: ${def.name}`, 'success');
     }
-    drainQueue();
+    drainQueue(pendingUnlocks);
   }, [pendingUnlocks, showToast, drainQueue]);
 }
