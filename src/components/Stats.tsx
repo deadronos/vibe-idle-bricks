@@ -21,32 +21,32 @@ export function Stats() {
 
   return (
     <div className="stats">
-      <div className="stat">
+      <div className="stat stat-coins">
         <Coins className="stat-icon" size={24} />
         <span className="stat-value">{formatNumber(coins)}</span>
         <label>Coins</label>
       </div>
-      <div className="stat">
+      <div className="stat stat-bricks">
         <BrickWall className="stat-icon" size={24} />
         <span className="stat-value">{formatNumber(bricksBroken)}</span>
         <label>Bricks Broken</label>
       </div>
-      <div className="stat">
+      <div className="stat stat-total">
         <Layers className="stat-icon" size={24} />
         <span className="stat-value">{formatNumber(totalBricksBroken)}</span>
         <label>Total Bricks</label>
       </div>
-      <div className="stat">
+      <div className="stat stat-balls">
         <Circle className="stat-icon" size={24} />
         <span className="stat-value">{ballCount}</span>
         <label>Balls</label>
       </div>
-      <div className="stat">
+      <div className="stat stat-prestige-target">
         <TrendingUp className="stat-icon" size={24} />
         <span className="stat-value">{formatNumber(prestigeTarget)}</span>
         <label>Next Prestige</label>
       </div>
-      <div className="stat">
+      <div className="stat stat-prestige-bonus">
         <TrendingUp className="stat-icon text-purple-400" size={24} />
         <span className="stat-value">{prestigeMult.toFixed(2)}x</span>
         <label>Prestige Bonus</label>
