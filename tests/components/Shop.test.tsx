@@ -32,9 +32,9 @@ const resetStore = () => {
       sniper: new Decimal(BALL_TYPES.sniper.baseCost),
     },
     upgradeCosts: {
-      speed: new Decimal(100),
-      damage: new Decimal(150),
-      coinMult: new Decimal(200),
+      speed: new Decimal(50),
+      damage: new Decimal(75),
+      coinMult: new Decimal(100),
     },
     currentTier: 1,
     balls: [],
@@ -67,6 +67,25 @@ describe('Shop', () => {
       expect(screen.getByText(/plasma ball/i)).toBeInTheDocument()
       expect(screen.getByText(/explosive ball/i)).toBeInTheDocument()
       expect(screen.getByText(/sniper ball/i)).toBeInTheDocument()
+    })
+
+    it('should show the max effect at the speed cap', async () => {
+      useGameStore.setState({ upgrades: { speed: 50, damage: 0, coinMult: 0 } })
+      const user = userEvent.setup()
+      renderShop()
+      await user.click(screen.getByRole('tab', { name: /upgrades/i }))
+
+      expect(screen.getByText(/max: ×6/i)).toBeInTheDocument()
+    })
+
+    it('should show current and next upgrade effects', async () => {
+      const user = userEvent.setup()
+      renderShop()
+      await user.click(screen.getByRole('tab', { name: /upgrades/i }))
+
+      expect(screen.getByText(/speed ×1 → ×1\.1/i)).toBeInTheDocument()
+      expect(screen.getByText(/damage ×1 → ×1\.1/i)).toBeInTheDocument()
+      expect(screen.getByText(/coins ×1 → ×1\.1/i)).toBeInTheDocument()
     })
 
     it('should render upgrade buttons', async () => {
@@ -194,8 +213,8 @@ describe('Shop', () => {
       const maxButton = within(upgradesPanel).getAllByRole('button', { name: /^max$/i })[0]
       await user.click(maxButton)
 
-      expect(useGameStore.getState().upgrades.speed).toBe(6)
-      expect(useGameStore.getState().coins.eq(120)).toBe(true)
+      expect(useGameStore.getState().upgrades.speed).toBe(11)
+      expect(useGameStore.getState().coins.eq(38)).toBe(true)
     })
   })
 

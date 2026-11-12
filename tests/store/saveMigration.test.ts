@@ -99,7 +99,7 @@ describe('Save Migration and Backward Compatibility', () => {
     }).not.toThrow()
   })
 
-   it('should handle partial upgradeCosts in save data by merging with defaults', () => {
+   it('should derive costs from levels and ignore stored upgradeCosts', () => {
     const partialSaveData = {
       coins: '100000',
       prestigeLevel: 0,
@@ -116,17 +116,69 @@ describe('Save Migration and Backward Compatibility', () => {
 
     const state = useGameStore.getState()
 
-    // Verify saved cost
-    expect(state.upgradeCosts.speed.eq(500)).toBe(true)
+    // Saved cost is ignored; level 0 rebuilds to the new base cost.
+    expect(state.upgradeCosts.speed.eq(50)).toBe(true)
 
     // Verify missing cost is default
     expect(state.upgradeCosts.damage).toBeDefined()
-    expect(state.upgradeCosts.damage.eq(150)).toBe(true) // Default damage cost
+    expect(state.upgradeCosts.damage.eq(75)).toBe(true) // Default damage cost
 
     // Verify safety
     expect(() => {
         state.buyUpgrade('damage')
     }).not.toThrow()
+  })
+
+  it('should rebuild upgrade costs from levels for old saves', () => {
+    const save = {
+      coins: '0',
+      prestigeLevel: 0,
+      upgrades: { speed: 6, damage: 0, coinMult: 0 },
+      upgradeCosts: { speed: '234' },
+      ballCosts: {},
+      balls: ['basic'],
+      version: 1,
+    }
+
+    expect(useGameStore.getState().importSave(JSON.stringify(save))).toBe(true)
+    expect(useGameStore.getState().upgradeCosts.speed.eq(92)).toBe(true)
+  })
+
+  it('should price a clamped speed level, not the raw save value', () => {
+    const makeSave = (speed: unknown) => JSON.stringify({
+      coins: '0',
+      prestigeLevel: 0,
+      upgrades: { speed, damage: 0, coinMult: 0 },
+      upgradeCosts: {},
+      ballCosts: {},
+      balls: ['basic'],
+      version: 1,
+    })
+
+    expect(useGameStore.getState().importSave(makeSave(50))).toBe(true)
+    const cappedCost = useGameStore.getState().upgradeCosts.speed
+    expect(useGameStore.getState().importSave(makeSave(999))).toBe(true)
+    expect(useGameStore.getState().upgradeCosts.speed.eq(cappedCost)).toBe(true)
+    expect(useGameStore.getState().upgrades.speed).toBe(50)
+
+    expect(useGameStore.getState().importSave(makeSave('abc'))).toBe(true)
+    expect(useGameStore.getState().upgrades.speed).toBe(0)
+    expect(useGameStore.getState().upgradeCosts.speed.eq(50)).toBe(true)
+  })
+
+  it('should price huge damage levels without looping', () => {
+    const save = JSON.stringify({
+      coins: '0',
+      prestigeLevel: 0,
+      upgrades: { speed: 0, damage: 1e12, coinMult: 0 },
+      upgradeCosts: {},
+      ballCosts: {},
+      balls: ['basic'],
+      version: 1,
+    })
+
+    expect(useGameStore.getState().importSave(save)).toBe(true)
+    expect(useGameStore.getState().upgradeCosts.damage.gt(0)).toBe(true)
   })
 
   it('should ignore garbage keys in ballCosts', () => {

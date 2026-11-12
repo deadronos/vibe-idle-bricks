@@ -8,6 +8,8 @@ import {
   MAX_TIER,
   calculateBrickStats,
   getPrestigeMultiplier,
+  STARTING_COINS,
+  UPGRADE_COST_MULTIPLIER,
 } from '../../src/types/game';
 
 describe('Ball Types Configuration', () => {
@@ -99,6 +101,14 @@ describe('Game Constants', () => {
 
   it('should be 0.1 (10% per level)', () => {
     expect(UPGRADE_MULTIPLIER).toBe(0.1);
+  });
+
+  it('should grant 35 starting coins', () => {
+    expect(STARTING_COINS).toBe(35);
+  });
+
+  it('should grow upgrade costs 10% per level', () => {
+    expect(UPGRADE_COST_MULTIPLIER).toBe(1.1);
   });
 
   it('should multiply income by 1.75 per prestige', () => {

@@ -11,6 +11,8 @@ import {
   MAX_SPEED_UPGRADE,
   MAX_PRESTIGE_LEVEL,
   COST_MULTIPLIER,
+  STARTING_COINS,
+  UPGRADE_COST_MULTIPLIER,
 } from '../types';
 import type {
   BallType,
@@ -405,11 +407,27 @@ const getDefaultBallCosts = (): Record<BallType, Decimal> => ({
  * Returns the default costs for all upgrades.
  * @returns {Record<keyof Upgrades, Decimal>} A map of upgrades to their initial costs.
  */
+const UPGRADE_BASE_COSTS: Record<keyof Upgrades, number> = {
+  speed: 50,
+  damage: 75,
+  coinMult: 100,
+};
+
 const getDefaultUpgradeCosts = (): Record<keyof Upgrades, Decimal> => ({
-  speed: new Decimal(100),
-  damage: new Decimal(150),
-  coinMult: new Decimal(200),
+  speed: new Decimal(UPGRADE_BASE_COSTS.speed),
+  damage: new Decimal(UPGRADE_BASE_COSTS.damage),
+  coinMult: new Decimal(UPGRADE_BASE_COSTS.coinMult),
 });
+
+/** Costs are derived from level, so a curve change applies to existing saves. */
+const calculateUpgradeCost = (type: keyof Upgrades, level: number): Decimal => {
+  const base = new Decimal(UPGRADE_BASE_COSTS[type]);
+  // Large levels come from crafted saves; a per-level loop would freeze load.
+  if (level > 100) return base.mul(new Decimal(UPGRADE_COST_MULTIPLIER).pow(level)).ceil();
+  let cost = base;
+  for (let i = 0; i < level; i++) cost = cost.mul(UPGRADE_COST_MULTIPLIER).ceil();
+  return cost;
+};
 
 type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
@@ -466,17 +484,17 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
     }
   }
 
-  const upgradeCosts = getDefaultUpgradeCosts();
-  if (saveData.upgradeCosts) {
-    for (const [key, value] of Object.entries(saveData.upgradeCosts)) {
-      if (Object.prototype.hasOwnProperty.call(upgradeCosts, key)) {
-        const upgradeKey = key as keyof Upgrades;
-        upgradeCosts[upgradeKey] = parseDecimal(value, upgradeCosts[upgradeKey]);
-      }
-    }
-  }
-
   const savedUpgrades = saveData.upgrades ?? { speed: 0, damage: 0, coinMult: 0 };
+  // Parse once: costs must use the same clamped level the game will use.
+  const upgrades = {
+    speed: parseInteger(savedUpgrades.speed, 0, MAX_SPEED_UPGRADE),
+    damage: parseInteger(savedUpgrades.damage),
+    coinMult: parseInteger(savedUpgrades.coinMult),
+  };
+  const upgradeCosts = getDefaultUpgradeCosts();
+  for (const key of Object.keys(upgradeCosts) as (keyof Upgrades)[]) {
+    upgradeCosts[key] = calculateUpgradeCost(key, upgrades[key]);
+  }
 
   // Validate the unlocked-achievements map. Older saves will not have this
   // field, in which case we start with an empty map.
@@ -494,11 +512,7 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
     bricksBroken: parseDecimal(saveData.bricksBroken),
     totalBricksBroken: parseDecimal(saveData.totalBricksBroken),
     prestigeLevel: parseInteger(saveData.prestigeLevel),
-    upgrades: {
-      speed: parseInteger(savedUpgrades.speed, 0, MAX_SPEED_UPGRADE),
-      damage: parseInteger(savedUpgrades.damage),
-      coinMult: parseInteger(savedUpgrades.coinMult),
-    },
+    upgrades,
     ballCosts,
     upgradeCosts,
     currentTier: parseInteger(saveData.currentTier, 1),
@@ -515,7 +529,7 @@ const parseSaveData = (saveData: SaveData, canvasWidth: number, canvasHeight: nu
 export const useGameStore = create<GameStore>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
-    coins: new Decimal(0),
+    coins: new Decimal(STARTING_COINS),
     bricksBroken: new Decimal(0),
     totalBricksBroken: new Decimal(0),
     prestigeLevel: 0,
@@ -610,7 +624,7 @@ export const useGameStore = create<GameStore>()(
           },
           upgradeCosts: {
             ...state.upgradeCosts,
-            [type]: cost.mul(COST_MULTIPLIER).ceil(),
+            [type]: calculateUpgradeCost(type, state.upgrades[type] + 1),
           },
         });
         playSound('purchase');
@@ -636,7 +650,7 @@ export const useGameStore = create<GameStore>()(
       while (currentCoins.gte(cost) && (type !== 'speed' || currentUpgradeLevel < MAX_SPEED_UPGRADE)) {
         currentCoins = currentCoins.sub(cost);
         currentUpgradeLevel++;
-        cost = cost.mul(COST_MULTIPLIER).ceil();
+        cost = calculateUpgradeCost(type, currentUpgradeLevel);
         currentUpgradeCosts[type] = cost;
         purchased++;
       }
@@ -670,6 +684,8 @@ export const useGameStore = create<GameStore>()(
 
       set({
         prestigeLevel: state.prestigeLevel + 1,
+        // A fresh run starts empty; kept upgrades and the multiplier already
+        // make income higher than a new game's 35 starting coins.
         coins: new Decimal(0),
         bricksBroken: new Decimal(0),
         currentTier: 1,
@@ -856,7 +872,7 @@ export const useGameStore = create<GameStore>()(
       const { width, height } = state.canvasSize;
 
       set({
-        coins: new Decimal(0),
+        coins: new Decimal(STARTING_COINS),
         bricksBroken: new Decimal(0),
         totalBricksBroken: new Decimal(0),
         prestigeLevel: 0,

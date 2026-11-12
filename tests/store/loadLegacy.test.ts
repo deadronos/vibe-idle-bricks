@@ -55,7 +55,7 @@ describe('GameStore load legacy/partial save', () => {
     });
   });
 
-    it('should initialize missing upgrade costs when loading an incomplete save', () => {
+    it('should derive upgrade costs from levels when a save omits them', () => {
     // Create a save data that only has 'speed' upgrade cost
     const partialSaveData = {
       coins: "100",
@@ -84,11 +84,11 @@ describe('GameStore load legacy/partial save', () => {
 
     const state = useGameStore.getState();
 
-    // Check if 'speed' cost is loaded correctly
-    expect(state.upgradeCosts.speed.toString()).toBe("100");
+    // Saved costs are ignored: costs are rebuilt from the upgrade level.
+    expect(state.upgradeCosts.speed.toString()).toBe("50");
 
     // Check if 'damage' cost is initialized to default
     expect(state.upgradeCosts.damage).toBeDefined();
-    expect(state.upgradeCosts.damage.toString()).toBe("150"); // Default damage cost
+    expect(state.upgradeCosts.damage.toString()).toBe("75"); // Default damage cost
   });
 });

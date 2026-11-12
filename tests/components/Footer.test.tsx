@@ -124,7 +124,7 @@ describe('Footer', () => {
     const dialog = screen.getByRole('dialog')
     await user.click(within(dialog).getByRole('button', { name: /^reset$/i }))
 
-    expect(useGameStore.getState().coins.eq(0)).toBe(true)
+    expect(useGameStore.getState().coins.eq(35)).toBe(true)
     expect(useGameStore.getState().prestigeLevel).toBe(0)
   })
 

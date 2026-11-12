@@ -217,6 +217,10 @@ export const BALL_TYPES: Record<BallType, BallTypeConfig> = {
 
 /** Multiplier applied to stats per upgrade level (10% boost). */
 export const UPGRADE_MULTIPLIER = 0.1;
+/** Coins granted on a fresh game so the first purchase is minutes away. */
+export const STARTING_COINS = 35;
+/** Upgrade cost growth; value per coin still decays ~9%/level, but slower than balls. */
+export const UPGRADE_COST_MULTIPLIER = 1.10;
 /** Damage and coin income are multiplied by this for every prestige level. */
 export const PRESTIGE_MULTIPLIER = 1.75;
 /** The fraction of theoretical earnings awarded for offline time (50%). */
@@ -244,7 +248,7 @@ export const MAX_SPEED_UPGRADE = 50;
 /** Maximum prestige level (no upper limit on bonuses, but caps progression). */
 export const MAX_PRESTIGE_LEVEL = 100;
 
-/** Cost scaling multiplier when purchasing balls or upgrades. */
+/** Cost scaling multiplier when purchasing balls. */
 export const COST_MULTIPLIER = 1.15;
 
 /**
