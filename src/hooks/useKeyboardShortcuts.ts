@@ -43,6 +43,7 @@ export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers): void {
       const current = handlersRef.current;
 
       if (key === ' ' || key === 'Spacebar' || key === 'p' || key === 'P') {
+        if (event.target instanceof Element && event.target.closest('button, a[href], summary, [role="button"]')) return;
         if (current.onPauseToggle) {
           event.preventDefault();
           current.onPauseToggle();

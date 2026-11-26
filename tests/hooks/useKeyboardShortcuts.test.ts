@@ -74,6 +74,21 @@ describe('useKeyboardShortcuts', () => {
     expect(onToggle).not.toHaveBeenCalled()
   })
 
+  it('preserves Space activation on a focused shop button', () => {
+    const onToggle = vi.fn()
+    renderHook(() => useKeyboardShortcuts({ onPauseToggle: onToggle }))
+    const button = document.createElement('button')
+    document.body.appendChild(button)
+    try {
+      button.focus()
+      const event = fireKey(' ', document.activeElement!)
+      expect(event.defaultPrevented).toBe(false)
+      expect(onToggle).not.toHaveBeenCalled()
+    } finally {
+      button.remove()
+    }
+  })
+
   it('does nothing when focus is inside an editable element', () => {
     const onToggle = vi.fn()
     renderHook(() => useKeyboardShortcuts({ onPauseToggle: onToggle }))
