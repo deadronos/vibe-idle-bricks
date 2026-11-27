@@ -98,6 +98,7 @@
 - ESLint 10.12.0 + typescript-eslint 8.71.1
 - jsdom 30.1.2
 - **Test count**: 532 passing across 46 files
+- **HiDPI**: Phaser backing store = displayed CSS size × min(DPR, 2), with camera zoom and logical input
 - **Core coverage**: 99.41% statements (170/171), 100% lines/functions, 87.34% branches
 - **Board publication**: at most 10 store mirror updates per second; renderers read live runtime state
 - **CI**: `.github/workflows/ci.yml` runs lint, typecheck, `test:run`, and build on PRs and `main`

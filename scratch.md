@@ -113,9 +113,9 @@ Issues: [#66], [#85], [#82], [#83], [#86], [#84].
 - [x] [#84] active layer: click-to-mark priority targeting (optional; idle falls back to weakest). Merged in #122.
 
 Batch 7a merged in #119, Batch 7b in #120, #86 in #121, Batch 7c in #122,
-Batch 7d in #123, and Batch 7e in #124; #83 closed. DPR-2 spike in #125
-measured Canvas at parity/slightly faster than Phaser at equal pixels, but
-Canvas lacks production visuals; recommend Phaser DPR-2 for #56.
+Batch 7d in #123, Batch 7e in #124, and DPR-2 spike #125; #83 closed.
+Phaser DPR-2 production is implemented on `feat/phaser-dpr2`; #56 closes on
+merge. All planned batches are complete.
 
 ## Batch 8 — Visual leaves (after Batch 4)
 

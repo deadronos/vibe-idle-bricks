@@ -2,6 +2,13 @@
 
 ## Current Work Focus
 
+Issue #56 (**Phaser DPR-2 production**) is implemented on
+`feat/phaser-dpr2` (2026-11-27): the Phaser backing store is now displayed CSS
+size × `min(devicePixelRatio, 2)`, with a matching camera zoom and logical
+pointer input. DPR 2 measured 1760×1100 backing for 880×550 CSS; DPR 1 measured
+880×550. 532 tests pass; #56 closes on merge. Design:
+`memory/designs/DESIGN018-phaser-dpr2-production.md`.
+
 DPR-2 renderer spike (#125) is merged (2026-11-27). At the same 1760×1100
 backing store, optimized Canvas measured ~98–100 ms/frame vs Phaser DPR-2
 ~105–108 ms, while normal blurry Phaser is ~84–87 ms. Canvas currently lacks
@@ -92,6 +99,10 @@ TypeScript 6.0.3. The entries below are historical context from the November
 playtest and earlier batches.
 
 ## Recent Changes
+
+- Production DPR: `createGameConfig`/PhaserGame derive the backing store from the
+  displayed board and DPR (cap 2); GameScene zooms/centers and uses logical
+  pointer coordinates. #56 closes on merge.
 
 - Batch 7e (PR #124): per-ball-type levels (Basic/Heavy damage, Fast damage+speed, Plasma/
   Explosive/Sniper damage), Shop upgrade row, save v6, prestige persistence and
