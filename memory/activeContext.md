@@ -292,9 +292,9 @@ playtest and earlier batches.
 The game is fully playable with:
 
 - ✅ 6 ball types with unique behaviors
-- ✅ Brick generation and tier progression (1-20)
+- ✅ Brick generation and tier progression (unbounded tiers, rising every 100 bricks)
 - ✅ Shop for balls and upgrades
-- ✅ Prestige system (scaling thresholds)
+- ✅ Prestige system (fixed 10,000-brick threshold, ×1.25 damage and coin multiplier per level)
 - ✅ Auto-save every 30 seconds
 - ✅ Offline earnings on return
 - ✅ Responsive canvas sizing

@@ -20,7 +20,7 @@
 ### Progression ✅
 
 - Coin earning based on brick value
-- Tier progression (every 100 bricks up to tier 20)
+- Tier progression (every 100 bricks, with no tier cap)
 - Prestige system with a fixed 10,000-brick goal and a ×1.25 damage and coin multiplier per level; upgrades, Blueprints, achievements, and the permanent prestige tree are kept across prestiges
 - Prestige tree with uncapped Might (damage), Fortune (live/simulated coins), and Insight (idle/offline coins) nodes; costs grow by 1.6× and effects by 1.1× per level
 - Speed, damage, and coin multiplier upgrades
@@ -33,7 +33,7 @@
 - Offline earnings use 50% of the measured-or-fallback live rate; the same rolling 60-second rate powers the Stats HUD and Shop ETAs
 - Save hydration now clamps all upgrade fields and safely defaults malformed values
 - Save validation rejects future versions and sanitizes NaN/Infinity, negative values, oversized prestige/tier, and out-of-range ball costs; writes are versioned and storage failures surface a toast
-- Version 4 saves persist prestige-tree levels, lifetime credited coins, best tier, and bounded active playtime; v0–v3 saves migrate safely
+- Version 6 saves persist prestige-tree levels, lifetime credited coins, best tier, and bounded active playtime; v0–v5 saves migrate safely
 
 ### UI ✅
 

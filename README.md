@@ -22,8 +22,8 @@ An idle/incremental breakout-style game where balls autonomously smash through b
 
 - **Autonomous gameplay** — Runs itself while you strategize upgrades.
 - **6 unique ball types** — Each with distinct physics, stats, and abilities.
-- **20 brick tiers** — Progressive difficulty with scaling rewards and colors; tiers rise every 100 bricks.
-- **Prestige system** — Reset the run for a permanent ×1.75 damage and coin multiplier per level (upgrades are kept; max level 100).
+- **Unbounded brick tiers** — Progressive difficulty with scaling rewards and colors; tiers rise every 100 bricks.
+- **Prestige system** — Reset the run for a permanent ×1.25 damage and coin multiplier per level (upgrades are kept).
 - **Auto-save** — Versioned, validated progress is saved to local storage every 30 seconds, when the tab is hidden, and when the page is closing.
 - **Offline earnings** — Earn 50% of your recent production rate while away, capped at 24 hours.
 - **Large number support** — Handles arbitrarily large values using `break_infinity.js`.
