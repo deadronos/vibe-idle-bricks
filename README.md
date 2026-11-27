@@ -27,6 +27,7 @@ An idle/incremental breakout-style game where balls autonomously smash through b
 - **Auto-save** — Versioned, validated progress is saved to local storage every 30 seconds, when the tab is hidden, and when the page is closing.
 - **Offline earnings** — Earn 50% of your recent production rate while away, capped at 24 hours.
 - **Large number support** — Handles arbitrarily large values using `break_infinity.js`.
+- **HiDPI-aware rendering** — The Phaser backing store matches the displayed board × device pixel ratio (capped at 2), so text and bricks stay crisp on Retina/4K screens.
 
 ## 🎮 How to Play
 

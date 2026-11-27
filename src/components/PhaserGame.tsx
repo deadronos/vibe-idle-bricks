@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as Phaser from 'phaser';
-import { gameConfig } from '../game';
+import { createGameConfig } from '../game';
 
 /**
  * React component that initializes and contains the Phaser game instance.
@@ -14,9 +14,17 @@ export function PhaserGame() {
 
   useEffect(() => {
     if (containerRef.current && !gameRef.current) {
+      const container = containerRef.current;
+      const cssWidth = container.clientWidth || 800;
+      const cssHeight = container.clientHeight || 500;
+      const displayWidth = Math.max(1, Math.min(cssWidth, cssHeight * (800 / 500)));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Backing store = displayed CSS size x DPR; the scene camera uses the
+      // same ratio so all gameplay coordinates remain on the 800x500 board.
+      const pixelRatio = (displayWidth * dpr) / 800;
       const game = new Phaser.Game({
-        ...gameConfig,
-        parent: containerRef.current,
+        ...createGameConfig(pixelRatio),
+        parent: container,
       });
       // The board is visual; the wrapper and the hint under it carry the
       // accessible name and instructions.
