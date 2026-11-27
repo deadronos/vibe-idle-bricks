@@ -2,7 +2,7 @@
 
 Date: 2026-11-27
 Issue: #56
-Branch: `feat/phaser-dpr2`
+Branch: `feat/phaser-dpr2` (merged in PR #127)
 
 ## EARS Requirements
 

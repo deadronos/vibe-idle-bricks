@@ -10,7 +10,7 @@ _No pending tasks._
 
 ## Completed
 
-- [TASK018 — Phaser DPR-2 production (#56)](../designs/DESIGN018-phaser-dpr2-production.md) (2026-11-27, implemented on feat/phaser-dpr2; PR pending).
+- [TASK018 — Phaser DPR-2 production (#56)](../designs/DESIGN018-phaser-dpr2-production.md) (2026-11-27, PR #127).
 - [TASK017 — DPR-2 renderer spike (#56)](../designs/DESIGN017-dpr2-renderer-spike.md) (2026-11-27, PR #125; Canvas vs Phaser comparison, no production switch).
 - [TASK016 — Per-ball progression (#83)](../designs/DESIGN016-per-ball-progression.md) (2026-11-27, PR #124).
 - [TASK015 — Run goals (#85)](../designs/DESIGN015-run-goals.md) (2026-11-27, PR #123).

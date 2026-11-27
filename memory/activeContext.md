@@ -2,11 +2,11 @@
 
 ## Current Work Focus
 
-Issue #56 (**Phaser DPR-2 production**) is implemented on
-`feat/phaser-dpr2` (2026-11-27): the Phaser backing store is now displayed CSS
+Issue #56 (**Phaser DPR-2 production**) is **complete**
+(2026-11-27, PR #127): the Phaser backing store is now displayed CSS
 size × `min(devicePixelRatio, 2)`, with a matching camera zoom and logical
 pointer input. DPR 2 measured 1760×1100 backing for 880×550 CSS; DPR 1 measured
-880×550. 532 tests pass; #56 closes on merge. Design:
+880×550. 532 tests pass; #56 is closed. Design:
 `memory/designs/DESIGN018-phaser-dpr2-production.md`.
 
 DPR-2 renderer spike (#125) is merged (2026-11-27). At the same 1760×1100
@@ -100,7 +100,7 @@ playtest and earlier batches.
 
 ## Recent Changes
 
-- Production DPR: `createGameConfig`/PhaserGame derive the backing store from the
+- Production DPR (PR #127): `createGameConfig`/PhaserGame derive the backing store from the
   displayed board and DPR (cap 2); GameScene zooms/centers and uses logical
   pointer coordinates. #56 closes on merge.
 
